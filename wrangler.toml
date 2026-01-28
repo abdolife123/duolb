@@ -1,5 +1,5 @@
 name = "duolb"
-compatibility_date = "2024-12-01"
+compatibility_date = "2026-01-28"
 
-[site]
-bucket = "./dist"
+type = "javascript"   # SSR Worker
+main = "dist/index.js" 
