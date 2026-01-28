@@ -7,10 +7,7 @@ import cloudflare from '@astrojs/cloudflare'
 
 export default defineConfig({
   site: 'https://duolb.com',
-  output: 'server',
-  adapter: cloudflare(
-
-  ),   // ⭐ THIS IS REQUIRED
+  output: 'server',  // ⭐ THIS IS REQUIRED
   integrations: [mdx(), sitemap(), react()],
   vite: {
     plugins: [tailwindcss()],
