@@ -1,5 +1,0 @@
-name = "duolb"
-compatibility_date = "2026-01-28"
-
-type = "javascript"        # tell CF this is a Worker
-main = "dist/index.js"  
