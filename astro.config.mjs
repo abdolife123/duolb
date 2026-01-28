@@ -9,11 +9,7 @@ export default defineConfig({
   site: 'https://duolb.com',
   output: 'server',
   adapter: cloudflare(
-    {
-    platformProxy: {
-      enabled: true
-    }
-  }
+
   ),   // ⭐ THIS IS REQUIRED
   integrations: [mdx(), sitemap(), react()],
   vite: {
