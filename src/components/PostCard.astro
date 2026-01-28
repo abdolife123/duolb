@@ -1,0 +1,85 @@
+---
+// PostCard.astro
+const { post } = Astro.props;
+
+// 🔥 NATIVE UTF-8 NORMALIZATION
+function fixText(str = "") {
+  try {
+    return new TextDecoder("utf-8").decode(new TextEncoder().encode(str));
+  } catch {
+    return str;
+  }
+}
+
+// Declare all "safe" variables here to avoid "not defined" errors 
+const safeTitle = fixText(post.title);
+const safeSlug = post.slug;
+const safeImage = post.featured_image; // This defines safeImage 
+const dateObj = new Date(post.created_at);
+
+const formattedDate = dateObj.toLocaleDateString("de-DE", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+});
+---
+
+<article class="group relative flex flex-col bg-white overflow-hidden transition-all duration-500 hover:-translate-y-2">
+<div class="relative overflow-hidden aspect-[16/10] bg-gray-100">    {
+      safeImage && (
+        <img
+          src={safeImage}
+          alt={`Vorschaubild: ${safeTitle}`}
+          loading="lazy"
+          decoding="async"
+          /* object-cover fills the container and removes white gaps  */
+          class="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+
+        />
+      )
+    }
+    
+    <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+    <div class="absolute top-4 left-4">
+      <div class="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-sm shadow-sm">
+        <p class="text-[9px] uppercase tracking-[0.2em] font-bold text-gray-900">
+          {formattedDate}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pt-4 pb-4 flex flex-col flex-grow">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="w-6 h-px bg-[#958e09]"></span>
+      <span class="text-[9px] uppercase tracking-[0.3em] font-bold text-[#958e09]">Editorial</span>
+    </div>
+
+    <h2 class="font-serif text-xl md:text-2xl text-gray-900 leading-snug mb-4 line-clamp-2 group-hover:text-[#958e09] transition-colors">
+      <a href={`/posts/${safeSlug}`}>
+        {safeTitle}
+      </a>
+    </h2>
+
+    <div class="mt-auto">
+      <a 
+        href={`/posts/${safeSlug}`} 
+        class="inline-flex items-center gap-4 group/link"
+      >
+        <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 group-hover/link:text-gray-900 transition-colors">
+          Weiterlesen
+        </span>
+        <div class="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center group-hover/link:bg-[#958e09] group-hover/link:text-white transition-all duration-300">
+          <span class="text-sm">→</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  h2 {
+    font-family: "Cormorant Garamond", serif; /*  */
+  }
+</style>

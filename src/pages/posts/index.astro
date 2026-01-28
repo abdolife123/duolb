@@ -1,0 +1,111 @@
+---
+import BaseHead from "../../components/BaseHead.astro";
+import Footer from "../../components/Footer.astro";
+import Navbar from "../../components/navbar.astro";
+import Layout from "../../layouts/Layout.astro";
+import { supabase } from "../../lib/supabase";
+
+/* ---------------- NATIVE UTF-8 NORMALIZATION ---------------- */
+function fixText(str = "") {
+  try {
+    return new TextDecoder("utf-8").decode(new TextEncoder().encode(str));
+  } catch {
+    return str;
+  }
+}
+
+const { data: rawPosts, error } = await supabase
+  .from("posts")
+  .select("title, slug, featured_image, created_at")
+  .order("created_at", { ascending: false });
+
+if (error) console.error(error);
+
+const posts =
+  rawPosts?.map((p) => ({
+    ...p,
+    title: fixText(p.title),
+  })) || [];
+---
+
+<Layout title="Archiv | duolb Beauty Blog">
+  <Navbar />
+
+  <main class="bg-white min-h-screen py-24 px-6">
+    <div class="max-w-4xl mx-auto">
+      <header class="text-center mb-24">
+        <span
+          class="text-[#958e09] font-bold tracking-[0.4em] uppercase text-[10px] mb-4 block italic"
+          >Kuration</span
+        >
+        <h1 class="text-5xl md:text-6xl font-serif text-gray-900 mb-6">
+          Alle Beiträge
+        </h1>
+        <div class="h-px w-24 bg-[#958e09]/30 mx-auto"></div>
+      </header>
+
+      <div class="space-y-12">
+        {
+          posts.map((post) => (
+            <a href={`/posts/${post.slug}`} class="group block">
+              <article class="flex flex-col md:flex-row gap-8 items-center border-b border-gray-50 pb-12 transition-all group-hover:border-[#958e09]/20">
+                <div class="hidden md:block w-32 shrink-0">
+                  <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-[#958e09] transition-colors">
+                    {new Date(post.created_at).toLocaleDateString("de-DE", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+
+                <div class="w-full md:w-48 h-32 overflow-hidden rounded-sm bg-gray-100">
+                  {post.featured_image && (
+                    <img
+                      src={post.featured_image}
+                      alt={post.title}
+                      class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  )}
+                </div>
+
+                <div class="flex-grow">
+                  <h2 class="text-2xl md:text-3xl font-serif text-gray-900 leading-snug group-hover:text-[#958e09] transition-colors">
+                    {post.title}
+                  </h2>
+                  <div class="mt-4 flex items-center gap-4">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 group-hover:text-gray-900 transition-colors">
+                      Artikel lesen
+                    </span>
+                    <span class="text-gray-300 group-hover:translate-x-2 transition-transform duration-300">
+                      →
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </a>
+          ))
+        }
+      </div>
+
+      {
+        posts.length === 0 && (
+          <div class="text-center py-20">
+            <p class="font-serif italic text-gray-400 text-xl text-center">
+              In Kürze folgen neue Beiträge...
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  h1,
+  h2 {
+    font-family: "Cormorant Garamond", serif;
+  }
+</style>

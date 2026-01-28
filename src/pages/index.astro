@@ -1,49 +1,77 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import FeaturedPost from "../components/FeaturedPost.astro";
+import PostCard from "../components/PostCard.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Newsletter from "../components/Newsletter.astro";
+import Layout from "../layouts/Layout.astro";
+import { supabase } from "../lib/supabase";
+
+/* ---------------- UTF-8 REPAIR (NODE 20 COMPATIBLE) ---------------- */
+/**
+ * Fixes "Mojibake" characters (like Ã¤) by re-encoding to UTF-8.
+ * Native TextDecoder is more reliable in Node 20 environments.
+ */
+function repairUTF8(str = "") {
+  try {
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder("utf-8");
+    return decoder.decode(encoder.encode(str));
+  } catch (e) {
+    return str;
+  }
+}
+
+/* ---------------- FETCH POSTS ---------------- */
+const { data: posts } = await supabase
+  .from("posts")
+  .select("title, slug, featured_image, created_at, description")
+  .order("created_at", { ascending: false });
+
+/* ---------------- FIX ENCODING & SAFE FALLBACKS ---------------- */
+const fixedPosts =
+  posts?.map((p) => ({
+    ...p,
+    title: repairUTF8(p.title),
+    description: repairUTF8(p.description),
+  })) ?? [];
+
+/* ---------------- SPLIT POSTS ---------------- */
+const featuredPost = fixedPosts[0];
+const otherPosts = fixedPosts.slice(1);
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-				serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-				website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to
-				<a href="https://docs.astro.build/">read the docs</a>
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<Layout title="Beauty Blog | Neueste Trends & Tipps">
+  <Navbar />
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <section>
+      {/* FEATURED POST HERO */}
+      {featuredPost && <FeaturedPost post={featuredPost} />}
+
+      {/* RECENT POSTS GRID */}
+      {
+        otherPosts.length > 0 && (
+          <div class="mt-16">
+            <h2 class="text-2xl font-serif text-gray-900 mb-8 border-l-4 border-[#958e09] pl-4">
+              Weitere Beiträge
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {otherPosts.map((post) => (
+                <PostCard post={post} />
+              ))}
+            </div>
+          </div>
+        )
+      }
+    </section>
+  </main>
+
+  <Newsletter />
+  <Footer />
+</Layout>
+
+<style>
+  /* Base styles handled via Tailwind. Font should be imported in Layout.astro. */
+</style>

@@ -1,0 +1,149 @@
+---
+import "../styles/global.css";
+const { title = "duolb" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="de">
+    <head>
+        <!-- ORGANIZATION (Publisher) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Duolb",
+  "url": "https://duolb.com",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://duolb.com/logo.png"
+  }
+}
+</script>
+
+<!-- WEBSITE -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Duolb",
+  "url": "https://duolb.com",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duolb",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://duolb.com/logo.png"
+    }
+  }
+}
+</script>
+
+        <meta charset="UTF-8" />
+        <title>
+            Duolb Editorial – Experten für Akne-Behandlung & Beauty
+        </title>
+
+        <meta
+            name="description"
+            content="Duolbe ist dein Experte für High-End Hautpflege. Unabhängige Tests zu CO2-Lasern, RF-Microneedling & Akne-Technologie. Wissenschaftlich fundiert & ehrlich."
+        />
+
+        <meta
+            name="keywords"
+            content="Duolbe, Akne Behandlung, CO2 Laser Erfahrung, RF Microneedling Test, Aknenarben entfernen, High-End Beauty Blog, Medical Skincare, Deutschland"
+        />
+
+        <meta name="author" content="Duolbe Beauty Redaktion" />
+        <meta
+            name="robots"
+            content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        />
+        <link rel="canonical" href="https://duolbe.com/" />
+
+        <meta http-equiv="content-language" content="de" />
+        <meta name="geo.region" content="DE" />
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+        <meta name="theme-color" content="#958e09" />
+        <meta name="msapplication-navbutton-color" content="#958e09" />
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+        />
+
+        <meta property="og:site_name" content="Duolbe Beauty Blog" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="de_DE" />
+        <meta
+            property="og:title"
+            content="Duolbe | Profi Akne-Behandlung & High-End Beauty Tech"
+        />
+        <meta
+            property="og:description"
+            content="Lohnt sich die Investition in Profi-Geräte? Wir testen CO2-Laser und RF-Microneedling auf Herz und Nieren. Dein Guide für reine Haut."
+        />
+        <meta property="og:url" content="https://duolbe.com/" />
+        <meta
+            property="og:image"
+            content="https://duolbe.com/social-share.jpg"
+        />
+        <meta
+            property="og:image:alt"
+            content="Duolbe Medical Beauty Equipment Review"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+            name="twitter:title"
+            content="Duolbe: High-End Skincare & Akne Technologie"
+        />
+        <meta
+            name="twitter:description"
+            content="Wissenschaftliche Tests zu Aknenarben-Behandlungen. Wir analysieren die teuersten Geräte am Markt."
+        />
+        <meta
+            name="twitter:image"
+            content="https://duolbe.com/social-share.jpg"
+        />
+        <meta name="twitter:domain" content="duolbe.com" />
+
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "Blog",
+                "name": "Duolbe",
+                "alternateName": "Duolb Editorial – Experten für Akne-Behandlung & Beauty,
+                "url": "https://duolbe.com/",
+                "description": "Deutschlands Experten-Blog für medizinische Akne-Behandlung, Laser-Technologie und High-End Skincare.",
+                "inLanguage": "de-DE",
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Duolbe",
+                    "url": "https://duolbe.com/",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://duolbe.com/logo.png"
+                    }
+                },
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://duolbe.com/search?q={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                }
+            }
+        </script>
+        <title>{title}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    </head>
+
+    <body class="bg-white text-gray-800">
+        <slot />
+    </body>
+</html>

@@ -1,0 +1,179 @@
+---
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Datenschutzerklärung | duolb Beauty Blog">
+  <Navbar />
+
+  <main class="bg-white min-h-screen py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <header class="mb-16 border-b border-gray-100 pb-12">
+        <span
+          class="text-[#958e09] font-bold tracking-widest uppercase text-xs mb-4 block"
+          >Rechtliches</span
+        >
+        <h1 class="text-4xl md:text-5xl font-serif text-gray-900 mb-6">
+          Datenschutzerklärung
+        </h1>
+        <p class="text-gray-500 text-lg leading-relaxed">
+          Der Schutz deiner persönlichen Daten ist uns wichtig. Hier erfährst
+          du, wie wir auf <strong class="text-gray-900">duolb.com</strong> mit deinen
+          Informationen umgehen.
+        </p>
+      </header>
+
+      <div class="grid lg:grid-cols-4 gap-12">
+        <aside class="hidden lg:block space-y-4 sticky top-24 h-fit">
+          <p
+            class="text-[10px] font-bold uppercase tracking-tighter text-gray-400 mb-6"
+          >
+            Inhalt
+          </p>
+          <nav
+            class="flex flex-col space-y-3 text-sm text-gray-500 border-l border-gray-100 pl-4"
+          >
+            <span class="hover:text-[#958e09] cursor-pointer transition-colors"
+              >1. Verantwortliche Stelle</span
+            >
+            <span class="hover:text-[#958e09] cursor-pointer transition-colors"
+              >2. Zugriffsdaten</span
+            >
+            <span class="hover:text-[#958e09] cursor-pointer transition-colors"
+              >3. Kontaktformular</span
+            >
+            <span class="hover:text-[#958e09] cursor-pointer transition-colors"
+              >7. Deine Rechte</span
+            >
+          </nav>
+        </aside>
+
+        <article
+          class="lg:col-span-3 prose prose-gray max-w-none text-gray-600 leading-loose"
+        >
+          <section class="mb-12">
+            <h2 class="text-2xl font-serif text-gray-900 mb-4">
+              1. Verantwortliche Stelle
+            </h2>
+            <div
+              class="bg-[#ffdead]/20 p-6 rounded-2xl border border-[#958e09]/10"
+            >
+              <p class="font-medium text-gray-800 mb-1">duolb Beauty</p>
+              <p class="text-sm">
+                E-Mail: <a
+                  href="mailto:contact@duolb.com"
+                  class="text-[#958e09] no-underline hover:underline"
+                  >contact@duolb.com</a
+                >
+              </p>
+            </div>
+          </section>
+
+          <section class="mb-12">
+            <h2 class="text-2xl font-serif text-gray-900 mb-4 italic">
+              2. Zugriffsdaten
+            </h2>
+            <p>
+              Beim Besuch unserer Website werden automatisch Informationen durch
+              den Webserver erfasst. Dazu gehören z. B. Browsertyp,
+              Betriebssystem, Uhrzeit des Zugriffs und aufgerufene Seiten. Diese
+              Daten dienen der technischen Optimierung und sind nicht bestimmten
+              Personen zuordenbar.
+            </p>
+          </section>
+
+          <section class="mb-12">
+            <h2 class="text-2xl font-serif text-gray-900 mb-4 italic">
+              3. Kontaktformular
+            </h2>
+            <p>
+              Wenn du uns über das Kontaktformular kontaktierst, werden die von
+              dir angegebenen Daten (Name, E-Mail-Adresse und Nachricht)
+              verschlüsselt an uns übertragen und gespeichert, um deine Anfrage
+              zu bearbeiten.
+            </p>
+          </section>
+
+          <section class="mb-12">
+            <h2 class="text-2xl font-serif text-gray-900 mb-4 italic">
+              4. Speicherung der Daten
+            </h2>
+            <p>
+              Die übermittelten Daten werden auf gesicherten Servern gespeichert
+              und ausschließlich zur Bearbeitung deiner Anfrage verwendet. Eine
+              Löschung erfolgt, sobald die Anfrage abschließend geklärt ist.
+            </p>
+          </section>
+
+          <section
+            class="mb-12 p-8 rounded-[2rem] bg-gray-50 border border-gray-100"
+          >
+            <h2
+              class="text-xl font-serif text-gray-900 mb-3 flex items-center gap-2"
+            >
+              <span class="text-lg">🍪</span> 5. Cookies
+            </h2>
+            <p class="text-sm">
+              Diese Website verfolgt einen minimalistischen Ansatz: Wir
+              verwenden <strong>keine Cookies</strong> zu Tracking- oder Marketingzwecken.
+            </p>
+          </section>
+
+          <section class="mb-12">
+            <h2 class="text-2xl font-serif text-gray-900 mb-4 italic">
+              6. Externe Dienste
+            </h2>
+            <p>
+              Zur Bereitstellung unserer Inhalte nutzen wir moderne
+              Hosting-Infrastruktur. Hierbei werden IP-Adressen technisch
+              bedingt kurzzeitig verarbeitet, um die Auslieferung der Website zu
+              gewährleisten.
+            </p>
+          </section>
+
+          <section class="mb-12 border-t border-gray-100 pt-8">
+            <h2 class="text-2xl font-serif text-gray-900 mb-4">
+              7. Deine Rechte
+            </h2>
+            <p class="mb-4">
+              Du hast im Rahmen der geltenden gesetzlichen Bestimmungen
+              jederzeit das Recht auf:
+            </p>
+            <ul class="list-disc pl-5 space-y-2 text-sm italic">
+              <li>Unentgeltliche Auskunft über deine gespeicherten Daten</li>
+              <li>Berichtigung oder Löschung deiner Daten</li>
+              <li>Einschränkung der Verarbeitung</li>
+              <li>Widerruf deiner Einwilligung</li>
+            </ul>
+          </section>
+
+          <section class="bg-[#958e09] p-8 rounded-[2rem] text-white">
+            <h2 class="text-xl font-serif mb-2 text-white">
+              8. Fragen zum Datenschutz?
+            </h2>
+            <p class="text-sm opacity-90 mb-4">
+              Schreib uns einfach eine E-Mail, wir helfen dir gerne weiter.
+            </p>
+            <a
+              href="mailto:contact@duolb.com"
+              class="font-bold text-white underline underline-offset-4"
+            >
+              contact@duolb.com
+            </a>
+          </section>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  /* Verwendet die Serif-Schriftart für einen eleganten Look */
+  h1,
+  h2 {
+    font-family: "Cormorant Garamond", serif;
+  }
+</style>

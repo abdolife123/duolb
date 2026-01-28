@@ -1,0 +1,106 @@
+---
+// FeaturedPost.astro
+const { post } = Astro.props || {};
+
+/* ---------------- NATIVE UTF-8 NORMALIZATION ---------------- */
+function cleanText(str = "") {
+  try {
+    return new TextDecoder("utf-8").decode(new TextEncoder().encode(str));
+  } catch {
+    return str;
+  }
+}
+
+const title = cleanText(post?.title ?? "Zeitlose Schönheit");
+const description = cleanText(
+  post?.description ??
+    "Entdecken Sie kuratierte Einblicke in moderne Hautpflege und exklusive Beauty-Trends.",
+);
+const image = post?.featured_image ?? "/placeholder-beauty.jpg";
+const slug = post?.slug ?? "";
+---
+
+<section
+  class="relative bg-white py-12 lg:py-20 overflow-hidden border-b border-gray-50"
+>
+  <div class="absolute top-0 left-0 w-full h-1/2 bg-[#ffdead]/10 -z-10"></div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+      <div class="w-full lg:w-3/5 order-2 lg:order-1">
+        <div class="relative group">
+          <div
+            class="absolute -inset-4 border border-[#958e09]/20 rounded-sm translate-x-2 translate-y-2 -z-10 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"
+          >
+          </div>
+
+          <div
+            class="overflow-hidden rounded-sm shadow-xl aspect-[16/10] lg:aspect-[4/3]"
+          >
+            <img
+              src={image}
+              alt={title}
+              class="w-full h-full object-cover transition-transform duration-[3s] group-hover:scale-110"
+              loading="eager"
+            />
+          </div>
+
+          <span
+            class="absolute -right-8 top-1/2 -rotate-90 text-[10px] tracking-[0.5em] uppercase text-gray-300 hidden xl:block"
+          >
+            Est. 2026 Editorial
+          </span>
+        </div>
+      </div>
+
+      <div class="w-full lg:w-2/5 order-1 lg:order-2 space-y-8">
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-px bg-[#958e09]"></span>
+            <span
+              class="text-[10px] uppercase tracking-[0.3em] font-bold text-[#958e09]"
+              >Top Story</span
+            >
+          </div>
+
+          <h1
+            class="text-3xl md:text-4xl lg:text-5xl font-serif text-gray-900 leading-[1.2] tracking-tight"
+          >
+            {title}
+          </h1>
+
+          <p
+            class="text-gray-500 text-base md:text-lg leading-relaxed font-light max-w-md"
+          >
+            {description}
+          </p>
+        </div>
+
+        <div class="pt-4">
+          <a
+            href={`/posts/${slug}`}
+            class="group inline-flex items-center gap-6"
+          >
+            <span
+              class="text-[11px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-200 pb-2 group-hover:border-[#958e09] transition-all"
+            >
+              Weiterlesen
+            </span>
+            <div
+              class="w-10 h-10 rounded-full border border-gray-100 flex items-center justify-center group-hover:bg-[#958e09] group-hover:text-white transition-all"
+            >
+              <span class="text-lg">→</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Ensure the font matches your beauty aesthetic */
+  h1 {
+    font-family: "Cormorant Garamond", serif;
+  }
+</style>

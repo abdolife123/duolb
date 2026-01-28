@@ -1,0 +1,63 @@
+---
+import Layout from "../layouts/Layout.astro";
+import PostCard from "../components/PostCard.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import { supabase } from "../lib/supabase";
+
+// 1️⃣ Get search term
+const query = Astro.url.searchParams.get("q")?.trim() || "";
+
+// 2️⃣ Prepare safe posts array
+let posts = [];
+
+if (query.length > 0) {
+    const { data, error } = await supabase
+        .from("posts")
+        .select("title, slug, featured_image, created_at")
+        .ilike("title", `%${query}%`)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Search error:", error.message);
+    }
+
+    // 🔒 ALWAYS force array
+    posts = Array.isArray(data) ? data : [];
+}
+---
+
+<Layout title={`Suche: ${query} | duolb`}>
+    <Navbar />
+    <main class="max-w-7xl mx-auto px-6 py-20">
+        <header class="mb-16">
+            <h1 class="text-4xl font-serif text-gray-900">
+                Ergebnisse für: "{query}"
+            </h1>
+            <p class="text-gray-500 mt-2">{posts.length} Beiträge gefunden</p>
+        </header>
+
+        {
+            posts.length > 0 ? (
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    {posts.map((post) => (
+                        <PostCard post={post} />
+                    ))}
+                </div>
+            ) : (
+                <div class="text-center py-20 border-t border-gray-100">
+                    <p class="font-serif italic text-2xl text-gray-300">
+                        Leider keine Ergebnisse gefunden.
+                    </p>
+                    <a
+                        href="/posts"
+                        class="text-[#958e09] underline mt-4 inline-block"
+                    >
+                        Alle Beiträge ansehen
+                    </a>
+                </div>
+            )
+        }
+    </main>
+    <Footer />
+</Layout>

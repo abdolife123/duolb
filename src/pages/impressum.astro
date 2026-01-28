@@ -1,0 +1,119 @@
+---
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Impressum | duolb Beauty Blog">
+  <Navbar />
+
+  <main class="bg-white min-h-screen py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <header class="text-center mb-20">
+        <span
+          class="text-[#958e09] font-bold tracking-[0.3em] uppercase text-xs mb-4 block"
+          >Informationen</span
+        >
+        <h1 class="text-5xl font-serif text-gray-900 mb-4">Impressum</h1>
+        <div class="h-1 w-12 bg-[#958e09] mx-auto rounded-full"></div>
+      </header>
+
+      <div class="grid md:grid-cols-3 gap-16">
+        <aside class="md:col-span-1 space-y-12">
+          <section>
+            <h2
+              class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 border-b border-gray-100 pb-2"
+            >
+              Angaben
+            </h2>
+            <p class="text-gray-700 leading-relaxed font-medium italic">
+              duolb<br />
+              Beauty Blog
+            </p>
+          </section>
+
+          <section>
+            <h2
+              class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 border-b border-gray-100 pb-2"
+            >
+              Kontakt
+            </h2>
+            <a
+              href="mailto:contact@duolb.com"
+              class="text-[#958e09] font-semibold hover:underline decoration-1 underline-offset-4 transition-all"
+            >
+              contact@duolb.com
+            </a>
+          </section>
+
+          <section
+            class="bg-[#ffdead]/30 p-6 rounded-3xl border border-[#958e09]/10"
+          >
+            <h2
+              class="text-xs font-bold uppercase tracking-widest text-[#958e09] mb-4"
+            >
+              Verantwortlich
+            </h2>
+            <p class="text-sm text-gray-600 leading-relaxed">
+              Gemäß § 55 Abs. 2 RStV:<br />
+              <span class="text-gray-900 font-medium">duolb Editorial Team</span
+              ><br />
+              contact@duolb.com
+            </p>
+          </section>
+        </aside>
+
+        <article class="md:col-span-2 space-y-12 text-gray-600 leading-loose">
+          <section>
+            <h2 class="text-2xl font-serif text-gray-900 mb-4">
+              Haftung für Inhalte
+            </h2>
+            <p class="text-sm italic mb-4">Gemäß § 7 Abs.1 TMG</p>
+            <p>
+              Als Diensteanbieter sind wir für eigene Inhalte auf diesen Seiten
+              nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG
+              sind wir jedoch nicht verpflichtet, übermittelte oder gespeicherte
+              fremde Informationen zu überwachen.
+            </p>
+            <p class="mt-4">
+              Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir
+              diese Inhalte umgehend entfernen.
+            </p>
+          </section>
+
+          <section>
+            <h2 class="text-2xl font-serif text-gray-900 mb-4">
+              Haftung für Links
+            </h2>
+            <p>
+              Unser Angebot enthält Links zu externen Websites Dritter, auf
+              deren Inhalte wir keinen Einfluss haben. Für die Inhalte der
+              verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber
+              der Seiten verantwortlich.
+            </p>
+          </section>
+
+          <section class="border-t border-gray-50 pt-10">
+            <h2 class="text-2xl font-serif text-gray-900 mb-4">Urheberrecht</h2>
+            <p>
+              Die Inhalte und Werke auf diesen Seiten unterliegen dem deutschen
+              Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und
+              jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes
+              bedürfen der schriftlichen Zustimmung.
+            </p>
+          </section>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  /* Verwendet die Serif-Schriftart für Headings, um den Blog-Charakter zu unterstreichen */
+  h1,
+  h2 {
+    font-family: "Cormorant Garamond", serif;
+  }
+</style>
