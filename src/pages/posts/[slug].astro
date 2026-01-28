@@ -4,32 +4,17 @@ import Navbar from '../../components/navbar.astro';
 import Footer from '../../components/Footer.astro';
 import { supabase } from '../../lib/supabase';
 
-// Tell Astro this page should be prerendered (static)
-export const prerender = true;
+// 🚀 This route must be server-rendered, not prebuilt
+export const prerender = false;
 
 /**
- * 1️⃣ Generate all post routes at build time
- */
-export async function getStaticPaths() {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('slug');
-
-  if (error) {
-    console.error('Supabase error in getStaticPaths:', error);
-    return [];
-  }
-
-  return data.map((post) => ({
-    params: { slug: post.slug },
-  }));
-}
-
-/**
- * 2️⃣ Fetch the post content for THIS slug
+ * 1️⃣ Get slug from URL
  */
 const { slug } = Astro.params;
 
+/**
+ * 2️⃣ Fetch post from Supabase at request time
+ */
 const { data: post, error } = await supabase
   .from('posts')
   .select('*')
@@ -37,7 +22,7 @@ const { data: post, error } = await supabase
   .single();
 
 if (error || !post) {
-  throw new Error(`Post not found for slug: ${slug}`);
+  return Astro.redirect('/404'); // or your custom 404 page
 }
 
 /**
@@ -80,7 +65,6 @@ const imageURL = post.featured_image || 'https://duolb.com/default-og.jpg';
     <Footer />
   </body>
 </html>
-
 
 <style>
 /* ===== POST LAYOUT ===== */
