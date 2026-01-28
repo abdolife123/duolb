@@ -46,24 +46,80 @@ const imageURL = post.featured_image || 'https://duolb.com/default-og.jpg';
     <meta property="og:image" content={imageURL} />
   </head>
 
-  <body>
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Navbar from '../../components/navbar.astro';
+import Footer from '../../components/Footer.astro';
+import { supabase } from '../../lib/supabase';
+
+export const prerender = false; // Server-rendered via Cloudflare
+
+const { slug } = Astro.params;
+
+// Fetch post from Supabase
+const { data: post, error } = await supabase
+  .from('posts')
+  .select('*')
+  .eq('slug', slug)
+  .eq('status', 'published')
+  .single();
+
+if (error || !post) {
+  return Astro.redirect('/404');
+}
+
+const pageURL = new URL(Astro.url.pathname, Astro.site).toString();
+const imageURL = post.featured_image || 'https://duolb.com/default-og.jpg';
+---
+
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <BaseHead title={post.title} description={post.description} />
+    <link rel="canonical" href={pageURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content={post.title} />
+    <meta property="og:description" content={post.description} />
+    <meta property="og:url" content={pageURL} />
+    <meta property="og:image" content={imageURL} />
+
+    <!-- 🔥 Post-specific CSS from database -->
+    {post.css && (
+      <style set:html={post.css}></style>
+    )}
+  </head>
+
+  <body class="bg-white text-gray-900">
     <Navbar />
 
-    <main class="post-container">
+    <main class="mx-auto max-w-4xl px-4 py-10">
+      
       {post.featured_image && (
-        <div class="post-hero">
-          <img src={post.featured_image} alt={post.title} />
+        <div class="mb-8 overflow-hidden rounded-2xl shadow-lg">
+          <img
+            src={post.featured_image}
+            alt={post.title}
+            class="h-auto w-full object-cover"
+            loading="lazy"
+          />
         </div>
       )}
 
-      <article class="post-article">
+      <article class="prose prose-lg max-w-none">
         <h1>{post.title}</h1>
+
+        <!-- 🧠 Post HTML from database -->
         <div set:html={post.html} />
       </article>
+
     </main>
 
     <Footer />
   </body>
+</html>
+
 </html>
 
 <style>
