@@ -8,8 +8,10 @@ import cloudflare from '@astrojs/cloudflare'
 export default defineConfig({
   site: 'https://duolb.com',
 
-  output: 'server', // REQUIRED for DB-driven posts
-  adapter: cloudflare(),
+  output: 'server',        // REQUIRED
+  adapter: cloudflare({    // Worker adapter
+    mode: 'standalone'
+  }),
 
   integrations: [
     mdx(),
