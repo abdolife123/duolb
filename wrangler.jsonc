@@ -1,7 +1,6 @@
 {
     "name": "duolb",
     "compatibility_date": "2026-01-28",
-    "main": "./dist/_worker.js",
     "assets": {
         "directory": "./dist"
     }
