@@ -1,5 +1,5 @@
 name = "duolb"
 compatibility_date = "2026-01-28"
 
-type = "javascript"   # SSR Worker
-main = "dist/index.js" 
+type = "javascript"        # tell CF this is a Worker
+main = "dist/index.js"  
