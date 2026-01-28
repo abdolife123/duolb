@@ -9,8 +9,7 @@ export default defineConfig({
   site: 'https://duolb.com',
 
   // REQUIRED for SSR
-  output: 'server',
-  adapter: cloudflare(),
+output: 'static',
 
   integrations: [
     mdx(),
