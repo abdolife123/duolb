@@ -1,4 +1,11 @@
 {
-    "name": "duolb",
-    "compatibility_date": "2026-01-28",
+  "name": "duolb-static",
+  "compatibility_date": "2026-01-28",
+  "type": "javascript",
+  "workers_dev": true,
+  "route": "",
+  "zone_id": "",
+  "assets": {
+    "directory": "dist/_astro"
+  }
 }
