@@ -1,7 +1,7 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
 import { supabase } from '../../lib/supabase';
-import Navbar from '../../components/Navbar.astro';
+import Navbar from '../../components/navbar.astro';
 import Footer from '../../components/Footer.astro';
 
 const { slug } = Astro.params;
@@ -19,27 +19,14 @@ if (!post) {
   return new Response("Post not found", { status: 404 });
 }
 
-// Related posts (same category)
-let relatedPosts = [];
-if (post.category_id) {
-  const { data: related } = await supabase
-    .from('posts')
-    .select('title, slug')
-    .eq('category_id', post.category_id)
-    .neq('slug', post.slug)
-    .limit(3);
-
-  relatedPosts = related || [];
-}
-
 const pageURL = new URL(Astro.url.pathname, Astro.site).toString();
-const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
+const imageURL = post.featured_image || "https://duolbe.com/default-og.jpg";
 ---
 
 <!DOCTYPE html>
 <html lang="de">
 <head>
-   <meta charset="UTF-8" />
+  <meta charset="UTF-8" />
   <BaseHead title={post.title} description={post.description} />
 
   <meta name="author" content="duolb" />
@@ -47,20 +34,17 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href={pageURL} />
 
-  <!-- Open Graph -->
   <meta property="og:type" content="article" />
   <meta property="og:title" content={post.title} />
   <meta property="og:description" content={post.description} />
   <meta property="og:url" content={pageURL} />
   <meta property="og:image" content={imageURL} />
 
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={post.title} />
   <meta name="twitter:description" content={post.description} />
   <meta name="twitter:image" content={imageURL} />
 
-  <!-- Article Schema -->
   <script type="application/ld+json">
   {JSON.stringify({
     "@context": "https://schema.org",
@@ -75,21 +59,20 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
       "name": "duolb",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://duolb.com/logo.png"
+        "url": "https://duolbe.com/logo.png"
       }
     },
     "mainEntityOfPage": pageURL
   })}
   </script>
 
-  <!-- Breadcrumb Schema -->
   <script type="application/ld+json">
   {JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Startseite", "item": "https://duolb.com" },
-      { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://duolb.com/posts" },
+      { "@type": "ListItem", "position": 1, "name": "Startseite", "item": "https://duolbe.com" },
+      { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://duolbe.com/posts" },
       { "@type": "ListItem", "position": 3, "name": post.title, "item": pageURL }
     ]
   })}
@@ -101,66 +84,50 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
 <body>
   <Navbar />
 
- <main class="post-container">
-
-{post.featured_image && (
-  <div class="post-hero">
-    <img
-      src={post.featured_image}
-      alt={`Bild zum Artikel: ${post.title}`}
-      title={post.title}
-      class="post-hero-img"
-      loading="eager"
-      decoding="async"
-      fetchpriority="high"
-      width="1200"
-      height="630"
-      itemprop="image"
-    />
-  </div>
-)}
-
-
-  <article
-    class="post-article"
-    itemscope
-    itemtype="https://schema.org/Article"
-  >
-    <meta itemprop="headline" content={post.title} />
-    <meta itemprop="description" content={post.description} />
-    <meta itemprop="datePublished" content={post.created_at} />
+  <main class="post-container">
     {post.featured_image && (
-      <meta itemprop="image" content={post.featured_image} />
+      <div class="post-hero">
+        <img
+          src={post.featured_image}
+          alt={`Bild zum Artikel: ${post.title}`}
+          title={post.title}
+          class="post-hero-img"
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+          width="1200"
+          height="630"
+          itemprop="image"
+        />
+      </div>
     )}
 
-    <header class="post-header">
-      <h1 class="post-title">{post.title}</h1>
-    </header>
+    <article
+      class="post-article"
+      itemscope
+      itemtype="https://schema.org/Article"
+    >
+      <meta itemprop="headline" content={post.title} />
+      <meta itemprop="description" content={post.description} />
+      <meta itemprop="datePublished" content={post.created_at} />
+      {post.featured_image && (
+        <meta itemprop="image" content={post.featured_image} />
+      )}
 
-    <div itemprop="articleBody" set:html={post.html} class="post-content"></div>
-  </article>
+      <header class="post-header">
+        <h1 class="post-title">{post.title}</h1>
+      </header>
 
-  {relatedPosts.length > 0 && (
-    <section class="related">
-      <h3 class="related-title">Ähnliche Beiträge</h3>
-      <div class="related-grid">
-        {relatedPosts.map(p => (
-          <a href={`/posts/${p.slug}`} class="related-card">
-            {p.title}
-          </a>
-        ))}
-      </div>
-    </section>
-  )}
-
-</main>
-
+      <div itemprop="articleBody" set:html={post.html} class="post-content"></div>
+    </article>
+  </main>
 
   <Footer />
 </body>
 </html>
 
-<style>/* ===== POST LAYOUT ===== */
+<style>
+/* ===== POST LAYOUT ===== */
 .post-container {
   width: 100%;
   max-width: 1100px;
@@ -168,8 +135,9 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
   padding: 3rem 2rem 4rem;
 }
 
-/* Make article content look premium */
-.post-container article {
+.post-article {
+  max-width: 900px;
+  margin: 0 auto;
   background: linear-gradient(180deg, #ffffff 0%, #fffaf2 100%);
   border-radius: 24px;
   padding: 3rem;
@@ -177,147 +145,7 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
   border: 1px solid rgba(149, 142, 9, 0.12);
 }
 
-/* Typography inside post */
-.post-container h1,
-.post-container h2,
-.post-container h3 {
-  font-family: "Cormorant Garamond", serif;
-  color: #2c2416;
-  line-height: 1.25;
-}
-
-.post-container h1 {
-  font-size: 2.6rem;
-  margin-bottom: 1.5rem;
-}
-
-.post-container h2 {
-  font-size: 2rem;
-  margin-top: 3rem;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid #958e09;
-  padding-bottom: 0.5rem;
-}
-
-.post-container h3 {
-  font-size: 1.5rem;
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
-}
-
-.post-container p {
-  color: #6b5d4f;
-  font-size: 1.1rem;
-  line-height: 1.9;
-  margin-bottom: 1.25rem;
-}
-
-/* Links inside article */
-.post-container a {
-  color: #958e09;
-  font-weight: 600;
-  text-decoration: underline;
-  text-decoration-color: rgba(149, 142, 9, 0.3);
-  transition: all 0.25s ease;
-}
-
-.post-container a:hover {
-  color: #c4a000;
-  text-decoration-color: #c4a000;
-}
-
-/* Images inside post */
-.post-container img {
-  border-radius: 18px;
-  margin: 2rem 0;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-}
-
-/* Lists */
-.post-container ul,
-.post-container ol {
-  margin: 1.2rem 0 1.2rem 1.5rem;
-  color: #6b5d4f;
-}
-
-.post-container li {
-  margin-bottom: 0.6rem;
-}
-
-/* Blockquotes */
-.post-container blockquote {
-  margin: 2rem 0;
-  padding: 1.5rem 2rem;
-  background: #fff4cc;
-  border-left: 4px solid #958e09;
-  border-radius: 12px;
-  font-style: italic;
-  color: #5a4d3b;
-}
-
-/* ===== RELATED POSTS ===== */
-.related {
-  margin-top: 5rem;
-}
-
-.related h3 {
-  font-family: "Cormorant Garamond", serif;
-  font-size: 1.8rem;
-  color: #2c2416;
-  margin-bottom: 1.5rem;
-  border-left: 5px solid #958e09;
-  padding-left: 1rem;
-}
-
-/* Grid */
-.related-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
-/* Cards */
-.related-card {
-  display: block;
-  padding: 1.4rem 1.6rem;
-  background: linear-gradient(145deg, #ffffff, #fff7e6);
-  border-radius: 18px;
-  text-decoration: none;
-  color: #2c2416;
-  border: 1px solid rgba(149, 142, 9, 0.15);
-  box-shadow: 0 10px 30px rgba(149, 142, 9, 0.06);
-  font-family: "Cormorant Garamond", serif;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-}
-
-.related-card:hover {
-  transform: translateY(-6px);
-  border-color: #958e09;
-  box-shadow: 0 18px 50px rgba(149, 142, 9, 0.15);
-  color: #958e09;
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 1100px) {
-  .post-container {
-    padding: 2rem 1.5rem 3rem;
-  }
-
-  .post-container article {
-    padding: 2rem;
-  }
-
-  .related-grid {
-    grid-template-columns: 1fr;
-  }
-}
-/* ===== MAIN CONTAINER ===== */
-.post-container {
-  padding: 2rem 1.5rem 4rem;
-}
-
-/* ===== HERO IMAGE ===== */
+/* Hero Image */
 .post-hero {
   max-width: 1100px;
   margin: 0 auto 3rem auto;
@@ -333,13 +161,7 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
   object-fit: cover;
 }
 
-/* ===== ARTICLE WRAPPER ===== */
-.post-article {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-/* ===== TITLE ===== */
+/* Typography */
 .post-header {
   text-align: center;
   margin-bottom: 3rem;
@@ -353,7 +175,6 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
   letter-spacing: -0.02em;
 }
 
-/* ===== POST CONTENT ===== */
 .post-content {
   font-size: 1.1rem;
   line-height: 1.9;
@@ -366,6 +187,20 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
   margin-top: 3rem;
   margin-bottom: 1rem;
   color: #2c2416;
+  border-bottom: 2px solid #958e09;
+  padding-bottom: 0.5rem;
+}
+
+.post-content p {
+  margin-bottom: 1.25rem;
+}
+
+.post-content a {
+  color: #958e09;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(149, 142, 9, 0.3);
+  transition: all 0.25s ease;
 }
 
 .post-content img {
@@ -374,59 +209,31 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
   box-shadow: 0 15px 40px rgba(0,0,0,0.12);
 }
 
-/* ===== RELATED POSTS ===== */
-.related {
-  max-width: 1100px;
-  margin: 5rem auto 0;
+/* Blockquotes */
+.post-content blockquote {
+  margin: 2rem 0;
+  padding: 1.5rem 2rem;
+  background: #fff4cc;
+  border-left: 4px solid #958e09;
+  border-radius: 12px;
+  font-style: italic;
+  color: #5a4d3b;
 }
 
-.related-title {
-  text-align: center;
-  font-family: "Cormorant Garamond", serif;
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: #2c2416;
-}
-
-.related-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
-.related-card {
-  padding: 1.2rem;
-  background: #fff;
-  border-radius: 14px;
-  text-decoration: none;
-  color: #2c2416;
-  border: 1px solid #eee;
-  transition: all 0.25s ease;
-}
-
-.related-card:hover {
-  border-color: #958e09;
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-}
-
-/* ===== RESPONSIVE ===== */
+/* Responsive */
 @media (max-width: 900px) {
+  .post-container {
+    padding: 2rem 1.5rem 3rem;
+  }
+  .post-article {
+    padding: 2rem;
+  }
   .post-hero {
     height: 360px;
     border-radius: 20px;
   }
-
-  .related-grid {
-    grid-template-columns: 1fr;
-  }
-
   .post-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 }
-
-
-
 </style>
-
