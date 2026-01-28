@@ -1,0 +1,195 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Navbar from '../../components/navbar.astro';
+import Footer from '../../components/Footer.astro';
+import { supabase } from '../../lib/supabase';
+
+// Tell Astro this page should be prerendered (static)
+export const prerender = true;
+
+/**
+ * 1️⃣ Generate all post routes at build time
+ */
+export async function getStaticPaths() {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('slug');
+
+  if (error) {
+    console.error('Supabase error in getStaticPaths:', error);
+    return [];
+  }
+
+  return data.map((post) => ({
+    params: { slug: post.slug },
+  }));
+}
+
+/**
+ * 2️⃣ Fetch the post content for THIS slug
+ */
+const { slug } = Astro.params;
+
+const { data: post, error } = await supabase
+  .from('posts')
+  .select('*')
+  .eq('slug', slug)
+  .single();
+
+if (error || !post) {
+  throw new Error(`Post not found for slug: ${slug}`);
+}
+
+/**
+ * 3️⃣ SEO helpers
+ */
+const pageURL = new URL(Astro.url.pathname, Astro.site).toString();
+const imageURL = post.featured_image || 'https://duolb.com/default-og.jpg';
+---
+
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <BaseHead title={post.title} description={post.description} />
+    <link rel="canonical" href={pageURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content={post.title} />
+    <meta property="og:description" content={post.description} />
+    <meta property="og:url" content={pageURL} />
+    <meta property="og:image" content={imageURL} />
+  </head>
+
+  <body>
+    <Navbar />
+
+    <main class="post-container">
+      {post.featured_image && (
+        <div class="post-hero">
+          <img src={post.featured_image} alt={post.title} />
+        </div>
+      )}
+
+      <article class="post-article">
+        <h1>{post.title}</h1>
+        <div set:html={post.html} />
+      </article>
+    </main>
+
+    <Footer />
+  </body>
+</html>
+
+
+<style>
+/* ===== POST LAYOUT ===== */
+.post-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+
+.post-article {
+  max-width: 900px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf2 100%);
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 20px 60px rgba(149, 142, 9, 0.08);
+  border: 1px solid rgba(149, 142, 9, 0.12);
+}
+
+/* Hero Image */
+.post-hero {
+  max-width: 1100px;
+  margin: 0 auto 3rem auto;
+  height: 520px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.18);
+}
+
+.post-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Typography */
+.post-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.post-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  line-height: 1.15;
+  color: #2c2416;
+  letter-spacing: -0.02em;
+}
+
+.post-content {
+  font-size: 1.1rem;
+  line-height: 1.9;
+  color: #3e3526;
+}
+
+.post-content h2,
+.post-content h3 {
+  font-family: "Cormorant Garamond", serif;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  color: #2c2416;
+  border-bottom: 2px solid #958e09;
+  padding-bottom: 0.5rem;
+}
+
+.post-content p {
+  margin-bottom: 1.25rem;
+}
+
+.post-content a {
+  color: #958e09;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(149, 142, 9, 0.3);
+  transition: all 0.25s ease;
+}
+
+.post-content img {
+  border-radius: 18px;
+  margin: 2rem auto;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+}
+
+/* Blockquotes */
+.post-content blockquote {
+  margin: 2rem 0;
+  padding: 1.5rem 2rem;
+  background: #fff4cc;
+  border-left: 4px solid #958e09;
+  border-radius: 12px;
+  font-style: italic;
+  color: #5a4d3b;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .post-container {
+    padding: 2rem 1.5rem 3rem;
+  }
+  .post-article {
+    padding: 2rem;
+  }
+  .post-hero {
+    height: 360px;
+    border-radius: 20px;
+  }
+  .post-title {
+    font-size: 2.2rem;
+  }
+}
+</style>
