@@ -4,70 +4,47 @@ import Navbar from '../../components/navbar.astro';
 import Footer from '../../components/Footer.astro';
 import { supabase } from '../../lib/supabase';
 
-// 🚀 This route must be server-rendered, not prebuilt
 export const prerender = false;
 
-/**
- * 1️⃣ Get slug from URL
- */
-const { slug } = Astro.params;
-
-/**
- * 2️⃣ Fetch post from Supabase at request time
- */
-const { data: post, error } = await supabase
-  .from('posts')
-  .select('*')
-  .eq('slug', slug)
-  .single();
-
-if (error || !post) {
-  return Astro.redirect('/404'); // or your custom 404 page
+/* ---------------- SLUG NORMALIZATION ---------------- */
+function normalizeSlug(str = "") {
+  return decodeURIComponent(str)
+    .toLowerCase()
+    .trim()
+    .replace(/[\u2010-\u2015]/g, "-") // normalize weird dashes
+    .replace(/\s+/g, "-");           // spaces to hyphens
 }
 
-/**
- * 3️⃣ SEO helpers
- */
-const pageURL = new URL(Astro.url.pathname, Astro.site).toString();
-const imageURL = post.featured_image || 'https://duolb.com/default-og.jpg';
----
+const rawSlug = Astro.params.slug || "";
+const decodedSlug = normalizeSlug(rawSlug);
 
-<html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <BaseHead title={post.title} description={post.description} />
-    <link rel="canonical" href={pageURL} />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content={post.title} />
-    <meta property="og:description" content={post.description} />
-    <meta property="og:url" content={pageURL} />
-    <meta property="og:image" content={imageURL} />
-  </head>
-
----
-import BaseHead from '../../components/BaseHead.astro';
-import Navbar from '../../components/navbar.astro';
-import Footer from '../../components/Footer.astro';
-import { supabase } from '../../lib/supabase';
-
-export const prerender = false; // Server-rendered via Cloudflare
-
-const { slug } = Astro.params;
-
-// Fetch post from Supabase
+/* ---------------- FETCH POST ---------------- */
 const { data: post, error } = await supabase
   .from('posts')
-  .select('*')
-  .eq('slug', slug)
-  .eq('status', 'published')
-  .single();
+  .select(`
+    title,
+    slug,
+    description,
+    featured_image,
+    content_blocks,
+    status
+  `)
+  .ilike('slug', decodedSlug)
+  .limit(1)
+  .maybeSingle();
 
-if (error || !post) {
+/* ---------------- DEBUG LOGS (CHECK TERMINAL) ---------------- */
+console.log("URL slug:", rawSlug);
+console.log("Normalized slug:", decodedSlug);
+console.log("DB post:", post);
+console.log("DB error:", error);
+
+/* ---------------- 404 HANDLING ---------------- */
+if (!post) {
   return Astro.redirect('/404');
 }
 
+/* ---------------- META ---------------- */
 const pageURL = new URL(Astro.url.pathname, Astro.site).toString();
 const imageURL = post.featured_image || 'https://duolb.com/default-og.jpg';
 ---
@@ -78,158 +55,130 @@ const imageURL = post.featured_image || 'https://duolb.com/default-og.jpg';
     <BaseHead title={post.title} description={post.description} />
     <link rel="canonical" href={pageURL} />
 
-    <!-- Open Graph -->
     <meta property="og:type" content="article" />
     <meta property="og:title" content={post.title} />
     <meta property="og:description" content={post.description} />
     <meta property="og:url" content={pageURL} />
     <meta property="og:image" content={imageURL} />
-
-    <!-- 🔥 Post-specific CSS from database -->
-    {post.css && (
-      <style set:html={post.css}></style>
-    )}
   </head>
 
-  <body class="bg-white text-gray-900">
+  <body>
     <Navbar />
 
-    <main class="mx-auto max-w-4xl px-4 py-10">
-      
+    <main class="post-container">
       {post.featured_image && (
-        <div class="mb-8 overflow-hidden rounded-2xl shadow-lg">
-          <img
-            src={post.featured_image}
-            alt={post.title}
-            class="h-auto w-full object-cover"
-            loading="lazy"
-          />
+        <div class="post-hero">
+          <img src={post.featured_image} alt={post.title} />
         </div>
       )}
 
-      <article class="prose prose-lg max-w-none">
-        <h1>{post.title}</h1>
-
-        <!-- 🧠 Post HTML from database -->
-        <div set:html={post.html} />
+      <article class="post-article">
+        <h1 class="post-title">{post.title}</h1>
+        <div class="post-content" set:html={post.content_blocks} />
       </article>
-
     </main>
 
     <Footer />
   </body>
 </html>
 
-</html>
-
-<style>
-/* ===== POST LAYOUT ===== */
-.post-container {
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 3rem 2rem 4rem;
-}
-
-.post-article {
-  max-width: 900px;
-  margin: 0 auto;
-  background: linear-gradient(180deg, #ffffff 0%, #fffaf2 100%);
-  border-radius: 24px;
-  padding: 3rem;
-  box-shadow: 0 20px 60px rgba(149, 142, 9, 0.08);
-  border: 1px solid rgba(149, 142, 9, 0.12);
-}
-
-/* Hero Image */
-.post-hero {
-  max-width: 1100px;
-  margin: 0 auto 3rem auto;
-  height: 520px;
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 30px 70px rgba(0,0,0,0.18);
-}
-
-.post-hero-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Typography */
-.post-header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.post-title {
-  font-family: "Cormorant Garamond", serif;
-  font-size: clamp(2.5rem, 4vw, 4rem);
-  line-height: 1.15;
-  color: #2c2416;
-  letter-spacing: -0.02em;
-}
-
-.post-content {
-  font-size: 1.1rem;
-  line-height: 1.9;
-  color: #3e3526;
-}
-
-.post-content h2,
-.post-content h3 {
-  font-family: "Cormorant Garamond", serif;
-  margin-top: 3rem;
-  margin-bottom: 1rem;
-  color: #2c2416;
-  border-bottom: 2px solid #958e09;
-  padding-bottom: 0.5rem;
-}
-
-.post-content p {
-  margin-bottom: 1.25rem;
-}
-
-.post-content a {
-  color: #958e09;
-  font-weight: 600;
-  text-decoration: underline;
-  text-decoration-color: rgba(149, 142, 9, 0.3);
-  transition: all 0.25s ease;
-}
-
-.post-content img {
-  border-radius: 18px;
-  margin: 2rem auto;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-}
-
-/* Blockquotes */
-.post-content blockquote {
-  margin: 2rem 0;
-  padding: 1.5rem 2rem;
-  background: #fff4cc;
-  border-left: 4px solid #958e09;
-  border-radius: 12px;
-  font-style: italic;
-  color: #5a4d3b;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .post-container {
-    padding: 2rem 1.5rem 3rem;
-  }
-  .post-article {
-    padding: 2rem;
-  }
+<style is:global>
+  /* ================= HERO IMAGE ================= */
   .post-hero {
-    height: 360px;
-    border-radius: 20px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 3rem auto 2rem auto;
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: center; /* centers the image */
   }
+
+  .post-hero img {
+    width: 100%;
+    max-width: 1100px; /* keeps it elegant on big screens */
+    height: 500px;
+    object-fit: cover;
+    border-radius: 28px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+    display: block;
+  }
+
+  /* Soft gradient glow behind hero for premium feel */
+  .post-hero::before {
+    content: "";
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(149,142,9,0.15) 0%, rgba(255,255,255,0) 70%);
+    filter: blur(60px);
+    z-index: -1;
+    top: 10%;
+  }
+
+  /* ================= ARTICLE CONTAINER ================= */
+  .post-article {
+    max-width: 1020px;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem 1.5rem;
+  }
+
+  /* ================= TITLE ================= */
   .post-title {
-    font-size: 2.2rem;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    font-weight: 900;
+    color: #111;
+    text-align: center;
+    line-height: 1.1;
+    margin: 2.5rem 0 3rem 0;
+    letter-spacing: -0.02em;
   }
-}
+
+  .post-title::after {
+    content: "";
+    display: block;
+    width: 90px;
+    height: 6px;
+    background: linear-gradient(90deg, #958e09, #c9c24d);
+    margin: 1.5rem auto 0;
+    border-radius: 10px;
+  }
+
+  /* ================= CONTENT TYPOGRAPHY ================= */
+  .post-content {
+    font-size: 1.15rem;
+    line-height: 1.9;
+    color: #333;
+  }
+
+  .post-content p {
+    margin-bottom: 1.6rem;
+  }
+
+  .post-content h2,
+  .post-content h3 {
+    font-weight: 800;
+    margin-top: 3rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.3;
+  }
+
+  .post-content img {
+    width: 100%;
+    border-radius: 18px;
+    margin: 2.5rem 0;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  }
+
+  /* ================= MOBILE ================= */
+  @media (max-width: 768px) {
+    .post-hero img {
+      height: 260px;
+      border-radius: 20px;
+    }
+
+    .post-article {
+      padding: 0 1.2rem 3rem 1.2rem;
+    }
+  }
 </style>

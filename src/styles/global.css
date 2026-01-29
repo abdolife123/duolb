@@ -86,7 +86,7 @@ p {
 
 /* A nice container if you want it */
 .container-soft {
-    width: min(1200px, calc(100% - 2rem));
+    width: min(1400px, calc(100% - 2rem));
     margin-inline: auto;
 }
 
