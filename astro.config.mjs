@@ -15,7 +15,7 @@ export default defineConfig({
   // Use Node locally, Cloudflare in production
   adapter: isDev
     ? node({ mode: 'standalone' })
-    : cloudflare({ mode: 'standalone' }),
+    : cloudflare({ sessions: false}),
 
   integrations: [
     mdx(),
