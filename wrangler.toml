@@ -2,5 +2,4 @@ name = "duolb"
 main = "./dist/_worker.js"
 compatibility_date = "2026-01-20"
 
-[build]
-command = "npm run build"
+
