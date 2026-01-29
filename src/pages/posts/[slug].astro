@@ -1,8 +1,9 @@
+
+
 ---
-import BaseHead from '../../components/BaseHead.astro';
-import Navbar from '../../components/navbar.astro';
-import Footer from '../../components/Footer.astro';
-import { supabase } from '../../lib/supabase';
+import Layout from "../../layouts/Layout.astro";
+import Footer from "../../components/Footer.astro";
+import { supabase } from "../../lib/supabase";
 
 export const prerender = false;
 
@@ -11,8 +12,8 @@ function normalizeSlug(str = "") {
   return decodeURIComponent(str)
     .toLowerCase()
     .trim()
-    .replace(/[\u2010-\u2015]/g, "-") // normalize weird dashes
-    .replace(/\s+/g, "-");           // spaces to hyphens
+    .replace(/[\u2010-\u2015]/g, "-")
+    .replace(/\s+/g, "-");
 }
 
 const rawSlug = Astro.params.slug || "";
@@ -20,7 +21,7 @@ const decodedSlug = normalizeSlug(rawSlug);
 
 /* ---------------- FETCH POST ---------------- */
 const { data: post, error } = await supabase
-  .from('posts')
+  .from("posts")
   .select(`
     title,
     slug,
@@ -29,41 +30,46 @@ const { data: post, error } = await supabase
     content_blocks,
     status
   `)
-  .ilike('slug', decodedSlug)
+  .ilike("slug", decodedSlug)
   .limit(1)
   .maybeSingle();
 
-/* ---------------- DEBUG LOGS (CHECK TERMINAL) ---------------- */
+/* ---------------- DEBUG LOGS ---------------- */
 console.log("URL slug:", rawSlug);
 console.log("Normalized slug:", decodedSlug);
 console.log("DB post:", post);
 console.log("DB error:", error);
 
-/* ---------------- 404 HANDLING ---------------- */
+/* ---------------- 404 ---------------- */
 if (!post) {
-  return Astro.redirect('/404');
+  return Astro.redirect("/404");
 }
 
 /* ---------------- META ---------------- */
 const pageURL = new URL(Astro.url.pathname, Astro.site).toString();
-const imageURL = post.featured_image || 'https://duolb.com/default-og.jpg';
+const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
 ---
 
-<html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <BaseHead title={post.title} description={post.description} />
-    <link rel="canonical" href={pageURL} />
+<Layout title={post.title}>
 
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content={post.title} />
-    <meta property="og:description" content={post.description} />
-    <meta property="og:url" content={pageURL} />
-    <meta property="og:image" content={imageURL} />
-  </head>
+  <main class="max-w-7xl mx-auto px-6 lg:px-8">
+    
+    {post.featured_image && (
+      <div class="post-hero">
+        <img src={post.featured_image} alt={post.title} />
+      </div>
+    )}
 
-  <body>
-    <Navbar />
+    <article class="post-article">
+      <h1 class="post-title">{post.title}</h1>
+      <div class="post-content" set:html={post.content_blocks} />
+    </article>
+
+  </main>
+
+  <Footer />
+
+</Layout>
 
     <main class="post-container">
       {post.featured_image && (

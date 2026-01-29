@@ -3,6 +3,9 @@
 /* =========================
    Global Theme Variables
    ========================= */
+   html, body {
+  overflow-x: hidden;
+}
 :root {
     --gold: #958e09;
     --cream: #ffdead;
