@@ -50,19 +50,98 @@ const pageURL = new URL(Astro.url.pathname, Astro.site).toString();
 const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
 ---
 
-<Layout title={post.title}>
+<Layout title={post.title} description={post.description}>
 
-  <main class="max-w-7xl mx-auto px-6 lg:px-8">
-    
+  {/* ================== STRUCTURED DATA ================== */}
+
+  <!-- Article Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": post.title,
+    "description": post.description,
+    "image": imageURL,
+    "author": {
+      "@type": "Organization",
+      "name": "Duolb Editorial"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Duolb",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://duolb.com/logo.png"
+      }
+    },
+    "mainEntityOfPage": pageURL,
+    "datePublished": post.created_at || new Date().toISOString(),
+    "dateModified": post.updated_at || post.created_at || new Date().toISOString()
+  })} />
+
+  <!-- Breadcrumb Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Startseite",
+        "item": "https://duolb.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": "https://duolb.com/posts"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": post.title,
+        "item": pageURL
+      }
+    ]
+  })} />
+
+  {/* ================== VISIBLE PAGE ================== */}
+
+  <main class="max-w-4xl mx-auto px-6 lg:px-8">
+
     {post.featured_image && (
-      <div class="post-hero">
-        <img src={post.featured_image} alt={post.title} />
+      <div class="post-hero mb-10">
+        <img
+          src={post.featured_image}
+          alt={post.title}
+          class="w-full h-auto rounded-2xl shadow-sm"
+          loading="eager"
+          fetchpriority="high"
+        />
       </div>
     )}
 
-    <article class="post-article">
-      <h1 class="post-title">{post.title}</h1>
+    <article class="post-article prose prose-lg max-w-none">
+
+      <header class="mb-10">
+        <h1 class="post-title">{post.title}</h1>
+
+        {post.description && (
+          <p class="text-xl text-gray-500 mt-4">
+            {post.description}
+          </p>
+        )}
+
+        <div class="text-sm text-gray-400 mt-4">
+          <span>Von Duolb Redaktion</span>
+          <span class="mx-2">•</span>
+          <time datetime={post.created_at}>
+            {new Date(post.created_at || Date.now()).toLocaleDateString("de-DE")}
+          </time>
+        </div>
+      </header>
+
       <div class="post-content" set:html={post.content_blocks} />
+
     </article>
 
   </main>
