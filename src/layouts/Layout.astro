@@ -92,6 +92,13 @@ const { title = "Duolb Editorial – Experten für Akne-Behandlung & Beauty" } =
     }
   }
   </script>
+  {Astro.url.hostname === 'duolb.pages.dev' && (
+  <>
+    <meta http-equiv="refresh" content={`0; url=https://duolb.com${Astro.url.pathname}`} />
+    <link rel="canonical" href={`https://duolb.com${Astro.url.pathname}`} />
+  </>
+)}
+
 
 </head>
 
