@@ -3,142 +3,84 @@ import Layout from "../../layouts/Layout.astro";
 import Footer from "../../components/Footer.astro";
 import { supabase } from "../../lib/supabase";
 
+// Set to false for SSR
 export const prerender = false;
 
-/* ---------------- SLUG NORMALIZATION ---------------- */
+/* ---------------- UNIVERSAL SLUG HANDLER ---------------- */
 function normalizeSlug(str = "") {
   return decodeURIComponent(str)
-    .toLowerCase()
     .trim()
-    .replace(/[\u2010-\u2015]/g, "-")
-    .replace(/\s+/g, "-");
+    .toLowerCase(); 
+    // We removed the .replace() that was deleting your underscores!
 }
 
-const rawSlug = Astro.params.slug || "";
-const decodedSlug = normalizeSlug(rawSlug);
+const { slug: rawSlug } = Astro.params;
+const decodedSlug = normalizeSlug(rawSlug || "");
 
-/* ---------------- FETCH POST ---------------- */
+/* ---------------- FETCH DATA (WITHOUT STATUS FILTER) ---------------- */
 const { data: post, error } = await supabase
   .from("posts")
-  .select(`
-    title,
-    slug,
-    description,
-    featured_image,
-    content_blocks,
-    created_at,
-    updated_at,
-    status
-  `)
-  .ilike("slug", decodedSlug)
-  .eq("status", "published")
-  .limit(1)
+  .select(`*`) 
+  .ilike("slug", decodedSlug) // Case-insensitive exact match
   .maybeSingle();
 
-/* ---------------- 404 ---------------- */
-if (!post || error) {
-  return Astro.redirect("/404");
+/* ---------------- ERROR & 404 ---------------- */
+if (error) {
+  return new Response(`Database Error: ${error.message}`, { status: 500 });
 }
 
-/* ---------------- META ---------------- */
-const pageURL = new URL(Astro.url.pathname, Astro.site).toString();
-const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
+if (!post) {
+  return new Response(
+    `ABSOLUTELY NOT FOUND. 
+     Your browser sent: "${rawSlug}"
+     The code searched for: "${decodedSlug}"
+     
+     If this is still a 404, go to Supabase and make sure the "slug" 
+     column for this post contains exactly: ${decodedSlug}`, 
+    { status: 404 }
+  );
+}
+
+const pageURL = new URL(Astro.url.pathname, Astro.site || "https://duolb.com").toString();
 ---
 
-<Layout title={post.title} description={post.description} image={imageURL}>
+<Layout title={post.title} description={post.description} image={post.featured_image}>
 
-  {/* ================== STRUCTURED DATA ================== */}
-
-  <!-- Article Schema -->
-  <script type="application/ld+json" set:html={JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": post.title,
-    "description": post.description,
-    "image": imageURL,
-    "author": {
-      "@type": "Organization",
-      "name": "Duolb Editorial"
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "Duolb",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://duolb.com/logo.png"
-      }
-    },
-    "mainEntityOfPage": pageURL,
-    "datePublished": post.created_at,
-    "dateModified": post.updated_at || post.created_at
-  })} />
-
-  <!-- Breadcrumb Schema -->
-  <script type="application/ld+json" set:html={JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Startseite",
-        "item": "https://duolb.com/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Blog",
-        "item": "https://duolb.com/posts"
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": post.title,
-        "item": pageURL
-      }
-    ]
-  })} />
-
-  {/* ================== VISIBLE PAGE ================== */}
-
-  <main class="max-w-4xl mx-auto px-6 lg:px-8">
-
+  <main class="max-w-4xl mx-auto px-6 lg:px-8 py-12">
+    
     {post.featured_image && (
       <div class="post-hero mb-10">
         <img
           src={post.featured_image}
           alt={post.title}
-          class="w-full h-auto rounded-2xl shadow-sm"
+          class="w-full h-auto rounded-2xl shadow-lg"
           loading="eager"
-          fetchpriority="high"
         />
       </div>
     )}
 
-    <article class="post-article prose prose-lg max-w-none">
-
-      <header class="mb-10 text-center">
-        <h1 class="post-title">{post.title}</h1>
-
-        {post.description && (
-          <p class="text-xl text-gray-500 mt-4">
-            {post.description}
-          </p>
-        )}
-
-        <div class="text-sm text-gray-400 mt-4">
-          <span>Von Duolb Redaktion</span>
-          <span class="mx-2">•</span>
-          <time datetime={post.created_at}>
+    <article class="prose prose-lg max-w-none">
+      <header class="mb-10">
+        <h1 class="text-4xl md:text-5xl font-black leading-tight">
+          {post.title}
+        </h1>
+        
+        <div class="text-sm text-gray-500 mt-6 flex items-center gap-2">
+          <span>Duolb Editorial</span>
+          <span>•</span>
+          <time>
             {new Date(post.created_at).toLocaleDateString("de-DE")}
           </time>
+          {post.status !== 'published' && (
+            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs ml-4">
+              Status: {post.status}
+            </span>
+          )}
         </div>
       </header>
 
       <div class="post-content" set:html={post.content_blocks} />
-
     </article>
-
   </main>
 
   <Footer />
@@ -146,17 +88,84 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
 </Layout>
 
 <style is:global>
+  /* ================= HERO IMAGE ================= */
   .post-hero {
     width: 100%;
+    max-width: 1400px;
+    margin: 3rem auto 2rem auto;
+    padding: 0 1.5rem;
     display: flex;
-    justify-content: center;
+    justify-content: center; /* centers the image */
   }
 
+  .post-hero img {
+    width: 100%;
+    max-width: 1100px; /* keeps it elegant on big screens */
+    height: 500px;
+    object-fit: cover;
+    border-radius: 28px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+    display: block;
+  }
+
+  /* Soft gradient glow behind hero for premium feel */
+  .post-hero::before {
+    content: "";
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(149,142,9,0.15) 0%, rgba(255,255,255,0) 70%);
+    filter: blur(60px);
+    z-index: -1;
+    top: 10%;
+  }
+
+  /* ================= ARTICLE CONTAINER ================= */
+  .post-article {
+    max-width: 1020px;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem 1.5rem;
+  }
+
+  /* ================= TITLE ================= */
   .post-title {
+    font-family: 'Inter', sans-serif;
     font-size: clamp(2.2rem, 4vw, 3.5rem);
     font-weight: 900;
+    color: #111;
+    text-align: center;
     line-height: 1.1;
+    margin: 2.5rem 0 3rem 0;
     letter-spacing: -0.02em;
+  }
+
+  .post-title::after {
+    content: "";
+    display: block;
+    width: 90px;
+    height: 6px;
+    background: linear-gradient(90deg, #958e09, #c9c24d);
+    margin: 1.5rem auto 0;
+    border-radius: 10px;
+  }
+
+  /* ================= CONTENT TYPOGRAPHY ================= */
+  .post-content {
+    font-size: 1.15rem;
+    line-height: 1.9;
+    color: #333;
+  }
+
+  .post-content p {
+    margin-bottom: 1.6rem;
+  }
+
+  .post-content h2,
+  .post-content h3 {
+    font-weight: 800;
+    margin-top: 3rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.3;
   }
 
   .post-content img {
@@ -164,5 +173,17 @@ const imageURL = post.featured_image || "https://duolb.com/default-og.jpg";
     border-radius: 18px;
     margin: 2.5rem 0;
     box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  }
+
+  /* ================= MOBILE ================= */
+  @media (max-width: 768px) {
+    .post-hero img {
+      height: 260px;
+      border-radius: 20px;
+    }
+
+    .post-article {
+      padding: 0 1.2rem 3rem 1.2rem;
+    }
   }
 </style>
