@@ -1,23 +1,16 @@
 ---
 import FeaturedPost from "../components/FeaturedPost.astro";
 import PostCard from "../components/PostCard.astro";
-import Navbar from "../components/navbar.astro";
-import Footer from "../components/Footer.astro";
 import Newsletter from "../components/Newsletter.astro";
+import Footer from "../components/Footer.astro";
 import Layout from "../layouts/Layout.astro";
 import { supabase } from "../lib/supabase";
 
-/* ---------------- UTF-8 REPAIR (NODE 20 COMPATIBLE) ---------------- */
-/**
- * Fixes "Mojibake" characters (like Ã¤) by re-encoding to UTF-8.
- * Native TextDecoder is more reliable in Node 20 environments.
- */
+/* ---------------- UTF-8 REPAIR ---------------- */
 function repairUTF8(str = "") {
   try {
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder("utf-8");
-    return decoder.decode(encoder.encode(str));
-  } catch (e) {
+    return new TextDecoder("utf-8").decode(new TextEncoder().encode(str));
+  } catch {
     return str;
   }
 }
@@ -28,7 +21,6 @@ const { data: posts } = await supabase
   .select("title, slug, featured_image, created_at, description")
   .order("created_at", { ascending: false });
 
-/* ---------------- FIX ENCODING & SAFE FALLBACKS ---------------- */
 const fixedPosts =
   posts?.map((p) => ({
     ...p,
@@ -36,35 +28,40 @@ const fixedPosts =
     description: repairUTF8(p.description),
   })) ?? [];
 
-/* ---------------- SPLIT POSTS ---------------- */
 const featuredPost = fixedPosts[0];
 const otherPosts = fixedPosts.slice(1);
 ---
 
-<Layout title="Beauty Blog | Neueste Trends & Tipps">
+<Layout
+  title="Duolb | High-End Beauty, Akne-Behandlung & Skincare Technologie"
+  description="Duolb ist Deutschlands Beauty Editorial für medizinische Hautpflege, Akne-Behandlung, Laser-Technologien und wissenschaftlich geprüfte High-End Skincare."
+  image="https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png"
+>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <section>
-      {/* FEATURED POST HERO */}
-      {featuredPost && <FeaturedPost post={featuredPost} />}
+    
+    {/* HERO / FEATURED */}
+    {featuredPost && (
+      <section aria-label="Empfohlener Beitrag">
+        <FeaturedPost post={featuredPost} />
+      </section>
+    )}
 
-      {/* RECENT POSTS GRID */}
-      {
-        otherPosts.length > 0 && (
-          <div class="mt-16">
-            <h2 class="text-2xl font-serif text-gray-900 mb-8 border-l-4 border-[#958e09] pl-4">
-              Weitere Beiträge
-            </h2>
+    {/* RECENT POSTS */}
+    {otherPosts.length > 0 && (
+      <section class="mt-16" aria-label="Neueste Beiträge">
+        <h2 class="text-2xl font-serif text-gray-900 mb-8 border-l-4 border-[#958e09] pl-4">
+          Weitere Beiträge
+        </h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {otherPosts.map((post) => (
-                <PostCard post={post} />
-              ))}
-            </div>
-          </div>
-        )
-      }
-    </section>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {otherPosts.map((post) => (
+            <PostCard post={post} />
+          ))}
+        </div>
+      </section>
+    )}
+    
   </main>
 
   <Newsletter />

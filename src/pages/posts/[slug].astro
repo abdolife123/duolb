@@ -3,48 +3,37 @@ import Layout from "../../layouts/Layout.astro";
 import Footer from "../../components/Footer.astro";
 import { supabase } from "../../lib/supabase";
 
-// Set to false for SSR
 export const prerender = false;
 
-/* ---------------- UNIVERSAL SLUG HANDLER ---------------- */
 function normalizeSlug(str = "") {
-  return decodeURIComponent(str)
-    .trim()
-    .toLowerCase(); 
-    // We removed the .replace() that was deleting your underscores!
+  return decodeURIComponent(str).trim().toLowerCase();
 }
 
 const { slug: rawSlug } = Astro.params;
 const decodedSlug = normalizeSlug(rawSlug || "");
 
-/* ---------------- FETCH DATA (WITHOUT STATUS FILTER) ---------------- */
 const { data: post, error } = await supabase
   .from("posts")
-  .select(`*`) 
-  .ilike("slug", decodedSlug) // Case-insensitive exact match
+  .select(`*`)
+  .ilike("slug", decodedSlug)
   .maybeSingle();
 
-/* ---------------- ERROR & 404 ---------------- */
-if (error) {
-  return new Response(`Database Error: ${error.message}`, { status: 500 });
-}
+if (error) return new Response(`Database Error: ${error.message}`, { status: 500 });
+if (!post) return Astro.redirect("/404");
 
-if (!post) {
-  return new Response(
-    `ABSOLUTELY NOT FOUND. 
-     Your browser sent: "${rawSlug}"
-     The code searched for: "${decodedSlug}"
-     
-     If this is still a 404, go to Supabase and make sure the "slug" 
-     column for this post contains exactly: ${decodedSlug}`, 
-    { status: 404 }
-  );
-}
+const pageURL = `https://duolb.com${Astro.url.pathname}`;
 
-const pageURL = new URL(Astro.url.pathname, Astro.site || "https://duolb.com").toString();
+const description =
+  post.description?.slice(0, 155) ||
+  "Expertenanalyse zu moderner Akne-Behandlung, medizinischer Hautpflege und High-End Beauty Technologien.";
 ---
 
-<Layout title={post.title} description={post.description} image={post.featured_image}>
+<Layout
+  title={`${post.title} | Duolb Beauty`}
+  description={description}
+  image={post.featured_image}
+  type="article"
+>
 
   <main class="max-w-4xl mx-auto px-6 lg:px-8 py-12">
     
@@ -53,8 +42,11 @@ const pageURL = new URL(Astro.url.pathname, Astro.site || "https://duolb.com").t
         <img
           src={post.featured_image}
           alt={post.title}
+          width="1200"
+          height="630"
           class="w-full h-auto rounded-2xl shadow-lg"
           loading="eager"
+          fetchpriority="high"
         />
       </div>
     )}
@@ -64,18 +56,13 @@ const pageURL = new URL(Astro.url.pathname, Astro.site || "https://duolb.com").t
         <h1 class="text-4xl md:text-5xl font-black leading-tight">
           {post.title}
         </h1>
-        
+
         <div class="text-sm text-gray-500 mt-6 flex items-center gap-2">
           <span>Duolb Editorial</span>
           <span>•</span>
-          <time>
+          <time datetime={post.created_at}>
             {new Date(post.created_at).toLocaleDateString("de-DE")}
           </time>
-          {post.status !== 'published' && (
-            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs ml-4">
-              Status: {post.status}
-            </span>
-          )}
         </div>
       </header>
 
@@ -85,7 +72,31 @@ const pageURL = new URL(Astro.url.pathname, Astro.site || "https://duolb.com").t
 
   <Footer />
 
+  <!-- Article Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": post.title,
+    "description": description,
+    "image": [post.featured_image],
+    "datePublished": post.created_at,
+    "dateModified": post.updated_at || post.created_at,
+    "author": {
+      "@type": "Organization",
+      "name": "Duolb Redaktion"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Duolb",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795884/Capture_d_%C3%A9cran_2026-01-30_185740_yhkku3.png"
+      }
+    },
+    "mainEntityOfPage": pageURL
+  })} />
 </Layout>
+
 
 <style is:global>
   /* ================= HERO IMAGE ================= */

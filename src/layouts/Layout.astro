@@ -1,7 +1,15 @@
 ---
 import Navbar from "@components/navbar.astro";
 import "../styles/global.css";
-const { title = "Duolb Editorial – Experten für Akne-Behandlung & Beauty" } = Astro.props;
+
+const {
+  title = "Duolb | Profi Akne-Behandlung & High-End Beauty Tech",
+  description = "Duolb ist dein Experte für High-End Hautpflege. Unabhängige Tests zu CO2-Lasern, RF-Microneedling & moderner Akne-Technologie.",
+  image = "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png",
+  type = "website" // use "article" on blog posts
+} = Astro.props;
+
+const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
 ---
 
 <!doctype html>
@@ -9,32 +17,30 @@ const { title = "Duolb Editorial – Experten für Akne-Behandlung & Beauty" } =
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
   <title>{title}</title>
-
-  <meta name="description" content="Duolb ist dein Experte für High-End Hautpflege. Unabhängige Tests zu CO2-Lasern, RF-Microneedling & Akne-Technologie. Wissenschaftlich fundiert & ehrlich." />
-  <meta name="keywords" content="Duolb, Akne Behandlung, CO2 Laser Erfahrung, RF Microneedling Test, Aknenarben entfernen, High-End Beauty Blog, Medical Skincare, Deutschland" />
+  <meta name="description" content={description} />
   <meta name="author" content="Duolb Beauty Redaktion" />
-  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-  <link rel="canonical" href="https://duolb.com/" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="canonical" href={canonicalURL} />
 
   <meta name="theme-color" content="#958e09" />
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="Duolb Beauty Blog" />
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content={type} />
   <meta property="og:locale" content="de_DE" />
-  <meta property="og:title" content="Duolb | Profi Akne-Behandlung & High-End Beauty Tech" />
-  <meta property="og:description" content="Lohnt sich die Investition in Profi-Geräte? Wir testen CO2-Laser und RF-Microneedling auf Herz und Nieren." />
-  <meta property="og:url" content="https://duolb.com/" />
-  <meta property="og:image" content="https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:image" content={image} />
+  <meta property="og:image:alt" content="Duolb Beauty Editorial Vorschau" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Duolb: High-End Skincare & Akne Technologie" />
-  <meta name="twitter:description" content="Wissenschaftliche Tests zu Aknenarben-Behandlungen." />
-  <meta name="twitter:image" content="https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={image} />
 
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GV324GH618"></script>
@@ -59,17 +65,13 @@ const { title = "Duolb Editorial – Experten für Akne-Behandlung & Beauty" } =
   }
   </script>
 
-  <!-- Website Schema -->
+  <!-- WebSite Schema -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Duolb",
-    "url": "https://duolb.com",
-    "publisher": {
-      "@type": "Organization",
-      "name": "Duolb"
-    }
+    "url": "https://duolb.com"
   }
   </script>
 
@@ -80,30 +82,19 @@ const { title = "Duolb Editorial – Experten für Akne-Behandlung & Beauty" } =
     "@type": "Blog",
     "name": "Duolb",
     "url": "https://duolb.com/",
-    "description": "Deutschlands Experten-Blog für medizinische Akne-Behandlung, Laser-Technologie und High-End Skincare.",
-    "inLanguage": "de-DE",
-    "publisher": {
-      "@type": "Organization",
-      "name": "Duolb",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795884/Capture_d_%C3%A9cran_2026-01-30_185740_yhkku3.png"
-      }
-    }
+    "description": "Deutschlands Experten-Blog für medizinische Akne-Behandlung, Laser-Technologie und High-End Skincare."
   }
   </script>
+
   {Astro.url.hostname === 'duolb.pages.dev' && (
-  <>
-    <meta http-equiv="refresh" content={`0; url=https://duolb.com${Astro.url.pathname}`} />
-    <link rel="canonical" href={`https://duolb.com${Astro.url.pathname}`} />
-  </>
-)}
-
-
+    <>
+      <meta http-equiv="refresh" content={`0; url=https://duolb.com${Astro.url.pathname}`} />
+      <link rel="canonical" href={`https://duolb.com${Astro.url.pathname}`} />
+    </>
+  )}
 </head>
 
 <body class="bg-white text-gray-800">
-    
   <Navbar />
   <slot />
 </body>
