@@ -97,5 +97,18 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
 <body class="bg-white text-gray-800">
   <Navbar />
   <slot />
+  <script is:inline>
+  console.log("Tracker running");
+
+  const payload = JSON.stringify({
+    event: "pageview",
+    path: window.location.pathname,
+    referrer: document.referrer,
+    userAgent: navigator.userAgent
+  });
+
+  navigator.sendBeacon("/api/track", payload);
+</script>
+
 </body>
 </html>
