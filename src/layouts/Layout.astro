@@ -1,6 +1,7 @@
 ---
 import Navbar from "@components/navbar.astro";
 import "../styles/global.css";
+import BackToTop from "@components/BackToTop.astro";
 
 const {
   title = "Duolb | Profi Akne-Behandlung & High-End Beauty Tech",
@@ -102,6 +103,7 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
 
   navigator.sendBeacon("/api/track", payload);
 </script>
+ <BackToTop />
 
 </body>
 </html>

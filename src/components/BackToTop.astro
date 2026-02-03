@@ -1,0 +1,63 @@
+---
+const label = "Go to top";
+---
+
+<button id="backToTop" class="back-to-top" aria-label={label} title={label}>
+  ↑
+</button>
+
+<script>
+  const btn = document.getElementById("backToTop");
+
+  const toggle = () => {
+    // يظهر بعد 400px نزول
+    if (window.scrollY > 400) btn.classList.add("show");
+    else btn.classList.remove("show");
+  };
+
+  window.addEventListener("scroll", toggle, { passive: true });
+  toggle();
+
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+</script>
+
+<style>
+  .back-to-top{
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    border: 0;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    line-height: 1;
+
+    /* شكل محترم بدون فلسفة */
+    background: #111;
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(0,0,0,.25);
+
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 9999;
+  }
+
+  .back-to-top.show{
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .back-to-top:focus-visible{
+    outline: 3px solid #7c3aed; /* بنفسجي واضح */
+    outline-offset: 3px;
+  }
+</style>
