@@ -2,7 +2,19 @@
 const label = "Go to top";
 ---
 
-<button id="backToTop" class="back-to-top" aria-label={label} title={label}>
+<button
+  id="backToTop"
+  aria-label={label}
+  title={label}
+  class="back-to-top fixed right-5 bottom-5 z-[9999]
+         w-12 h-12 rounded-full
+         bg-brand-gold text-brand-pure
+         shadow-lg shadow-black/20
+         flex items-center justify-center
+         text-xl font-bold
+         opacity-0 translate-y-2 pointer-events-none
+         transition-all duration-200"
+>
   ↑
 </button>
 
@@ -10,54 +22,34 @@ const label = "Go to top";
   const btn = document.getElementById("backToTop");
 
   const toggle = () => {
-    // يظهر بعد 400px نزول
-    if (window.scrollY > 400) btn.classList.add("show");
-    else btn.classList.remove("show");
+    if (window.scrollY > 400) {
+      btn.classList.add("opacity-100", "translate-y-0", "pointer-events-auto");
+      btn.classList.remove("opacity-0", "translate-y-2", "pointer-events-none");
+    } else {
+      btn.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
+      btn.classList.add("opacity-0", "translate-y-2", "pointer-events-none");
+    }
   };
 
   window.addEventListener("scroll", toggle, { passive: true });
   toggle();
 
   btn.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
   });
 </script>
 
 <style>
-  .back-to-top{
-    position: fixed;
-    right: 18px;
-    bottom: 18px;
-    width: 46px;
-    height: 46px;
-    border-radius: 999px;
-    border: 0;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    font-size: 18px;
-    line-height: 1;
-
-    /* شكل محترم بدون فلسفة */
-    background: #111;
-    color: #fff;
-    box-shadow: 0 10px 25px rgba(0,0,0,.25);
-
-    opacity: 0;
-    transform: translateY(10px);
-    pointer-events: none;
-    transition: opacity .2s ease, transform .2s ease;
-    z-index: 9999;
+  /* تأثير Hover باستخدام ألوان البراند */
+  .back-to-top:hover {
+    background-color: #ffdead; /* brand.cream */
+    color: #958e09; /* brand.gold */
+    transform: translateY(-2px);
   }
 
-  .back-to-top.show{
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  .back-to-top:focus-visible{
-    outline: 3px solid #7c3aed; /* بنفسجي واضح */
+  .back-to-top:focus-visible {
+    outline: 3px solid #ffdead;
     outline-offset: 3px;
   }
 </style>
