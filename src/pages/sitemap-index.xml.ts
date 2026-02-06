@@ -1,5 +1,6 @@
 export async function GET() {
   const urls = [
+    "https://duolb.com/sitemap-blog.xml",
     "https://duolb.com/sitemap-salons.xml",
     "https://duolb.com/sitemap-directory.xml",
     "https://duolb.com/sitemap-city-category.xml",
