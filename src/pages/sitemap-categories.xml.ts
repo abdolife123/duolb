@@ -23,17 +23,17 @@ export async function GET({ request }: { request: Request }) {
   const url = new URL(request.url);
   const debug = url.searchParams.get("debug") === "1";
 
-  const { data: categories, error: categoriesError } = await supabase
-    .from("business_categories")
-    .select("slug, updated_at")
-    .not("slug", "is", null);
+  const { data: salonCategorySlugs, error: categoriesError } = await supabase
+    .from("salons")
+    .select("category_slug, updated_at")
+    .not("category_slug", "is", null);
 
   const { count: categoriesCount, error: countError } = await supabase
-    .from("business_categories")
+    .from("salons")
     .select("*", { count: "exact", head: true });
 
   if (categoriesError) {
-    console.error("sitemap-categories: categories error", categoriesError);
+    console.error("sitemap-categories: salons error", categoriesError);
   }
   if (countError) {
     console.error("sitemap-categories: count error", countError);
@@ -41,17 +41,17 @@ export async function GET({ request }: { request: Request }) {
 
   const seen = new Set<string>();
 
-  const urls = (categories || [])
-    .filter((cat) => {
-      if (!cat?.slug) return false;
-      if (seen.has(cat.slug)) return false;
-      seen.add(cat.slug);
+  const urls = (salonCategorySlugs || [])
+    .filter((row) => {
+      if (!row?.category_slug) return false;
+      if (seen.has(row.category_slug)) return false;
+      seen.add(row.category_slug);
       return true;
     })
-    .map((cat) => `
+    .map((row) => `
     <url>
-      <loc>https://duolb.com/directory/category/${cat.slug}</loc>
-      <lastmod>${cat.updated_at ?? new Date().toISOString()}</lastmod>
+      <loc>https://duolb.com/directory/category/${row.category_slug}</loc>
+      <lastmod>${row.updated_at ?? new Date().toISOString()}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.9</priority>
     </url>

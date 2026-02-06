@@ -23,31 +23,31 @@ export async function GET({ request }: { request: Request }) {
   const url = new URL(request.url);
   const debug = url.searchParams.get("debug") === "1";
 
-  const { data: cities, error: citiesError } = await supabase
-    .from("cities")
-    .select("slug, updated_at")
-    .not("slug", "is", null);
+  const { data: salonCitySlugs, error: citiesError } = await supabase
+    .from("salons")
+    .select("city_slug, updated_at")
+    .not("city_slug", "is", null);
 
   const { count: citiesCount, error: countError } = await supabase
-    .from("cities")
+    .from("salons")
     .select("*", { count: "exact", head: true });
 
-  if (citiesError) console.error("sitemap-cities: cities error", citiesError);
+  if (citiesError) console.error("sitemap-cities: salons error", citiesError);
   if (countError) console.error("sitemap-cities: count error", countError);
 
   const seen = new Set<string>();
 
-  const urls = (cities || [])
-    .filter((city) => {
-      if (!city?.slug) return false;
-      if (seen.has(city.slug)) return false;
-      seen.add(city.slug);
+  const urls = (salonCitySlugs || [])
+    .filter((row) => {
+      if (!row?.city_slug) return false;
+      if (seen.has(row.city_slug)) return false;
+      seen.add(row.city_slug);
       return true;
     })
-    .map((city) => `
+    .map((row) => `
     <url>
-      <loc>https://duolb.com/directory/city/${city.slug}</loc>
-      <lastmod>${city.updated_at ?? new Date().toISOString()}</lastmod>
+      <loc>https://duolb.com/directory/city/${row.city_slug}</loc>
+      <lastmod>${row.updated_at ?? new Date().toISOString()}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.9</priority>
     </url>
