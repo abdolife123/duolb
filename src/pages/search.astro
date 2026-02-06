@@ -1,14 +1,13 @@
----
+﻿---
 import Layout from "../layouts/Layout.astro";
 import PostCard from "../components/PostCard.astro";
-import Navbar from "../components/navbar.astro";
 import Footer from "../components/Footer.astro";
 import { supabase } from "../lib/supabase";
 
-// 1️⃣ Get search term
+// 1. Get search term
 const query = Astro.url.searchParams.get("q")?.trim() || "";
 
-// 2️⃣ Prepare safe posts array
+// 2. Prepare safe posts array
 let posts = [];
 
 if (query.length > 0) {
@@ -22,9 +21,14 @@ if (query.length > 0) {
         console.error("Search error:", error.message);
     }
 
-    // 🔒 ALWAYS force array
+    // ALWAYS force array
     posts = Array.isArray(data) ? data : [];
 }
+
+Astro.response.headers.set(
+    "Cache-Control",
+    "public, max-age=0, s-maxage=120, stale-while-revalidate=600"
+)
 ---
 
 <Layout title={`Suche: ${query} | duolb`}>

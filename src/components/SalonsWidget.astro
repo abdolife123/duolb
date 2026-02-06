@@ -1,0 +1,54 @@
+﻿---
+import { supabase } from "../lib/supabase"
+import SalonImage from "@components/directory/SalonImage.astro"
+const { data: salons } = await supabase
+  .from("salons")
+  .select("salon_name, slug, cover_image, rating_value, rating_count, city_slug")
+  .order("rating_value", { ascending: false })
+  .limit(6)
+---
+
+<section class="py-20 px-6 bg-white rounded-3xl shadow-sm">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="flex items-center justify-between mb-12">
+      <h2 class="text-3xl font-serif text-[#958e09]">
+        Schönheitssalons
+      </h2>
+      <a href="/directory" class="text-sm text-[#958e09] font-semibold hover:underline">
+        Alle ansehen →
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {salons?.map(salon => (
+        <a
+          href={`/salon/${salon.slug}`}
+          class="group bg-[#ffdead]/30 rounded-3xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 border border-transparent hover:border-[#958e09]/40"
+        >
+          <div class="h-52 overflow-hidden">
+            <SalonImage
+              coverImage={salon.cover_image}
+              alt={salon.salon_name}
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2 group-hover:text-[#958e09] transition-colors">
+              {salon.salon_name}
+            </h3>
+
+            <div class="text-sm text-[#958e09] font-medium">
+              ⭐ {salon.rating_value ?? "Neu"} 
+              <span class="text-gray-500 ml-1">
+                ({salon.rating_count ?? 0})
+              </span>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+
+  </div>
+</section>

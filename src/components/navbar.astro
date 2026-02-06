@@ -1,4 +1,4 @@
----
+﻿---
 // Navbar.astro
 ---
 
@@ -36,6 +36,11 @@
           >Startseite</a
         >
         <a
+          href="/directory"
+          class="nav-link text-[13px] uppercase tracking-[0.2em] font-semibold text-gray-600 hover:text-[#958e09]"
+          >Verzeichnis</a
+        >
+        <a
           href="/posts"
           class="nav-link text-[13px] uppercase tracking-[0.2em] font-semibold text-gray-600 hover:text-[#958e09]"
           >Blog</a
@@ -43,7 +48,7 @@
         <a
           href="/about"
           class="nav-link text-[13px] uppercase tracking-[0.2em] font-semibold text-gray-600 hover:text-[#958e09]"
-          >About</a
+          >Über uns</a
         >
           <a
           href="/contact"
@@ -139,3 +144,5 @@
   // For Astro View Transitions
   document.addEventListener("astro:after-swap", initSearch);
 </script>
+
+

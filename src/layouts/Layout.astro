@@ -1,4 +1,4 @@
----
+﻿---
 import Navbar from "@components/navbar.astro";
 import "../styles/global.css";
 import BackToTop from "@components/BackToTop.astro";
@@ -24,8 +24,12 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
   <meta name="author" content="Duolb Beauty Redaktion" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href={canonicalURL} />
+  <link rel="sitemap" href="/sitemap-index.xml" />
 
   <meta name="theme-color" content="#958e09" />
+
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+  <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="Duolb Beauty Blog" />
@@ -107,3 +111,4 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
 
 </body>
 </html>
+

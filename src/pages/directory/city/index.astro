@@ -1,0 +1,89 @@
+---
+import DirectoryLayout from "../../../layouts/DirectoryLayout.astro"
+import { supabase } from "../../../lib/supabase"
+
+const { data: cities } = await supabase
+  .from("cities")
+  .select("name, slug, salon_count")
+  .gt("salon_count", 0)
+  .order("salon_count", { ascending: false })
+  .limit(200)
+
+const title = "Salons nach Stadt – Beauty & Wellness Verzeichnis"
+const description =
+  "Finde die besten Beauty- und Wellness-Salons nach Stadt in Deutschland. Vergleiche Bewertungen, Standorte und Angebote in deiner Nähe."
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+)
+
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  itemListElement: (cities || []).map((city, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: `https://duolb.com/directory/city/${city.slug}`,
+    name: city.name,
+  })),
+}
+---
+
+<head>
+  <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+</head>
+
+<DirectoryLayout
+  title={title}
+  description={description}
+  canonical="https://duolb.com/directory/city"
+>
+  <section class="bg-[#ffdead] py-16 px-6 text-center rounded-3xl mb-12">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-4xl md:text-6xl font-serif text-[#958e09] mb-4">
+        Salons nach Stadt
+      </h1>
+      <p class="text-lg text-[#958e09]/80 mb-2 italic">
+        Entdecke die beliebtesten Städte und finde Salons in deiner Nähe.
+      </p>
+    </div>
+  </section>
+
+  <section class="py-6 px-6">
+    <h2 class="text-2xl md:text-3xl font-serif text-center mb-10 text-[#958e09]">
+      Top Städte in Deutschland
+    </h2>
+
+    {(!cities || cities.length === 0) && (
+      <p class="text-center text-gray-500">Keine Städte gefunden.</p>
+    )}
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {cities?.map((city) => (
+        <a
+          href={`/directory/city/${city.slug}`}
+          class="bg-white p-6 rounded-2xl shadow-sm hover:ring-1 hover:ring-[#958e09] transition-all"
+        >
+          <div class="text-[#958e09] font-semibold">{city.name}</div>
+          <div class="text-sm text-gray-500 mt-1">
+            {city.salon_count ?? 0} Salons
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="py-16 px-6 border-t border-[#ffdead] max-w-5xl mx-auto prose">
+    <h2>Salons für Schönheit & Wellness nach Stadt finden</h2>
+    <p>
+      Wähle eine Stadt, um die besten Salons, Studios und Wellnessanbieter vor Ort
+      zu entdecken. Vergleiche Bewertungen, Leistungen und Standorte, um den
+      passenden Anbieter zu finden.
+    </p>
+    <p>
+      <a href="/directory/category">Alle Kategorien ansehen</a> ·{" "}
+      <a href="/directory">Zum Verzeichnis</a>
+    </p>
+  </section>
+</DirectoryLayout>

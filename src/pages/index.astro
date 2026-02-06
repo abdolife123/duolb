@@ -1,10 +1,11 @@
----
+﻿---
 import FeaturedPost from "../components/FeaturedPost.astro";
 import PostCard from "../components/PostCard.astro";
 import Newsletter from "../components/Newsletter.astro";
 import Footer from "../components/Footer.astro";
 import Layout from "../layouts/Layout.astro";
 import { supabase } from "../lib/supabase";
+import SalonsWidget from "@components/SalonsWidget.astro";
 
 /* ---------------- UTF-8 REPAIR ---------------- */
 function repairUTF8(str = "") {
@@ -30,6 +31,11 @@ const fixedPosts =
 
 const featuredPost = fixedPosts[0];
 const otherPosts = fixedPosts.slice(1);
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+)
 ---
 
 <Layout
@@ -64,11 +70,12 @@ title="Duolb | High-End Skincare, Akne-Behandlung & Laser-Technologie"
     
   </main>
   
-
   <Newsletter />
+  <SalonsWidget />
   <Footer />
 </Layout>
 
 <style>
   /* Base styles handled via Tailwind. Font should be imported in Layout.astro. */
 </style>
+

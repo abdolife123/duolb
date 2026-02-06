@@ -1,4 +1,4 @@
-import rss from '@astrojs/rss';
+﻿import rss from '@astrojs/rss';
 import { supabase } from '../lib/supabase';
 
 export async function GET(context) {
@@ -7,7 +7,7 @@ export async function GET(context) {
 		.select('title, slug, description, created_at')
 		.order('created_at', { ascending: false });
 
-	return rss({
+	const response = rss({
 		title: 'duolb – Beauty Blog',
 		description: 'Beauty, Hautpflege, Trends und ehrliche Produktempfehlungen.',
 		site: context.site,
@@ -18,5 +18,11 @@ export async function GET(context) {
 			link: `/posts/${post.slug}`,
 		})),
 	});
-}
 
+	response.headers.set(
+		'Cache-Control',
+		'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400'
+	);
+
+	return response;
+}

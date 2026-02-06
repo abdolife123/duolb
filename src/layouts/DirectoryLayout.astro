@@ -1,0 +1,81 @@
+---
+const {
+  title = "Beauty & Wellness Directory",
+  description = "",
+  canonical,
+  image = "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png",
+  type = "website",
+} = Astro.props;
+
+import Navbar from "@components/navbar.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+
+const canonicalURL = canonical || `https://duolb.com${Astro.url.pathname}`;
+---
+
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Duolb Beauty Redaktion" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href={canonicalURL} />
+
+    <meta name="theme-color" content="#958e09" />
+
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Duolb Beauty Directory" />
+    <meta property="og:type" content={type} />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:alt" content="Duolb Directory Vorschau" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+
+    <!-- RSS + Sitemap -->
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Duolb RSS Feed" href="/rss.xml" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+
+    {Astro.url.hostname === "duolb.pages.dev" && (
+      <>
+        <meta http-equiv="refresh" content={`0; url=https://duolb.com${Astro.url.pathname}`} />
+        <link rel="canonical" href={`https://duolb.com${Astro.url.pathname}`} />
+      </>
+    )}
+  </head>
+
+  <body class="bg-[#ffdead] text-gray-800 font-['Inter']">
+
+    <!-- ✅ REAL NAVBAR COMPONENT -->
+    <Navbar />
+
+    <!-- 🌸 MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-6 py-10">
+      <slot />
+    </main>
+
+    <!-- ✅ REAL FOOTER COMPONENT -->
+    <Footer />
+
+  </body>
+</html>

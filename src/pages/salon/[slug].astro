@@ -1,0 +1,225 @@
+﻿---
+export const prerender = false;
+
+import DirectoryLayout from "../../layouts/DirectoryLayout.astro"
+import { supabase } from "../../lib/supabase"
+
+const { slug } = Astro.params
+
+const fallbackCover =
+  "https://res.cloudinary.com/daxbch3om/image/upload/v1770339624/7b93947b-000b-4572-beb1-fbcd14924b7b_1_lo30fm.png"
+
+const { data: salon } = await supabase
+  .from("salons")
+  .select("*")
+  .eq("slug", slug)
+  .maybeSingle()
+
+if (!salon) {
+  return Astro.redirect("/directory")
+}
+
+const coverImage =
+  typeof salon.cover_image === "string" && salon.cover_image.trim()
+    ? salon.cover_image
+    : fallbackCover
+
+let city = null
+if (salon.city_id) {
+  const { data } = await supabase
+    .from("cities")
+    .select("name, slug")
+    .eq("id", salon.city_id)
+    .maybeSingle()
+  city = data
+}
+
+let category = null
+if (salon.category_id) {
+  const { data } = await supabase
+    .from("categories")
+    .select("name, slug")
+    .eq("id", salon.category_id)
+    .maybeSingle()
+  category = data
+}
+
+// SEO
+const title = `${salon.salon_name}${city ? ` in ${city.name}` : ""} – ${category?.name || "Salon"}`
+const description =
+  salon.description?.slice(0, 155) ||
+  `${salon.salon_name} in ${city?.name}. Adresse, Bewertungen und Leistungen im Überblick.`
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+)
+
+const salonSchema = {
+  "@context": "https://schema.org",
+  "@type": "BeautySalon",
+  name: salon.salon_name,
+  url: `https://duolb.com/salon/${salon.slug}`,
+  image: coverImage,
+  description,
+  telephone: salon.phone || undefined,
+  address:
+    salon.full_address || salon.postal_code || city?.name
+      ? {
+          "@type": "PostalAddress",
+          streetAddress: salon.full_address || undefined,
+          postalCode: salon.postal_code || undefined,
+          addressLocality: city?.name || undefined,
+          addressCountry: "DE",
+        }
+      : undefined,
+  geo:
+    salon.latitude && salon.longitude
+      ? {
+          "@type": "GeoCoordinates",
+          latitude: salon.latitude,
+          longitude: salon.longitude,
+        }
+      : undefined,
+  aggregateRating:
+    salon.rating_value
+      ? {
+          "@type": "AggregateRating",
+          ratingValue: salon.rating_value,
+          ratingCount: salon.rating_count ?? 0,
+        }
+      : undefined,
+}
+---
+
+<head>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(salonSchema, (key, value) =>
+      value === undefined ? undefined : value
+    )}
+  />
+</head>
+
+<DirectoryLayout
+  title={title}
+  description={description}
+  canonical={`https://duolb.com/salon/${salon.slug}`}
+  image={coverImage}
+>
+
+<section class="max-w-6xl mx-auto px-6 py-16">
+
+  {/* HERO IMAGE */}
+  <div class="rounded-3xl overflow-hidden shadow-xl mb-10">
+    <img
+      src={coverImage}
+      alt={`${salon.salon_name}${city ? ` in ${city.name}` : ""}`}
+      class="w-full h-80 object-cover"
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
+    />
+  </div>
+
+  {/* HEADER */}
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+    <div>
+      <h1 class="text-4xl font-serif text-[#958e09] mb-3">
+        {salon.salon_name}{city ? ` in ${city.name}` : ""}
+      </h1>
+
+      <div class="flex flex-wrap items-center gap-3 text-sm">
+        {category && (
+          <a href={`/directory/city/${city?.slug}/${category.slug}`} class="bg-[#ffdead] px-3 py-1 rounded-full hover:bg-[#958e09] hover:text-white transition">
+            {category.name}
+          </a>
+        )}
+        {salon.rating_value && (
+          <span class="text-[#958e09] font-semibold">
+            ⭐ {salon.rating_value} ({salon.rating_count ?? 0})
+          </span>
+        )}
+        {salon.has_offers && (
+          <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full">
+            Angebote verfügbar
+          </span>
+        )}
+      </div>
+    </div>
+
+    <div class="flex gap-3">
+      {salon.phone && (
+        <a href={`tel:${salon.phone}`} class="bg-[#958e09] text-white px-6 py-3 rounded-xl font-semibold shadow hover:opacity-90">
+          Anrufen
+        </a>
+      )}
+      {salon.website && (
+        <a href={salon.website} target="_blank" rel="noopener" class="border border-[#958e09] text-[#958e09] px-6 py-3 rounded-xl font-semibold hover:bg-[#ffdead]">
+          Website
+        </a>
+      )}
+    </div>
+  </div>
+
+  {/* ADDRESS */}
+  <div class="bg-white rounded-2xl shadow p-6 mb-10 border border-[#ffdead]">
+    <h2 class="text-xl font-semibold text-[#958e09] mb-3">Adresse</h2>
+    <p class="text-gray-700">
+      {salon.full_address}, {salon.postal_code} {city?.name}
+    </p>
+  </div>
+
+  {/* DESCRIPTION */}
+  {salon.description && (
+    <div class="prose max-w-none mb-12">
+      <h2>Über {salon.salon_name}</h2>
+      <p class="whitespace-pre-line">{salon.description}</p>
+    </div>
+  )}
+
+  {/* SERVICES SEO BLOCK */}
+  {category && city && (
+    <div class="prose max-w-none mb-12">
+      <h2>{category.name} in {city.name}</h2>
+      <p>
+        {salon.salon_name} gehört zu den etablierten Anbietern für {category.name} in {city.name}.
+        Kunden schätzen besonders die Qualität der Leistungen, das freundliche Team
+        und die angenehme Atmosphäre vor Ort.
+      </p>
+    </div>
+  )}
+
+  {/* MAP */}
+  {salon.latitude && salon.longitude && (
+    <div class="mb-12">
+      <h2 class="text-2xl font-serif text-[#958e09] mb-4">Standort auf der Karte</h2>
+      <iframe
+        width="100%"
+        height="350"
+        loading="lazy"
+        class="rounded-2xl border"
+        src={`https://www.google.com/maps?q=${salon.latitude},${salon.longitude}&output=embed`}
+      ></iframe>
+    </div>
+  )}
+
+  {/* INTERNAL LINKS */}
+  {city && category && (
+    <div class="mt-16">
+      <h2 class="text-xl font-serif text-[#958e09] mb-4">Mehr {category.name} in {city.name}</h2>
+      <a
+        href={`/directory/city/${city.slug}/${category.slug}`}
+        class="inline-block bg-[#ffdead] px-6 py-3 rounded-xl hover:bg-[#958e09] hover:text-white transition"
+      >
+        Alle {category.name} in {city.name} ansehen
+      </a>
+    </div>
+  )}
+
+</section>
+
+</DirectoryLayout>
+
+
+

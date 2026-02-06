@@ -1,0 +1,117 @@
+﻿---
+import DirectoryLayout from "../../../layouts/DirectoryLayout.astro"
+import SalonImage from "@components/directory/SalonImage.astro"
+import { supabase } from "../../../lib/supabase"
+
+// Generate static pages for each category
+export async function getStaticPaths() {
+  const { data: categories, error } = await supabase
+    .from("business_categories")
+    .select("slug")
+
+  if (error) {
+    console.error(error)
+    return []
+  }
+
+  return categories.map(cat => ({
+    params: { category: cat.slug }
+  }))
+}
+
+const { category } = Astro.params
+
+// Fetch category SEO data
+const { data: categoryData, error: catError } = await supabase
+  .from("business_categories")
+  .select("name, seo_title, seo_description")
+  .eq("slug", category)
+  .maybeSingle()
+
+if (catError) console.error(catError)
+
+// Fetch salons in this category
+const { data: salons, error: salonError } = await supabase
+  .from("salons")
+  .select("salon_name, slug, cover_image, rating_value, rating_count, full_address")
+  .eq("category.slug", category)
+  .order("rating_value", { ascending: false })
+
+if (salonError) console.error(salonError)
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+)
+
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  itemListElement: (salons || []).map((salon, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: `https://duolb.com/salon/${salon.slug}`,
+    name: salon.salon_name,
+  })),
+}
+---
+
+<head>
+  <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+</head>
+
+<DirectoryLayout
+  title={categoryData?.seo_title || `Beste ${categoryData?.name} in Deutschland`}
+  description={categoryData?.seo_description || ""}
+  canonical={`https://duolb.com/directory/category/${category}`}
+>
+
+  {!categoryData ? (
+    <h1 class="text-2xl text-red-500">Kategorie nicht gefunden</h1>
+  ) : (
+    <>
+      <h1 class="text-3xl font-serif text-[#958e09] mb-4">
+        {categoryData.name} in Deutschland
+      </h1>
+
+      <p class="text-gray-600 mb-10 max-w-3xl">
+        Entdecke die besten {categoryData.name} in ganz Deutschland. Vergleiche Bewertungen,
+        Standorte und finde den passenden Anbieter für deine Bedürfnisse.
+      </p>
+
+      {salons && salons.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {salons.map(salon => (
+            <a href={`/salon/${salon.slug}`} class="bg-white rounded-3xl overflow-hidden shadow-md group border border-[#ffdead] hover:shadow-lg transition">
+              <div class="h-48 bg-gray-200 overflow-hidden">
+                <SalonImage
+                  coverImage={salon.cover_image}
+                  alt={salon.salon_name}
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div class="p-5">
+                <div class="text-[#958e09] text-sm mb-1">
+                  ⭐ {salon.rating_value ?? "–"} <span class="text-gray-400 ml-1">({salon.rating_count ?? 0})</span>
+                </div>
+                <h3 class="font-semibold text-lg">{salon.salon_name}</h3>
+                <p class="text-gray-500 text-sm">{salon.full_address}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="text-gray-500 mt-8">Keine Salons in dieser Kategorie gefunden.</p>
+      )}
+
+      <div class="mt-10 text-sm text-gray-500">
+        <a href="/directory/category" class="hover:text-[#958e09]">Alle Kategorien ansehen</a>
+        {" "}·{" "}
+        <a href="/directory/city" class="hover:text-[#958e09]">Alle Städte ansehen</a>
+      </div>
+    </>
+  )}
+
+</DirectoryLayout>
+
+

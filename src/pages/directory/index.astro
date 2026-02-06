@@ -1,0 +1,195 @@
+﻿---
+import DirectoryFilterBar from "@components/directory/DirectoryFilterBar.astro"
+import SalonImage from "@components/directory/SalonImage.astro"
+import DirectoryLayout from "../../layouts/DirectoryLayout.astro"
+import { supabase } from "../../lib/supabase"
+
+const url = new URL(Astro.request.url)
+const citySlug = url.searchParams.get("city")
+const categorySlug = url.searchParams.get("category")
+const rating = url.searchParams.get("rating")
+const hasFilters = citySlug || categorySlug || rating
+
+// Categories
+const { data: categories } = await supabase
+  .from("categories")
+  .select("name, slug")
+  .order("name")
+  .limit(12)
+
+// Cities
+const { data: cities } = await supabase
+  .from("cities")
+  .select("name, slug")
+  .order("salon_count", { ascending: false })
+  .limit(12)
+
+let salons = []
+
+if (hasFilters) {
+  let query = supabase
+    .from("salons")
+    .select("salon_name, slug, cover_image, rating_value, rating_count, full_address")
+
+  if (citySlug) {
+    const { data: city } = await supabase.from("cities").select("id").eq("slug", citySlug).single()
+    if (city) query = query.eq("city_id", city.id)
+  }
+
+  if (categorySlug) {
+    const { data: cat } = await supabase.from("categories").select("id").eq("slug", categorySlug).single()
+    if (cat) query = query.eq("category_id", cat.id)
+  }
+
+  if (rating) query = query.gte("rating_value", Number(rating))
+
+  const { data } = await query.order("rating_value", { ascending: false }).limit(24)
+  salons = data || []
+
+} else {
+  const { data } = await supabase
+    .from("salons")
+    .select("salon_name, slug, cover_image, rating_value, rating_count, full_address")
+    .order("rating_value", { ascending: false })
+    .limit(9)
+
+  salons = data || []
+}
+
+// SEO
+const title = "Beauty & Wellness Verzeichnis Deutschland – Top Salons & Studios finden"
+const description = "Finde die besten Friseure, Kosmetikstudios, Nagelstudios und Wellnessanbieter in ganz Deutschland. Bewertungen, Preise und Standorte vergleichen."
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+)
+
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  itemListElement: (salons || []).map((salon, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: `https://duolb.com/salon/${salon.slug}`,
+    name: salon.salon_name,
+  })),
+}
+---
+
+<head>
+  <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+</head>
+
+<DirectoryLayout
+  title={title}
+  description={description}
+  canonical="https://duolb.com/directory"
+>
+
+  {/* HERO */}
+  <section class="bg-[#ffdead] py-20 px-6 text-center rounded-3xl">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-4xl md:text-6xl font-serif text-[#958e09] mb-6">
+        Deutschlands großes Verzeichnis für Schönheit & Wellness
+      </h1>
+      <p class="text-lg text-[#958e09]/80 mb-10 italic">
+        Finde Friseure, Kosmetikstudios, Massagen, Nagelstudios und mehr in deiner Stadt.
+      </p>
+    </div>
+  </section>
+
+  <DirectoryFilterBar cities={cities} categories={categories} />
+
+  {/* CATEGORY LINKS */}
+  {!hasFilters && (
+    <section class="py-20 px-6">
+      <h2 class="text-3xl font-serif text-center mb-12 text-[#958e09]">
+        Beliebte Schönheitskategorien
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {categories?.map(cat => (
+          <a href={`/directory/category/${cat.slug}`} class="group p-8 bg-white border border-[#ffdead] rounded-3xl shadow-sm hover:shadow-md hover:border-[#958e09] transition-all text-center">
+            <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">✨</div>
+            <span class="font-medium text-gray-700 group-hover:text-[#958e09]">{cat.name}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {/* CITY LINKS */}
+  {!hasFilters && (
+    <section class="bg-[#ffdead]/30 py-20 px-6 rounded-3xl">
+      <h2 class="text-3xl font-serif mb-12 text-center text-[#958e09]">Top Städte</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {cities?.map(city => (
+          <a href={`/directory/city/${city.slug}`} class="bg-white p-6 rounded-2xl shadow-sm hover:ring-1 hover:ring-[#958e09] transition-all">
+            <span class="text-[#958e09] font-semibold">{city.name}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {/* SALON RESULTS */}
+  <section class="py-20 px-6">
+    <h2 class="text-3xl font-serif text-center mb-12 text-[#958e09]">
+      {hasFilters ? "Suchergebnisse" : "Empfohlene Salons"}
+    </h2>
+
+    {salons.length === 0 && hasFilters && (
+      <p class="text-center text-gray-500 mb-10">Keine Salons gefunden.</p>
+    )}
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {salons?.map(salon => (
+        <a href={`/salon/${salon.slug}`} class="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-50 group">
+          <div class="h-48 bg-gray-200 overflow-hidden">
+            <SalonImage
+              coverImage={salon.cover_image}
+              alt={salon.salon_name}
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+          <div class="p-6 text-left">
+            <div class="flex text-[#958e09] mb-2 text-sm">
+              ⭐ {salon.rating_value ?? "–"} <span class="text-gray-400 ml-2">({salon.rating_count ?? 0})</span>
+            </div>
+            <h3 class="text-xl font-bold mb-1">{salon.salon_name}</h3>
+            <p class="text-gray-500 text-sm mb-4">{salon.full_address}</p>
+            <div class="py-3 rounded-xl border border-[#958e09] text-center text-[#958e09] font-semibold group-hover:bg-[#958e09] group-hover:text-white transition-colors">
+              Details ansehen
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  {/* SEO TEXT BLOCK */}
+  {!hasFilters && (
+    <section class="py-20 px-6 border-t border-[#ffdead] max-w-5xl mx-auto prose">
+      <h2>Anbieter für Schönheit & Wellness in Deutschland finden</h2>
+      <p>
+        Unser Verzeichnis hilft dir, schnell und einfach professionelle Anbieter für Schönheit und Wellness in ganz Deutschland zu finden. Ob Friseur, Kosmetikstudio, Massagepraxis oder Nagelstudio – hier kannst du Bewertungen vergleichen, Standorte entdecken und passende Anbieter in deiner Stadt auswählen.
+      </p>
+
+      <h2>Warum dieses Verzeichnis nutzen?</h2>
+      <ul>
+        <li>Große Auswahl an geprüften Salons</li>
+        <li>Bewertungen zur besseren Entscheidung</li>
+        <li>Standorte in vielen deutschen Städten</li>
+        <li>Schnelle Suche nach Kategorie oder Stadt</li>
+      </ul>
+
+      <p>
+        <a href="/directory/city">Alle Städte ansehen</a> ·{" "}
+        <a href="/directory/category">Alle Kategorien ansehen</a>
+      </p>
+    </section>
+  )}
+
+</DirectoryLayout>
+
+

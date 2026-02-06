@@ -1,4 +1,4 @@
-﻿export async function GET() {
+export async function GET() {
   const urls = [
     "https://duolb.com/sitemap-salons.xml",
     "https://duolb.com/sitemap-directory.xml",

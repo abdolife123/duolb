@@ -1,0 +1,28 @@
+---
+const {
+  coverImage,
+  alt,
+  class: className = "",
+  loading = "lazy",
+  decoding = "async",
+  fetchpriority,
+  ...rest
+} = Astro.props
+
+const fallbackCover =
+  "https://res.cloudinary.com/daxbch3om/image/upload/v1770339624/7b93947b-000b-4572-beb1-fbcd14924b7b_1_lo30fm.png"
+
+const resolvedCover =
+  typeof coverImage === "string" && coverImage.trim() ? coverImage : fallbackCover
+---
+
+<img
+  src={resolvedCover}
+  alt={alt}
+  class={className}
+  loading={loading}
+  decoding={decoding}
+  fetchpriority={fetchpriority}
+  onerror={`this.onerror=null;this.src='${fallbackCover}';`}
+  {...rest}
+/>

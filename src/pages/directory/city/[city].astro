@@ -1,0 +1,159 @@
+﻿---
+import DirectoryLayout from "../../../layouts/DirectoryLayout.astro"
+import SalonImage from "@components/directory/SalonImage.astro"
+import { supabase } from "../../../lib/supabase"
+
+export async function getStaticPaths() {
+  const { data: cities } = await supabase.from("cities").select("slug")
+  return (cities || []).map(city => ({
+    params: { city: city.slug }
+  }))
+}
+
+const { city } = Astro.params
+
+// Fetch city
+const { data: cityData } = await supabase
+  .from("cities")
+  .select("id, name, slug, seo_title, seo_description")
+  .eq("slug", city)
+  .single()
+
+if (!cityData) {
+  return Astro.redirect("/404")
+}
+
+// Fetch salons
+const { data: salons } = await supabase
+  .from("salons")
+  .select("salon_name, slug, rating_value, rating_count, cover_image, category_id")
+  .eq("city_id", cityData.id)
+  .order("rating_value", { ascending: false })
+  .limit(60)
+
+// Fetch categories for internal linking
+const { data: categories } = await supabase
+  .from("categories")
+  .select("id, name, slug")
+
+// SEO
+const title =
+  cityData.seo_title ||
+  `Die besten Salons in ${cityData.name} – Bewertungen, Preise & Adressen`
+
+const description =
+  cityData.seo_description ||
+  `Finde die besten Friseure, Kosmetikstudios und Wellness Salons in ${cityData.name}. Vergleiche Bewertungen, Preise und Leistungen.`
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+)
+
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  itemListElement: (salons || []).map((salon, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: `https://duolb.com/salon/${salon.slug}`,
+    name: salon.salon_name,
+  })),
+}
+---
+
+<head>
+  <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+</head>
+
+<DirectoryLayout
+  title={title}
+  description={description}
+  canonical={`https://duolb.com/directory/city/${cityData.slug}`}
+>
+
+<section class="max-w-6xl mx-auto px-6 py-16">
+
+  <h1 class="text-4xl font-serif text-[#958e09] mb-6">
+    Die besten Salons in {cityData.name}
+  </h1>
+
+  <p class="text-gray-700 max-w-3xl mb-12">
+    {description}
+  </p>
+
+  {/* Salon Grid */}
+  {(!salons || salons.length === 0) && (
+    <p class="text-gray-500">Keine Salons gefunden.</p>
+  )}
+
+  <div class="grid md:grid-cols-3 gap-8">
+    {salons?.map(salon => (
+      <a href={`/salon/${salon.slug}`} class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
+        <SalonImage
+          coverImage={salon.cover_image}
+          alt={`${salon.salon_name} in ${cityData.name}`}
+          class="h-48 w-full object-cover"
+        />
+        <div class="p-5">
+          <h3 class="font-semibold text-lg mb-1">{salon.salon_name}</h3>
+          <div class="text-[#958e09] text-sm">
+            ⭐ {salon.rating_value ?? "–"} ({salon.rating_count ?? 0})
+          </div>
+        </div>
+      </a>
+    ))}
+  </div>
+
+  {/* Category Internal Links */}
+  <section class="mt-20">
+    <h2 class="text-2xl font-serif text-[#958e09] mb-6">
+      Beliebte Kategorien in {cityData.name}
+    </h2>
+    <div class="flex flex-wrap gap-3">
+      {categories?.map(cat => (
+        <a
+          href={`/directory/city/${cityData.slug}/${cat.slug}`}
+          class="px-4 py-2 bg-[#ffdead] rounded-full text-sm hover:bg-[#958e09] hover:text-white transition"
+        >
+          {cat.name} in {cityData.name}
+        </a>
+      ))}
+    </div>
+  </section>
+
+  {/* SEO Content */}
+  <section class="mt-20 prose max-w-none">
+    <h2>Warum einen Salon in {cityData.name} wählen?</h2>
+    <p>
+      In {cityData.name} findest du eine große Auswahl an professionellen Salons,
+      die moderne Techniken, hochwertige Produkte und individuelle Beratung anbieten.
+      Egal ob Friseur, Kosmetikstudio oder Wellnessanbieter –
+      hier findest du den passenden Service.
+    </p>
+
+    <h2>Preise für Salons in {cityData.name}</h2>
+    <p>
+      Die Preise variieren je nach Lage, Erfahrung und Leistungsangebot.
+      Ein Vergleich der Anbieter in {cityData.name} hilft, die beste Wahl zu treffen.
+    </p>
+
+    <h2>Tipps zur Auswahl</h2>
+    <ul>
+      <li>Bewertungen und Erfahrungsberichte lesen</li>
+      <li>Auf Spezialisierungen achten</li>
+      <li>Standort und Erreichbarkeit prüfen</li>
+      <li>Preis-Leistungs-Verhältnis vergleichen</li>
+    </ul>
+
+    <p>
+      <a href="/directory/city">Alle Städte ansehen</a> ·{" "}
+      <a href="/directory/category">Alle Kategorien ansehen</a>
+    </p>
+  </section>
+
+</section>
+
+</DirectoryLayout>
+
+

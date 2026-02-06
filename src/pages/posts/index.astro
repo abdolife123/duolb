@@ -1,5 +1,4 @@
----
-import BaseHead from "../../components/BaseHead.astro";
+﻿---
 import Footer from "../../components/Footer.astro";
 import Navbar from "../../components/navbar.astro";
 import Layout from "../../layouts/Layout.astro";
@@ -26,6 +25,11 @@ const posts =
     ...p,
     title: fixText(p.title),
   })) || [];
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+)
 ---
 
 <Layout title="Archiv | duolb Beauty Blog">
@@ -108,3 +112,5 @@ const posts =
     font-family: "Cormorant Garamond", serif;
   }
 </style>
+
+

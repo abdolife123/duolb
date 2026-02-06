@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from "../../layouts/Layout.astro";
 import Footer from "../../components/Footer.astro";
 import { supabase } from "../../lib/supabase";
@@ -26,6 +26,11 @@ const pageURL = `https://duolb.com${Astro.url.pathname}`;
 const description =
   post.description?.slice(0, 155) ||
   "Expertenanalyse zu moderner Akne-Behandlung, medizinischer Hautpflege und High-End Beauty Technologien.";
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+)
 ---
 
 <Layout
@@ -58,7 +63,7 @@ const description =
         </h1>
 
         <div class="text-sm text-gray-500 mt-6 flex items-center gap-2">
-          <span>Duolb Editorial</span>
+          <span>Duolb Redaktion</span>
           <span>•</span>
           <time datetime={post.created_at}>
             {new Date(post.created_at).toLocaleDateString("de-DE")}
@@ -198,3 +203,4 @@ const description =
     }
   }
 </style>
+

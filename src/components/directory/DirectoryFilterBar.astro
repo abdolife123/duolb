@@ -1,0 +1,68 @@
+---
+const { cities = [], categories = [] } = Astro.props;
+
+const url = new URL(Astro.request.url);
+
+const selectedCity = url.searchParams.get("city") || "";
+const selectedCategory = url.searchParams.get("category") || "";
+const selectedRating = url.searchParams.get("rating") || "";
+---
+
+<div class="bg-[#ffdead]/40 border border-[#958e09]/20 rounded-xl p-4 mb-8">
+  <form method="GET" class="grid gap-4 md:grid-cols-4 items-end">
+
+    <!-- City Filter -->
+    <div class="flex flex-col">
+      <label class="text-sm font-semibold mb-1">Stadt</label>
+      <select name="city" class="border rounded-lg px-3 py-2 bg-white">
+        <option value="">Alle Städte</option>
+        {cities.map(city => (
+          <option value={city.slug} selected={city.slug === selectedCity}>
+            {city.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="flex flex-col">
+      <label class="text-sm font-semibold mb-1">Kategorie</label>
+      <select name="category" class="border rounded-lg px-3 py-2 bg-white">
+        <option value="">Alle Kategorien</option>
+        {categories.map(cat => (
+          <option value={cat.slug} selected={cat.slug === selectedCategory}>
+            {cat.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <!-- Rating Filter -->
+    <div class="flex flex-col">
+      <label class="text-sm font-semibold mb-1">Mindestbewertung</label>
+      <select name="rating" class="border rounded-lg px-3 py-2 bg-white">
+        <option value="">Beliebige Bewertung</option>
+        <option value="4" selected={selectedRating === "4"}>4★ und höher</option>
+        <option value="3" selected={selectedRating === "3"}>3★ und höher</option>
+      </select>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex gap-2">
+      <button
+        type="submit"
+        class="bg-[#958e09] text-white px-4 py-2 rounded-lg hover:opacity-90 w-full"
+      >
+        Anwenden
+      </button>
+
+      <a
+        href={Astro.url.pathname}
+        class="border border-gray-300 px-4 py-2 rounded-lg text-center w-full hover:bg-gray-50"
+      >
+        Zurücksetzen
+      </a>
+    </div>
+
+  </form>
+</div>
