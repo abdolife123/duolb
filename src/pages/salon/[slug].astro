@@ -24,6 +24,11 @@ const coverImage =
     ? salon.cover_image
     : fallbackCover
 
+const phoneLink =
+  typeof salon.phone === "string"
+    ? salon.phone.replace(/[^\d+]/g, "")
+    : ""
+
 let city = null
 if (salon.city_id) {
   const { data } = await supabase
@@ -149,8 +154,8 @@ const salonSchema = {
     </div>
 
     <div class="flex gap-3">
-      {salon.phone && (
-        <a href={`tel:${salon.phone}`} class="bg-[#958e09] text-white px-6 py-3 rounded-xl font-semibold shadow hover:opacity-90">
+      {phoneLink && (
+        <a href={`tel:${phoneLink}`} class="bg-[#958e09] text-white px-6 py-3 rounded-xl font-semibold shadow hover:opacity-90">
           Anrufen
         </a>
       )}
