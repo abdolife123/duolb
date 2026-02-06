@@ -1,7 +1,7 @@
 import { supabase } from "../lib/supabase";
 
 export async function GET() {
-  const base = "https://duolb.de";
+  const base = "https://duolb.com";
 
   const [{ data: cities }, { data: categories }, { data: salons }] = await Promise.all([
     supabase.from("cities").select("slug, updated_at"),
