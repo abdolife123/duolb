@@ -21,13 +21,26 @@ export async function GET() {
   }
 
   const { data: categories } = await supabase
-    .from("categories")
-    .select("slug, updated_at");
+    .from("business_categories")
+    .select("slug, updated_at")
+    .not("slug", "is", null);
+
+  const { data: salonCategorySlugs } = await supabase
+    .from("salons")
+    .select("category_slug")
+    .not("category_slug", "is", null);
 
   const seen = new Set<string>();
+  const validCategorySlugs = new Set(
+    (salonCategorySlugs || [])
+      .map((row) => row.category_slug)
+      .filter(Boolean)
+  );
+
   const urls = (categories || [])
     .filter((cat) => {
       if (!cat?.slug) return false;
+      if (!validCategorySlugs.has(cat.slug)) return false;
       if (seen.has(cat.slug)) return false;
       seen.add(cat.slug);
       return true;

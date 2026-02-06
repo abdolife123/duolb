@@ -22,12 +22,23 @@ export async function GET() {
 
   const { data: cities } = await supabase
     .from("cities")
-    .select("slug, updated_at");
+    .select("slug, updated_at")
+    .not("slug", "is", null);
+
+  const { data: salonCitySlugs } = await supabase
+    .from("salons")
+    .select("city_slug")
+    .not("city_slug", "is", null);
 
   const seen = new Set<string>();
+  const validCitySlugs = new Set(
+    (salonCitySlugs || []).map((row) => row.city_slug).filter(Boolean)
+  );
+
   const urls = (cities || [])
     .filter((city) => {
       if (!city?.slug) return false;
+      if (!validCitySlugs.has(city.slug)) return false;
       if (seen.has(city.slug)) return false;
       seen.add(city.slug);
       return true;

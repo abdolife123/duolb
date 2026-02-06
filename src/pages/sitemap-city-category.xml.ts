@@ -20,28 +20,43 @@ export async function GET() {
     return new Response("Supabase env missing", { status: 500 });
   }
 
-  const [{ data: cities }, { data: categories }] = await Promise.all([
-    supabase.from("cities").select("slug"),
-    supabase.from("categories").select("slug")
-  ]);
+  const [{ data: cities }, { data: categories }, { data: salons }] =
+    await Promise.all([
+      supabase.from("cities").select("slug"),
+      supabase.from("business_categories").select("slug"),
+      supabase
+        .from("salons")
+        .select("city_slug, category_slug")
+        .not("city_slug", "is", null)
+        .not("category_slug", "is", null),
+    ]);
 
   let urls = "";
   const seen = new Set<string>();
+  const citySet = new Set((cities || []).map((c) => c.slug).filter(Boolean));
+  const categorySet = new Set(
+    (categories || []).map((c) => c.slug).filter(Boolean)
+  );
+  const salonPairs = new Set(
+    (salons || [])
+      .map((s) => `${s.city_slug}/${s.category_slug}`)
+      .filter((key) => {
+        const [citySlug, categorySlug] = key.split("/");
+        return citySet.has(citySlug) && categorySet.has(categorySlug);
+      })
+  );
 
-  for (const city of cities || []) {
-    for (const cat of categories || []) {
-      if (!city?.slug || !cat?.slug) continue;
-      const key = `${city.slug}/${cat.slug}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      urls += `
+  for (const key of salonPairs) {
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const [citySlug, categorySlug] = key.split("/");
+    urls += `
     <url>
-      <loc>https://duolb.com/directory/city/${city.slug}/${cat.slug}</loc>
+      <loc>https://duolb.com/directory/city/${citySlug}/${categorySlug}</loc>
       <changefreq>weekly</changefreq>
       <priority>0.7</priority>
     </url>
   `;
-    }
   }
 
   return new Response(
