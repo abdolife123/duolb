@@ -5,16 +5,20 @@ import { createClient } from "@supabase/supabase-js";
 // Configuration
 // ============================================================================
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl =
+  import.meta.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey =
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
+  import.meta.env.SUPABASE_ANON_KEY ||
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 const OWNER_SECRET = import.meta.env.OWNER_SECRET || "my_owner_key_9f3c7a1b";
 
-// Validate environment variables
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error("Supabase environment variables missing");
+function getSupabaseClient() {
+  if (!supabaseUrl || !supabaseKey) return null;
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+  });
 }
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ============================================================================
 // Types
@@ -302,6 +306,12 @@ export const POST: APIRoute = async ({ request }) => {
     // ========================================================================
     // Store in database
     // ========================================================================
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      console.error("Supabase environment variables missing");
+      return new Response("Server misconfigured", { status: 500 });
+    }
+
     const { error } = await supabase.from("analytics_events").insert(eventData);
 
     if (error) {
