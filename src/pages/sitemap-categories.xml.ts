@@ -14,16 +14,30 @@ function getSupabaseClient() {
   });
 }
 
-export async function GET() {
+export async function GET({ request }: { request: Request }) {
   const supabase = getSupabaseClient();
   if (!supabase) {
     return new Response("Supabase env missing", { status: 500 });
   }
 
-  const { data: categories } = await supabase
+  const url = new URL(request.url);
+  const debug = url.searchParams.get("debug") === "1";
+
+  const { data: categories, error: categoriesError } = await supabase
     .from("business_categories")
     .select("slug, updated_at")
     .not("slug", "is", null);
+
+  const { count: categoriesCount, error: countError } = await supabase
+    .from("business_categories")
+    .select("*", { count: "exact", head: true });
+
+  if (categoriesError) {
+    console.error("sitemap-categories: categories error", categoriesError);
+  }
+  if (countError) {
+    console.error("sitemap-categories: count error", countError);
+  }
 
   const seen = new Set<string>();
 
@@ -44,14 +58,18 @@ export async function GET() {
   `)
     .join("");
 
+  const debugComment = debug
+    ? `\n<!-- debug: categoriesCount=${categoriesCount ?? "null"} rows=${(categories || [])
+        .length} -->\n`
+    : "\n";
+
   return new Response(
-    `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    `<?xml version="1.0" encoding="UTF-8"?>${debugComment}<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
 </urlset>`,
     {
-    headers: {
-      "Content-Type": "application/xml",
+      headers: {
+        "Content-Type": "application/xml",
       "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
     }
     }
