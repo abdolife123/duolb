@@ -30,7 +30,7 @@ const fixedPosts =
   })) ?? [];
 
 const featuredPost = fixedPosts[0];
-const otherPosts = fixedPosts.slice(1);
+const otherPosts = fixedPosts.slice(1, 7);
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -64,6 +64,16 @@ title="Duolb | High-End Skincare, Akne-Behandlung & Laser-Technologie"
           {otherPosts.map((post) => (
             <PostCard post={post} />
           ))}
+        </div>
+
+        <div class="mt-10 flex justify-center">
+          <a
+            href="/posts"
+            class="inline-flex items-center gap-3 text-sm font-semibold uppercase tracking-widest text-[#958e09] hover:text-[#7e7708]"
+          >
+            Alle Beiträge ansehen
+            <span aria-hidden="true">→</span>
+          </a>
         </div>
       </section>
     )}
