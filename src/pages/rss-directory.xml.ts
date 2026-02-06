@@ -25,7 +25,7 @@ export async function GET() {
       const link = `https://duolb.com/salon/${salon.slug}`;
       const address = (salon.full_address ?? "").trim();
       const description = escapeXml(
-        `${address ? `${address} – ` : ""}Beauty & Wellness Salon in Germany`
+        `${address ? `${address} - ` : ""}Beauty & Wellness Salon in Germany`
       );
       const rawDate = salon.updated_at || salon.created_at || new Date().toISOString();
       const pubDate = new Date(rawDate).toUTCString();
@@ -44,9 +44,9 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Duolb Beauty & Wellness Salons</title>
+    <title>${escapeXml("Duolb Beauty & Wellness Salons")}</title>
     <link>https://duolb.com/directory</link>
-    <description>Latest beauty and wellness salons across Germany.</description>
+    <description>${escapeXml("Latest beauty and wellness salons across Germany.")}</description>
     ${items}
   </channel>
 </rss>`;

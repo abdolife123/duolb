@@ -7,11 +7,13 @@ export async function GET(context) {
 		.select('title, slug, description, created_at')
 		.order('created_at', { ascending: false });
 
+	const site = context.site ?? 'https://duolb.com';
+
 	const response = rss({
 		title: 'duolb – Beauty Blog',
 		description: 'Beauty, Hautpflege, Trends und ehrliche Produktempfehlungen.',
-		site: context.site,
-		items: posts.map(post => ({
+		site,
+		items: (posts ?? []).map(post => ({
 			title: post.title,
 			description: post.description || '',
 			pubDate: new Date(post.created_at),
