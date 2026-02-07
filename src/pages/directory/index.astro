@@ -12,10 +12,10 @@ const hasFilters = citySlug || categorySlug || rating
 
 // Categories
 const { data: categories } = await supabase
-  .from("categories")
+  .from("business_categories")
   .select("name, slug")
   .order("name")
-  .limit(12)
+  .limit(11)
 
 // Cities
 const { data: cities } = await supabase
@@ -37,7 +37,11 @@ if (hasFilters) {
   }
 
   if (categorySlug) {
-    const { data: cat } = await supabase.from("categories").select("id").eq("slug", categorySlug).single()
+    const { data: cat } = await supabase
+      .from("business_categories")
+      .select("id")
+      .eq("slug", categorySlug)
+      .single()
     if (cat) query = query.eq("category_id", cat.id)
   }
 
@@ -64,6 +68,7 @@ Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
 )
+Astro.response.headers.set("Content-Type", "text/html; charset=utf-8")
 
 const itemListSchema = {
   "@context": "https://schema.org",
@@ -104,16 +109,45 @@ const itemListSchema = {
   {/* CATEGORY LINKS */}
   {!hasFilters && (
     <section class="py-20 px-6">
-      <h2 class="text-3xl font-serif text-center mb-12 text-[#958e09]">
-        Beliebte Schönheitskategorien
-      </h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {categories?.map(cat => (
-          <a href={`/directory/category/${cat.slug}`} class="group p-8 bg-white border border-[#ffdead] rounded-3xl shadow-sm hover:shadow-md hover:border-[#958e09] transition-all text-center">
-            <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">✨</div>
-            <span class="font-medium text-gray-700 group-hover:text-[#958e09]">{cat.name}</span>
+      <div class="max-w-5xl mx-auto text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-serif text-[#958e09]">
+          Beliebte Schönheitskategorien
+        </h2>
+        <p class="text-[#958e09]/70 mt-3">
+          11 handverlesene Kategorien, um schneller die passenden Salons zu finden.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {categories?.map((cat, index) => (
+          <a
+            href={`/directory/category/${cat.slug}`}
+            class="group relative overflow-hidden rounded-3xl border border-[#ffdead] bg-white p-7 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+            style={`background: linear-gradient(135deg, rgba(255,222,173,0.35), rgba(255,255,255,0.95));`}
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs tracking-[0.2em] text-[#958e09]/70">TOP {index + 1}</span>
+              <span class="text-2xl">✨</span>
+            </div>
+            <h3 class="mt-4 text-xl font-semibold text-gray-800 group-hover:text-[#958e09]">
+              {cat.name}
+            </h3>
+            <p class="mt-2 text-sm text-gray-500">
+              Entdecke die besten Anbieter in dieser Kategorie.
+            </p>
+            <div class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#958e09]">
+              Kategorie ansehen
+              <span class="text-base transition-transform group-hover:translate-x-1">→</span>
+            </div>
           </a>
         ))}
+      </div>
+      <div class="mt-10 text-center">
+        <a
+          href="/directory/category"
+          class="inline-flex items-center gap-2 rounded-full border border-[#958e09] px-6 py-2 text-sm font-semibold text-[#958e09] transition-colors hover:bg-[#958e09] hover:text-white"
+        >
+          Alle Kategorien ansehen
+        </a>
       </div>
     </section>
   )}

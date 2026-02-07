@@ -21,10 +21,10 @@ export async function getStaticPaths() {
 
 const { category } = Astro.params
 
-// Fetch category SEO data
+// Fetch category SEO data + id for salon lookup
 const { data: categoryData, error: catError } = await supabase
   .from("business_categories")
-  .select("name, seo_title, seo_description")
+  .select("id, name, seo_title, seo_description")
   .eq("slug", category)
   .maybeSingle()
 
@@ -34,7 +34,7 @@ if (catError) console.error(catError)
 const { data: salons, error: salonError } = await supabase
   .from("salons")
   .select("salon_name, slug, cover_image, rating_value, rating_count, full_address")
-  .eq("category.slug", category)
+  .eq("category_id", categoryData?.id ?? -1)
   .order("rating_value", { ascending: false })
 
 if (salonError) console.error(salonError)

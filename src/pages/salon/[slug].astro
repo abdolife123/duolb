@@ -113,10 +113,10 @@ const salonSchema = {
   image={coverImage}
 >
 
-<section class="max-w-6xl mx-auto px-6 py-16">
+<section class="max-w-6xl mx-auto px-6 py-14 text-slate-800">
 
   {/* HERO IMAGE */}
-  <div class="rounded-3xl overflow-hidden shadow-xl mb-10">
+  <div class="rounded-3xl overflow-hidden shadow-xl ring-1 ring-slate-200 mb-10">
     <img
       src={coverImage}
       alt={`${salon.salon_name}${city ? ` in ${city.name}` : ""}`}
@@ -128,39 +128,43 @@ const salonSchema = {
   </div>
 
   {/* HEADER */}
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+  <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-10">
     <div>
-      <h1 class="text-4xl font-serif text-[#958e09] mb-3">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-3 leading-tight">
         {salon.salon_name}{city ? ` in ${city.name}` : ""}
       </h1>
 
+      <p class="text-base md:text-lg text-slate-600 max-w-3xl mb-4">
+        Entdecke Leistungen, Standort und Kontaktdaten auf einen Blick.
+      </p>
+
       <div class="flex flex-wrap items-center gap-3 text-sm">
         {category && (
-          <a href={`/directory/city/${city?.slug}/${category.slug}`} class="bg-[#ffdead] px-3 py-1 rounded-full hover:bg-[#958e09] hover:text-white transition">
+          <a href={`/directory/city/${city?.slug}/${category.slug}`} class="bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1 rounded-full hover:bg-amber-100 transition">
             {category.name}
           </a>
         )}
         {salon.rating_value && (
-          <span class="text-[#958e09] font-semibold">
+          <span class="text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
             ⭐ {salon.rating_value} ({salon.rating_count ?? 0})
           </span>
         )}
         {salon.has_offers && (
-          <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full">
+          <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
             Angebote verfügbar
           </span>
         )}
       </div>
     </div>
 
-    <div class="flex gap-3">
+    <div class="flex flex-wrap gap-3 md:justify-end">
       {phoneLink && (
-        <a href={`tel:${phoneLink}`} class="bg-[#958e09] text-white px-6 py-3 rounded-xl font-semibold shadow hover:opacity-90">
+        <a href={`tel:${phoneLink}`} class="bg-slate-900 text-white px-6 py-3 rounded-xl font-semibold shadow-sm hover:bg-slate-800 transition">
           Anrufen
         </a>
       )}
       {salon.website && (
-        <a href={salon.website} target="_blank" rel="noopener" class="border border-[#958e09] text-[#958e09] px-6 py-3 rounded-xl font-semibold hover:bg-[#ffdead]">
+        <a href={salon.website} target="_blank" rel="noopener" class="border border-slate-300 text-slate-700 bg-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition">
           Website
         </a>
       )}
@@ -168,28 +172,28 @@ const salonSchema = {
   </div>
 
   {/* ADDRESS */}
-  <div class="bg-white rounded-2xl shadow p-6 mb-10 border border-[#ffdead]">
-    <h2 class="text-xl font-semibold text-[#958e09] mb-3">Adresse</h2>
-    <p class="text-gray-700">
+  <div class="bg-white rounded-2xl shadow-sm p-6 mb-10 border border-slate-200">
+    <h2 class="text-xl font-semibold text-slate-900 mb-3">Adresse</h2>
+    <p class="text-slate-700 leading-relaxed">
       {salon.full_address}, {salon.postal_code} {city?.name}
     </p>
   </div>
 
   {/* DESCRIPTION */}
   {salon.description && (
-    <div class="prose max-w-none mb-12">
-      <h2>Über {salon.salon_name}</h2>
-      <p class="whitespace-pre-line">{salon.description}</p>
+    <div class="prose prose-slate max-w-none mb-12">
+      <h2 class="!text-slate-900">Über {salon.salon_name}</h2>
+      <p class="whitespace-pre-line !leading-relaxed">{salon.description}</p>
     </div>
   )}
 
   {/* SERVICES SEO BLOCK */}
   {category && city && (
-    <div class="prose max-w-none mb-12">
-      <h2>{category.name} in {city.name}</h2>
+    <div class="prose prose-slate max-w-none mb-12">
+      <h2 class="!text-slate-900">{category.name} in {city.name}</h2>
       <p>
         {salon.salon_name} gehört zu den etablierten Anbietern für {category.name} in {city.name}.
-        Kunden schätzen besonders die Qualität der Leistungen, das freundliche Team
+        Besucher schätzen vor allem die Qualität der Leistungen, das freundliche Team
         und die angenehme Atmosphäre vor Ort.
       </p>
     </div>
@@ -198,12 +202,12 @@ const salonSchema = {
   {/* MAP */}
   {salon.latitude && salon.longitude && (
     <div class="mb-12">
-      <h2 class="text-2xl font-serif text-[#958e09] mb-4">Standort auf der Karte</h2>
+      <h2 class="text-2xl font-semibold text-slate-900 mb-4">Standort auf der Karte</h2>
       <iframe
         width="100%"
         height="350"
         loading="lazy"
-        class="rounded-2xl border"
+        class="rounded-2xl border border-slate-200"
         src={`https://www.google.com/maps?q=${salon.latitude},${salon.longitude}&output=embed`}
       ></iframe>
     </div>
@@ -212,12 +216,12 @@ const salonSchema = {
   {/* INTERNAL LINKS */}
   {city && category && (
     <div class="mt-16">
-      <h2 class="text-xl font-serif text-[#958e09] mb-4">Mehr {category.name} in {city.name}</h2>
+      <h2 class="text-xl font-semibold text-slate-900 mb-4">Mehr {category.name} in {city.name}</h2>
       <a
         href={`/directory/city/${city.slug}/${category.slug}`}
-        class="inline-block bg-[#ffdead] px-6 py-3 rounded-xl hover:bg-[#958e09] hover:text-white transition"
+        class="inline-block bg-amber-50 text-amber-900 border border-amber-200 px-6 py-3 rounded-xl hover:bg-amber-100 transition"
       >
-        Alle {category.name} in {city.name} ansehen
+        Alle {category.name} in {city.name} anzeigen
       </a>
     </div>
   )}

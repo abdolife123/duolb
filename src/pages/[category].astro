@@ -1,0 +1,74 @@
+---
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl =
+  import.meta.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey =
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
+  import.meta.env.SUPABASE_ANON_KEY ||
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+function getSupabaseClient() {
+  if (!supabaseUrl || !supabaseKey) return null;
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+  });
+}
+
+const reservedSlugs = new Set([
+  "about",
+  "contact",
+  "datenschutz",
+  "impressum",
+  "search",
+  "directory",
+  "posts",
+  "salon",
+  "autor",
+  "api",
+  "rss",
+  "rss-categories",
+  "rss-cities",
+  "rss-city-category",
+  "rss-directory",
+  "sitemap",
+  "sitemap-index",
+  "sitemap-blog",
+  "sitemap-salons",
+  "sitemap-directory",
+  "sitemap-city-category",
+  "sitemap-cities",
+  "sitemap-categories",
+  "robots",
+]);
+
+export async function getStaticPaths() {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  const { data: categories, error } = await supabase
+    .from("business_categories")
+    .select("slug");
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return (categories || [])
+    .filter((category) => category?.slug && !reservedSlugs.has(category.slug))
+    .map((category) => ({
+      params: { category: category.slug },
+    }));
+}
+
+const { category } = Astro.params;
+const destination = `/directory/category/${category}`;
+
+Astro.response.status = 301;
+Astro.response.headers.set("Location", destination);
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400"
+);
+---

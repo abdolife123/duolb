@@ -1,4 +1,18 @@
-import { supabase } from "../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl =
+  import.meta.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey =
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
+  import.meta.env.SUPABASE_ANON_KEY ||
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+function getSupabaseClient() {
+  if (!supabaseUrl || !supabaseKey) return null;
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+  });
+}
 
 const escapeXml = (value: string) =>
   value
@@ -9,18 +23,31 @@ const escapeXml = (value: string) =>
     .replace(/'/g, "&apos;");
 
 export async function GET() {
-  const { data: categories, error } = await supabase
-    .from("categories")
-    .select("name, slug")
-    .order("name");
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return new Response("Supabase env missing", { status: 500 });
+  }
+
+  const [{ data: categories, error }, { data: salonCategories }] =
+    await Promise.all([
+      supabase.from("business_categories").select("name, slug").order("name"),
+      supabase
+        .from("salons")
+        .select("category_slug")
+        .not("category_slug", "is", null),
+    ]);
 
   if (error) {
     console.error(error);
   }
 
   const pubDate = new Date().toUTCString();
+  const categorySet = new Set(
+    (salonCategories || []).map((row) => row.category_slug).filter(Boolean)
+  );
 
   const items = (categories || [])
+    .filter((category) => categorySet.size === 0 || categorySet.has(category.slug))
     .map((category) => {
       const title = escapeXml(category.name ?? "Category");
       const link = `https://duolb.com/directory/category/${category.slug}`;

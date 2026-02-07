@@ -1,30 +1,58 @@
-﻿import rss from '@astrojs/rss';
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 
-export async function GET(context) {
-	const { data: posts } = await supabase
-		.from('posts')
-		.select('title, slug, description, created_at')
-		.order('created_at', { ascending: false });
+const escapeXml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 
-	const site = context.site ?? 'https://duolb.com';
+export async function GET() {
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select("title, slug, description, created_at")
+    .order("created_at", { ascending: false })
+    .limit(200);
 
-	const response = rss({
-		title: 'duolb – Beauty Blog',
-		description: 'Beauty, Hautpflege, Trends und ehrliche Produktempfehlungen.',
-		site,
-		items: (posts ?? []).map(post => ({
-			title: post.title,
-			description: post.description || '',
-			pubDate: new Date(post.created_at),
-			link: `/posts/${post.slug}`,
-		})),
-	});
+  if (error) {
+    console.error(error);
+  }
 
-	response.headers.set(
-		'Cache-Control',
-		'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400'
-	);
+  const pubDateFallback = new Date().toUTCString();
 
-	return response;
+  const items = (posts || [])
+    .map((post) => {
+      const title = escapeXml(post.title ?? "Post");
+      const link = `https://duolb.com/posts/${post.slug}`;
+      const description = escapeXml(post.description ?? "");
+      const rawDate = post.created_at ? new Date(post.created_at).toUTCString() : pubDateFallback;
+
+      return `
+        <item>
+          <title>${title}</title>
+          <link>${link}</link>
+          <description>${description}</description>
+          <pubDate>${rawDate}</pubDate>
+        </item>
+      `;
+    })
+    .join("");
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>duolb - Beauty Blog</title>
+    <link>https://duolb.com</link>
+    <description>Beauty, Hautpflege, Trends und ehrliche Produktempfehlungen.</description>
+    ${items}
+  </channel>
+</rss>`;
+
+  return new Response(xml, {
+    headers: {
+      "Content-Type": "application/xml",
+      "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+    },
+  });
 }
