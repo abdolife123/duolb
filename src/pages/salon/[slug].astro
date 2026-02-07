@@ -124,6 +124,7 @@ const salonSchema = {
       loading="eager"
       decoding="async"
       fetchpriority="high"
+      onerror={`this.onerror=null;this.src='${fallbackCover}';`}
     />
   </div>
 
