@@ -1,12 +1,58 @@
 ﻿---
 import Layout from "../../layouts/Layout.astro";
 import Footer from "../../components/Footer.astro";
+import PostCard from "../../components/PostCard.astro";
 import { supabase } from "../../lib/supabase";
 
 export const prerender = false;
 
 function normalizeSlug(str = "") {
   return decodeURIComponent(str).trim().toLowerCase();
+}
+
+function toTimestamp(value = "") {
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+const titleStopWords = new Set([
+  "der",
+  "die",
+  "das",
+  "und",
+  "oder",
+  "mit",
+  "für",
+  "von",
+  "den",
+  "dem",
+  "des",
+  "ein",
+  "eine",
+  "einer",
+  "einem",
+  "im",
+  "in",
+  "am",
+  "an",
+  "zu",
+  "auf",
+  "bei",
+  "aus",
+  "ist",
+  "sind",
+  "wie",
+  "was",
+]);
+
+function titleTokens(input = "") {
+  return input
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length > 2 && !titleStopWords.has(token));
 }
 
 const { slug: rawSlug } = Astro.params;
@@ -20,6 +66,36 @@ const { data: post, error } = await supabase
 
 if (error) return new Response(`Database Error: ${error.message}`, { status: 500 });
 if (!post) return Astro.redirect("/404");
+
+const currentTitleTokenSet = new Set(titleTokens(post.title ?? ""));
+
+const { data: relatedRaw, error: relatedError } = await supabase
+  .from("posts")
+  .select("title, slug, featured_image, created_at")
+  .neq("slug", post.slug)
+  .order("created_at", { ascending: false })
+  .limit(24);
+
+if (relatedError) {
+  console.error("Related posts error:", relatedError.message);
+}
+
+const relatedPosts = (relatedRaw || [])
+  .map((candidate) => {
+    const candidateTokens = new Set(titleTokens(candidate.title ?? ""));
+    let overlapScore = 0;
+
+    for (const token of currentTitleTokenSet) {
+      if (candidateTokens.has(token)) overlapScore += 1;
+    }
+
+    return { ...candidate, overlapScore };
+  })
+  .sort((a, b) => {
+    if (b.overlapScore !== a.overlapScore) return b.overlapScore - a.overlapScore;
+    return toTimestamp(b.created_at) - toTimestamp(a.created_at);
+  })
+  .slice(0, 3);
 
 const pageURL = `https://duolb.com${Astro.url.pathname}`;
 
@@ -73,6 +149,26 @@ Astro.response.headers.set(
 
       <div class="post-content" set:html={post.content_blocks} />
     </article>
+
+    {relatedPosts.length > 0 && (
+      <section class="mt-16 pt-12 border-t border-gray-100" aria-label="Ähnliche Beiträge">
+        <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+          <h2 class="text-3xl font-serif text-gray-900">Ähnliche Beiträge</h2>
+          <a
+            href="/posts"
+            class="text-xs font-bold uppercase tracking-[0.2em] text-[#958e09] hover:text-[#7e7708]"
+          >
+            Alle Beiträge ansehen
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {relatedPosts.map((relatedPost) => (
+            <PostCard post={relatedPost} />
+          ))}
+        </div>
+      </section>
+    )}
   </main>
 
   <Footer />
