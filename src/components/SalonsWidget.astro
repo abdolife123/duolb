@@ -12,10 +12,10 @@ const { data: salons } = await supabase
   <div class="max-w-7xl mx-auto">
 
     <div class="flex items-center justify-between mb-12">
-      <h2 class="text-3xl font-serif text-[#958e09]">
+      <h2 class="text-3xl font-serif text-[#C6A75E]">
         Schönheitssalons
       </h2>
-      <a href="/directory" class="text-sm text-[#958e09] font-semibold hover:underline">
+      <a href="/directory" class="text-sm text-[#C6A75E] font-semibold hover:underline">
         Alle ansehen →
       </a>
     </div>
@@ -24,7 +24,7 @@ const { data: salons } = await supabase
       {salons?.map(salon => (
         <a
           href={`/salon/${salon.slug}`}
-          class="group bg-[#ffdead]/30 rounded-3xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 border border-transparent hover:border-[#958e09]/40"
+          class="group bg-[#FBF6F2]/30 rounded-3xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 border border-transparent hover:border-[#C6A75E]/40"
         >
           <div class="h-52 overflow-hidden">
             <SalonImage
@@ -35,11 +35,11 @@ const { data: salons } = await supabase
           </div>
 
           <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2 group-hover:text-[#958e09] transition-colors">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2 group-hover:text-[#C6A75E] transition-colors">
               {salon.salon_name}
             </h3>
 
-            <div class="text-sm text-[#958e09] font-medium">
+            <div class="text-sm text-[#C6A75E] font-medium">
               ⭐ {salon.rating_value ?? "Neu"} 
               <span class="text-gray-500 ml-1">
                 ({salon.rating_count ?? 0})
@@ -52,3 +52,4 @@ const { data: salons } = await supabase
 
   </div>
 </section>
+

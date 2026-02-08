@@ -1,4 +1,4 @@
-﻿---
+---
 import DirectoryLayout from "../../../layouts/DirectoryLayout.astro"
 import SalonImage from "@components/directory/SalonImage.astro"
 import { supabase } from "../../../lib/supabase"
@@ -70,7 +70,7 @@ const itemListSchema = {
     <h1 class="text-2xl text-red-500">Kategorie nicht gefunden</h1>
   ) : (
     <>
-      <h1 class="text-3xl font-serif text-[#958e09] mb-4">
+      <h1 class="text-3xl font-serif text-[#C6A75E] mb-4">
         {categoryData.name} in Deutschland
       </h1>
 
@@ -82,7 +82,7 @@ const itemListSchema = {
       {salons && salons.length > 0 ? (
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           {salons.map(salon => (
-            <a href={`/salon/${salon.slug}`} class="bg-white rounded-3xl overflow-hidden shadow-md group border border-[#ffdead] hover:shadow-lg transition">
+            <a href={`/salon/${salon.slug}`} class="bg-white rounded-3xl overflow-hidden shadow-md group border border-[#FBF6F2] hover:shadow-lg transition">
               <div class="h-48 bg-gray-200 overflow-hidden">
                 <SalonImage
                   coverImage={salon.cover_image}
@@ -91,7 +91,7 @@ const itemListSchema = {
                 />
               </div>
               <div class="p-5">
-                <div class="text-[#958e09] text-sm mb-1">
+                <div class="text-[#C6A75E] text-sm mb-1">
                   ⭐ {salon.rating_value ?? "–"} <span class="text-gray-400 ml-1">({salon.rating_count ?? 0})</span>
                 </div>
                 <h3 class="font-semibold text-lg">{salon.salon_name}</h3>
@@ -105,9 +105,9 @@ const itemListSchema = {
       )}
 
       <div class="mt-10 text-sm text-gray-500">
-        <a href="/directory/category" class="hover:text-[#958e09]">Alle Kategorien ansehen</a>
+        <a href="/directory/category" class="hover:text-[#C6A75E]">Alle Kategorien ansehen</a>
         {" "}·{" "}
-        <a href="/directory/city" class="hover:text-[#958e09]">Alle Städte ansehen</a>
+        <a href="/directory/city" class="hover:text-[#C6A75E]">Alle Städte ansehen</a>
       </div>
     </>
   )}

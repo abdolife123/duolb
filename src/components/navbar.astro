@@ -2,8 +2,7 @@
 // Navbar.astro
 ---
 
-<header
->
+<header class="sticky top-0 z-50 border-b border-[#EFE7E2] bg-[#FBF6F2]/90 backdrop-blur-md">
   <div class="max-w-7xl mx-auto px-6 lg:px-8">
     <div class="h-24 flex items-center justify-between">
       <a href="/" class="flex items-center gap-4 group shrink-0">
@@ -11,19 +10,19 @@
           <svg width="42" height="42" viewBox="0 0 100 100">
             <path
               d="M30 10 V90 H55 C75 90 90 75 90 50 C90 25 75 10 55 10 H30 Z"
-              stroke="#958e09"
+              stroke="#C6A75E"
               stroke-width="3"
               fill="none"></path>
           </svg>
-          <div class="absolute w-1.5 h-1.5 bg-[#958e09] rounded-full"></div>
+          <div class="absolute h-1.5 w-1.5 rounded-full bg-[#C6A75E]"></div>
         </div>
         <div class="flex flex-col">
           <span
-            class="text-3xl font-serif text-gray-900 tracking-tighter leading-none"
+            class="text-3xl font-serif leading-none tracking-[0.04em] text-gray-900"
             >duolb</span
           >
           <span
-            class="text-[9px] tracking-[0.3em] uppercase text-gray-400 font-bold"
+            class="text-[9px] font-semibold uppercase tracking-[0.3em] text-gray-400"
             >das Wichtigste an Schönheit</span
           >
         </div>
@@ -32,27 +31,27 @@
       <nav class="hidden lg:flex items-center gap-12">
         <a
           href="/"
-          class="nav-link text-[13px] uppercase tracking-[0.2em] font-semibold text-gray-600 hover:text-[#958e09]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
           >Startseite</a
         >
         <a
           href="/directory"
-          class="nav-link text-[13px] uppercase tracking-[0.2em] font-semibold text-gray-600 hover:text-[#958e09]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
           >Verzeichnis</a
         >
         <a
           href="/posts"
-          class="nav-link text-[13px] uppercase tracking-[0.2em] font-semibold text-gray-600 hover:text-[#958e09]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
           >Blog</a
         >
         <a
           href="/about"
-          class="nav-link text-[13px] uppercase tracking-[0.2em] font-semibold text-gray-600 hover:text-[#958e09]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
           >Über uns</a
         >
           <a
           href="/contact"
-          class="nav-link text-[13px] uppercase tracking-[0.2em] font-semibold text-gray-600 hover:text-[#958e09]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
           >Kontakt</a
         >
         
@@ -64,7 +63,7 @@
     aria-label="Open search"
     aria-controls="site-search"
     aria-expanded="false"
-    class="text-gray-400 hover:text-[#958e09] transition-colors p-2 focus:outline-none"
+    class="text-gray-400 hover:text-[#C6A75E] transition-colors p-2 focus:outline-none"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -86,9 +85,9 @@
 
   <a
     href="/contact"
-    class="hidden lg:inline-block text-[12px] uppercase tracking-[0.2em] font-bold bg-[#958e09] px-8 py-3.5 rounded-full hover:bg-[#7e7708] transition-all"
+    class="hidden lg:inline-block rounded-full bg-[#D8A7B1] px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] text-[#FBF6F2] shadow-md shadow-[#D8A7B1]/30 hover:-translate-y-0.5 hover:bg-[#9CAF9A] hover:shadow-lg hover:shadow-[#9CAF9A]/30 transition-all"
   >
-    <span class="text-[#FFFFFF]">Schreiben</span>
+    <span class="text-[#FBF6F2]">Schreiben</span>
   </a>
 </div>
 
@@ -97,7 +96,7 @@
 
   <div
     id="searchContainer"
-    class="max-h-0 overflow-hidden bg-gray-50 transition-all duration-500 ease-in-out"
+    class="max-h-0 overflow-hidden border-t border-[#EFE7E2] bg-[#F3ECE8]/70 transition-all duration-500 ease-in-out"
   >
     <div class="max-w-7xl mx-auto px-6 py-8">
       <form action="/search" method="GET" class="relative">
@@ -144,5 +143,6 @@
   // For Astro View Transitions
   document.addEventListener("astro:after-swap", initSearch);
 </script>
+
 
 

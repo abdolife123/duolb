@@ -29,16 +29,10 @@ interface TrackingPayload {
   path?: string;
   referrer?: string;
   userAgent?: string;
+  country?: string;
+  deviceType?: string;
   sessionId?: string;
   ownerKey?: string;
-  timestamp?: number;
-  screenWidth?: number;
-  screenHeight?: number;
-  language?: string;
-  timezone?: string;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
 }
 
 // ============================================================================
@@ -213,6 +207,30 @@ function sanitize(input: string | undefined, maxLength = 2048): string {
   return input.slice(0, maxLength).trim();
 }
 
+/**
+ * Basic device type detection from user agent
+ */
+function detectDeviceType(userAgent: string): "mobile" | "tablet" | "desktop" {
+  const ua = userAgent.toLowerCase();
+  if (
+    ua.includes("ipad") ||
+    ua.includes("tablet") ||
+    (ua.includes("android") && !ua.includes("mobile"))
+  ) {
+    return "tablet";
+  }
+
+  if (
+    ua.includes("mobile") ||
+    ua.includes("iphone") ||
+    ua.includes("android")
+  ) {
+    return "mobile";
+  }
+
+  return "desktop";
+}
+
 // ============================================================================
 // Main Handler
 // ============================================================================
@@ -292,14 +310,10 @@ export const POST: APIRoute = async ({ request }) => {
       referrer: referrer || null,
       user_agent: userAgent,
       session_id: data.sessionId || null,
-      client_ip: clientIp !== "unknown" ? clientIp : null,
-      screen_width: data.screenWidth || null,
-      screen_height: data.screenHeight || null,
-      language: sanitize(data.language, 10) || null,
-      timezone: sanitize(data.timezone, 50) || null,
-      utm_source: sanitize(data.utmSource, 255) || null,
-      utm_medium: sanitize(data.utmMedium, 255) || null,
-      utm_campaign: sanitize(data.utmCampaign, 255) || null,
+      country:
+        sanitize(data.country || request.headers.get("cf-ipcountry") || "", 8) ||
+        null,
+      device_type: sanitize(data.deviceType || detectDeviceType(userAgent), 20),
       created_at: new Date().toISOString(),
     };
 

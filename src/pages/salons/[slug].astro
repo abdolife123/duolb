@@ -1,0 +1,11 @@
+---
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect("/directory");
+}
+
+return Astro.redirect(`/salon/${encodeURIComponent(slug)}`);
+---

@@ -5,8 +5,12 @@ export default {
     extend: {
       colors: {
         brand: {
-          gold: "#958e09",
-          cream: "#ffdead",
+          gold: "#C9AE84",
+          cream: "#F6F4F1",
+          rose: "#C98FA0",
+          sage: "#A8B8A2",
+          mocha: "#A47864",
+          berry: "#7D425B",
           pure: "#FFFFFF",
         },
       },

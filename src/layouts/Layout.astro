@@ -7,7 +7,8 @@ const {
   title = "Duolb | Profi Akne-Behandlung & High-End Beauty Tech",
   description = "Duolb ist dein Experte für High-End Hautpflege. Unabhängige Tests zu CO2-Lasern, RF-Microneedling & moderner Akne-Technologie.",
   image = "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png",
-  type = "website" // use "article" on blog posts
+  type = "website", // use "article" on blog posts
+  robots = "index, follow, max-image-preview:large",
 } = Astro.props;
 
 const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
@@ -22,12 +23,17 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
   <title>{title}</title>
   <meta name="description" content={description} />
   <meta name="author" content="Duolb Beauty Redaktion" />
-  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="robots" content={robots} />
   <meta name="google-adsense-account" content="ca-pub-6824827690109369" />
+  <script
+    async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6824827690109369"
+    crossorigin="anonymous"
+  ></script>
   <link rel="canonical" href={canonicalURL} />
   <link rel="sitemap" href="/sitemap-index.xml" />
 
-  <meta name="theme-color" content="#958e09" />
+  <meta name="theme-color" content="#F6F4F1" />
 
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
   <link rel="dns-prefetch" href="https://res.cloudinary.com" />
@@ -93,7 +99,7 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
   )}
 </head>
 
-<body class="bg-white text-gray-800">
+<body class="bg-[#F6F4F1] text-[#595252]">
   <Navbar />
   <slot />
   <script is:inline>
@@ -112,4 +118,5 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
 
 </body>
 </html>
+
 

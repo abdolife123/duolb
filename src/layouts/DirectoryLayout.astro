@@ -1,4 +1,4 @@
----
+﻿---
 const {
   title = "Beauty & Wellness Directory",
   description = "",
@@ -24,9 +24,15 @@ const canonicalURL = canonical || `https://duolb.com${Astro.url.pathname}`;
     <meta name="description" content={description} />
     <meta name="author" content="Duolb Beauty Redaktion" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="google-adsense-account" content="ca-pub-6824827690109369" />
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6824827690109369"
+      crossorigin="anonymous"
+    ></script>
     <link rel="canonical" href={canonicalURL} />
 
-    <meta name="theme-color" content="#958e09" />
+    <meta name="theme-color" content="#F6F4F1" />
 
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
@@ -54,7 +60,7 @@ const canonicalURL = canonical || `https://duolb.com${Astro.url.pathname}`;
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="alternate" type="application/rss+xml" title="Duolb RSS Feed" href="/rss.xml" />
 
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet" />
 
     {Astro.url.hostname === "duolb.pages.dev" && (
       <>
@@ -64,18 +70,19 @@ const canonicalURL = canonical || `https://duolb.com${Astro.url.pathname}`;
     )}
   </head>
 
-  <body class="bg-[#ffdead] text-gray-800 font-['Inter']">
+  <body class="bg-[#F6F4F1] text-[#595252] font-['Montserrat']">
 
-    <!-- ✅ REAL NAVBAR COMPONENT -->
+    <!-- Real navbar component -->
     <Navbar />
 
-    <!-- 🌸 MAIN CONTENT -->
-    <main class="max-w-7xl mx-auto px-6 py-10">
+    <!-- Main content -->
+    <main class="max-w-7xl mx-auto px-6 py-14">
       <slot />
     </main>
 
-    <!-- ✅ REAL FOOTER COMPONENT -->
+    <!-- Real footer component -->
     <Footer />
 
   </body>
 </html>
+

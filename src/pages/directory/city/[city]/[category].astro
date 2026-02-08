@@ -1,4 +1,4 @@
-﻿---
+---
 import DirectoryLayout from "../../../../layouts/DirectoryLayout.astro"
 import SalonImage from "@components/directory/SalonImage.astro"
 import { supabase } from "../../../../lib/supabase"
@@ -88,7 +88,7 @@ const itemListSchema = {
 >
 
   <section class="mb-10">
-    <h1 class="text-3xl font-serif text-[#958e09] mb-4">
+    <h1 class="text-3xl font-serif text-[#C6A75E] mb-4">
       {categoryData.seo_h1 || `Die besten ${categoryData.name} in ${cityData.name}`}
     </h1>
 
@@ -107,7 +107,7 @@ const itemListSchema = {
             class="h-48 w-full object-cover group-hover:scale-105 transition-transform"
           />
           <div class="p-5">
-            <div class="text-[#958e09] text-sm mb-1">
+            <div class="text-[#C6A75E] text-sm mb-1">
               ⭐ {salon.rating_value ?? "–"} ({salon.rating_count ?? 0})
             </div>
             <h3 class="font-semibold">{salon.salon_name}</h3>

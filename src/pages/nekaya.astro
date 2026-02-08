@@ -1,0 +1,1761 @@
+﻿---
+import { createClient, type User } from "@supabase/supabase-js";
+import Footer from "../components/Footer.astro";
+import Layout from "../layouts/Layout.astro";
+
+const ADMIN_USER_ID = "5b90533f-9f77-4a2e-8b5e-057cda7eb361";
+const AUTH_COOKIE_NAME = "nekaya_access_token";
+
+const SECTION_ITEMS = [
+  { id: "home", label: "Home" },
+  { id: "posts", label: "Posts" },
+  { id: "messages", label: "Messages" },
+  { id: "subscribers", label: "Subscribers" },
+  { id: "statistics", label: "Statistics" },
+] as const;
+
+type AdminSection = (typeof SECTION_ITEMS)[number]["id"];
+type Row = Record<string, unknown>;
+type PostStatus = "draft" | "published";
+type PostEditorState = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  featuredImage: string;
+  status: PostStatus;
+  categoryId: string;
+  content: string;
+};
+type StatSummary = {
+  posts: number;
+  publishedPosts: number;
+  draftPosts: number;
+  messages: number;
+  subscribers: number;
+  pageviews: number;
+  last24hPageviews: number;
+  uniqueVisitors24h: number;
+  lastEventAt: string;
+};
+
+const isAdminSection = (value: string | null): value is AdminSection =>
+  SECTION_ITEMS.some((item) => item.id === value);
+
+const sectionParam = Astro.url.searchParams.get("section");
+const activeSection: AdminSection = isAdminSection(sectionParam) ? sectionParam : "home";
+const editParam = Astro.url.searchParams.get("edit");
+let editingPostId = editParam && editParam.length > 0 ? editParam : "";
+const messageParam = Astro.url.searchParams.get("message");
+let selectedMessageId = messageParam && messageParam.length > 0 ? messageParam : "";
+const querySaved = Astro.url.searchParams.get("saved");
+const queryDeleted = Astro.url.searchParams.get("deleted");
+const queryMessageDeleted = Astro.url.searchParams.get("message_deleted");
+const querySubscriberDeleted = Astro.url.searchParams.get("subscriber_deleted");
+const NEKAYA_ROBOTS = "noindex, nofollow, noarchive, nosnippet, noimageindex";
+
+Astro.response.headers.set("X-Robots-Tag", NEKAYA_ROBOTS);
+
+const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_KEY =
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY ||
+  import.meta.env.SUPABASE_ANON_KEY ||
+  SUPABASE_ANON_KEY;
+
+const authClient =
+  SUPABASE_URL && SUPABASE_ANON_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      })
+    : null;
+
+const dataClient =
+  SUPABASE_URL && SUPABASE_SERVICE_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      })
+    : null;
+
+let errorMsg = "";
+let successMsg =
+  querySaved === "1"
+    ? "Post saved successfully."
+    : queryDeleted === "1"
+      ? "Post deleted successfully."
+      : queryMessageDeleted === "1"
+        ? "Message deleted successfully."
+        : querySubscriberDeleted === "1"
+          ? "Subscriber deleted successfully."
+      : "";
+let user: User | null = null;
+let authorized = false;
+let posts: Row[] = [];
+let messages: Row[] = [];
+let subscribers: Row[] = [];
+let postCategories: Row[] = [];
+let topPaths: Array<{ path: string; views: number }> = [];
+let recentVisitors: Row[] = [];
+let dashboardPosts: Row[] = [];
+let dashboardMessages: Row[] = [];
+let dashboardSubscribers: Row[] = [];
+let selectedMessage: Row | null = null;
+let postEditor: PostEditorState = {
+  id: "",
+  title: "",
+  slug: "",
+  description: "",
+  featuredImage: "",
+  status: "draft",
+  categoryId: "",
+  content: "",
+};
+let hasEditorFromForm = false;
+let stats: StatSummary = {
+  posts: 0,
+  publishedPosts: 0,
+  draftPosts: 0,
+  messages: 0,
+  subscribers: 0,
+  pageviews: 0,
+  last24hPageviews: 0,
+  uniqueVisitors24h: 0,
+  lastEventAt: "-",
+};
+
+const asText = (value: unknown, fallback = "-") => {
+  if (typeof value === "string" && value.trim().length > 0) return value;
+  if (typeof value === "number") return String(value);
+  return fallback;
+};
+
+const textOrEmpty = (value: unknown) => (typeof value === "string" ? value : "");
+
+const formatDate = (value: unknown) => {
+  if (typeof value !== "string" || !value) return "-";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "-";
+
+  return parsed.toLocaleString("de-DE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
+
+const truncate = (value: string, maxLength = 220) =>
+  value.length > maxLength ? `${value.slice(0, maxLength - 3)}...` : value;
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
+const toPostStatus = (value: string): PostStatus =>
+  value === "published" ? "published" : "draft";
+
+const rowToPostEditor = (row: Row): PostEditorState => ({
+  id: textOrEmpty(row.id),
+  title: textOrEmpty(row.title),
+  slug: textOrEmpty(row.slug),
+  description: textOrEmpty(row.description),
+  featuredImage: textOrEmpty(row.featured_image),
+  status: toPostStatus(textOrEmpty(row.status)),
+  categoryId: textOrEmpty(row.category_id),
+  content: textOrEmpty(row.content_blocks),
+});
+
+const getFormString = (formData: FormData | null, key: string) =>
+  formData?.get(key)?.toString() ?? "";
+
+const clearAuthCookie = () => {
+  Astro.cookies.delete(AUTH_COOKIE_NAME, { path: "/" });
+};
+
+const getUserFromToken = async (token?: string) => {
+  if (!authClient || !token) return null;
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data?.user) return null;
+  return data.user;
+};
+
+let requestFormData: FormData | null = null;
+let formAction = "";
+
+if (Astro.request.method === "POST") {
+  requestFormData = await Astro.request.formData();
+  formAction = getFormString(requestFormData, "action").trim();
+}
+
+if (!authClient) {
+  errorMsg =
+    "Supabase auth is not configured. Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY.";
+} else {
+  if (formAction === "login") {
+    const email = getFormString(requestFormData, "email").trim();
+    const password = getFormString(requestFormData, "password");
+
+    if (!email || !password) {
+      errorMsg = "Email and password are required.";
+    } else {
+      const { data, error } = await authClient.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error || !data?.session || !data?.user) {
+        errorMsg = "Login failed. Check your credentials.";
+      } else if (data.user.id !== ADMIN_USER_ID) {
+        clearAuthCookie();
+        errorMsg = "This account is not allowed to access Nekaya.";
+      } else {
+        Astro.cookies.set(AUTH_COOKIE_NAME, data.session.access_token, {
+          path: "/",
+          httpOnly: true,
+          sameSite: "lax",
+          secure: Astro.url.protocol === "https:",
+          maxAge: Math.max(60, data.session.expires_in ?? 3600),
+        });
+
+        return Astro.redirect("/nekaya");
+      }
+    }
+  }
+
+  const token = Astro.cookies.get(AUTH_COOKIE_NAME)?.value;
+  user = await getUserFromToken(token);
+
+  if (!user) {
+    clearAuthCookie();
+  } else if (user.id !== ADMIN_USER_ID) {
+    clearAuthCookie();
+    user = null;
+    errorMsg = errorMsg || "This account is not allowed to access Nekaya.";
+  } else {
+    authorized = true;
+  }
+
+  if (formAction === "logout") {
+    clearAuthCookie();
+    return Astro.redirect("/nekaya");
+  }
+}
+
+if (authorized) {
+  if (!dataClient) {
+    errorMsg =
+      errorMsg ||
+      "Supabase data client is not configured. Set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY.";
+  } else {
+    if (activeSection === "posts") {
+      if (formAction === "save_post") {
+        const providedId = getFormString(requestFormData, "post_id").trim();
+        const title = getFormString(requestFormData, "title").trim();
+        const providedSlug = getFormString(requestFormData, "slug").trim();
+        const description = getFormString(requestFormData, "description").trim();
+        const featuredImage = getFormString(requestFormData, "featured_image").trim();
+        const categoryId = getFormString(requestFormData, "category_id").trim();
+        const status = toPostStatus(getFormString(requestFormData, "status").trim());
+        const content = getFormString(requestFormData, "content_blocks").trim();
+
+        postEditor = {
+          id: providedId,
+          title,
+          slug: slugify(providedSlug || title),
+          description,
+          featuredImage,
+          status,
+          categoryId,
+          content,
+        };
+        hasEditorFromForm = true;
+        if (providedId) editingPostId = providedId;
+
+        if (!postEditor.title) {
+          errorMsg = "Post title is required.";
+        } else if (!postEditor.slug) {
+          errorMsg = "Post slug is required.";
+        } else if (!postEditor.content) {
+          errorMsg = "Post content is required.";
+        } else {
+          const nowIso = new Date().toISOString();
+          const payload = {
+            title: postEditor.title,
+            slug: postEditor.slug,
+            description: postEditor.description || null,
+            featured_image: postEditor.featuredImage || null,
+            status: postEditor.status,
+            category_id: postEditor.categoryId || null,
+            content_blocks: postEditor.content,
+            updated_at: nowIso,
+          };
+
+          if (postEditor.id) {
+            const { data: updatedPost, error: updateError } = await dataClient
+              .from("posts")
+              .update(payload)
+              .eq("id", postEditor.id)
+              .select("id")
+              .maybeSingle();
+
+            if (updateError) {
+              errorMsg =
+                updateError.code === "23505"
+                  ? "This slug already exists. Use a unique slug."
+                  : `Could not update post: ${updateError.message}`;
+            } else {
+              const savedId = textOrEmpty(updatedPost?.id) || postEditor.id;
+              return Astro.redirect(`/nekaya?section=posts&edit=${savedId}&saved=1`);
+            }
+          } else {
+            const { data: insertedPost, error: insertError } = await dataClient
+              .from("posts")
+              .insert({
+                ...payload,
+                created_at: nowIso,
+              })
+              .select("id")
+              .single();
+
+            if (insertError) {
+              errorMsg =
+                insertError.code === "23505"
+                  ? "This slug already exists. Use a unique slug."
+                  : `Could not create post: ${insertError.message}`;
+            } else {
+              const savedId = textOrEmpty(insertedPost?.id);
+              return Astro.redirect(`/nekaya?section=posts&edit=${savedId}&saved=1`);
+            }
+          }
+        }
+      }
+
+      if (formAction === "delete_post") {
+        const deleteId = getFormString(requestFormData, "post_id").trim();
+        if (!deleteId) {
+          errorMsg = "Post ID is missing for delete.";
+        } else {
+          const { error: deleteError } = await dataClient
+            .from("posts")
+            .delete()
+            .eq("id", deleteId);
+
+          if (deleteError) {
+            errorMsg = `Could not delete post: ${deleteError.message}`;
+          } else {
+            return Astro.redirect("/nekaya?section=posts&deleted=1");
+          }
+        }
+      }
+
+      const [postsResult, categoriesResult] = await Promise.all([
+        dataClient
+          .from("posts")
+          .select("id, title, slug, status, category_id, created_at, updated_at")
+          .order("created_at", { ascending: false })
+          .limit(200),
+        dataClient.from("categories").select("id, name").order("name"),
+      ]);
+
+      if (postsResult.error) {
+        errorMsg = errorMsg || `Could not load posts: ${postsResult.error.message}`;
+      }
+      if (categoriesResult.error) {
+        errorMsg =
+          errorMsg || `Could not load categories: ${categoriesResult.error.message}`;
+      }
+
+      posts = (postsResult.data as Row[] | null) ?? [];
+      postCategories = (categoriesResult.data as Row[] | null) ?? [];
+
+      if (!hasEditorFromForm && editingPostId) {
+        const { data: editPost, error: editPostError } = await dataClient
+          .from("posts")
+          .select(
+            "id, title, slug, description, featured_image, status, category_id, content_blocks"
+          )
+          .eq("id", editingPostId)
+          .maybeSingle();
+
+        if (editPostError) {
+          errorMsg =
+            errorMsg || `Could not load selected post: ${editPostError.message}`;
+        } else if (editPost) {
+          postEditor = rowToPostEditor(editPost as Row);
+        }
+      }
+    }
+
+    if (activeSection === "home" || activeSection === "statistics") {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+      const [
+        postsCountResult,
+        publishedPostsCountResult,
+        draftPostsCountResult,
+        messagesCountResult,
+        subscribersCountResult,
+        pageviewsCountResult,
+        last24hPageviewsResult,
+        recentEventsResult,
+      ] = await Promise.all([
+        dataClient.from("posts").select("*", { head: true, count: "exact" }),
+        dataClient
+          .from("posts")
+          .select("*", { head: true, count: "exact" })
+          .eq("status", "published"),
+        dataClient
+          .from("posts")
+          .select("*", { head: true, count: "exact" })
+          .eq("status", "draft"),
+        dataClient.from("messages").select("*", { head: true, count: "exact" }),
+        dataClient.from("subscribers").select("*", { head: true, count: "exact" }),
+        dataClient
+          .from("analytics_events")
+          .select("*", { head: true, count: "exact" })
+          .eq("event_name", "pageview"),
+        dataClient
+          .from("analytics_events")
+          .select("*", { head: true, count: "exact" })
+          .eq("event_name", "pageview")
+          .gte("created_at", twentyFourHoursAgo),
+        dataClient
+          .from("analytics_events")
+          .select("path, event_name, created_at, device_type, country, referrer, session_id")
+          .order("created_at", { ascending: false })
+          .limit(1000),
+      ]);
+
+      const firstError =
+        postsCountResult.error ||
+        publishedPostsCountResult.error ||
+        draftPostsCountResult.error ||
+        messagesCountResult.error ||
+        subscribersCountResult.error ||
+        pageviewsCountResult.error ||
+        last24hPageviewsResult.error ||
+        recentEventsResult.error;
+
+      if (firstError) {
+        errorMsg = errorMsg || `Could not load statistics: ${firstError.message}`;
+      }
+
+      const recentEventRows = (recentEventsResult.data as Row[] | null) ?? [];
+      const pageviewEvents = recentEventRows.filter(
+        (event) => asText(event.event_name, "") === "pageview"
+      );
+      const uniqueVisitorSessions = new Set<string>();
+      for (const event of pageviewEvents) {
+        const createdAt = textOrEmpty(event.created_at);
+        const sessionId = textOrEmpty(event.session_id);
+        if (createdAt >= twentyFourHoursAgo && sessionId) {
+          uniqueVisitorSessions.add(sessionId);
+        }
+      }
+
+      stats = {
+        posts: postsCountResult.count ?? 0,
+        publishedPosts: publishedPostsCountResult.count ?? 0,
+        draftPosts: draftPostsCountResult.count ?? 0,
+        messages: messagesCountResult.count ?? 0,
+        subscribers: subscribersCountResult.count ?? 0,
+        pageviews: pageviewsCountResult.count ?? 0,
+        last24hPageviews: last24hPageviewsResult.count ?? 0,
+        uniqueVisitors24h: uniqueVisitorSessions.size,
+        lastEventAt: formatDate(recentEventRows[0]?.created_at),
+      };
+
+      const counter = new Map<string, number>();
+      for (const event of pageviewEvents) {
+        const path = asText(event.path, "");
+        if (!path) continue;
+        counter.set(path, (counter.get(path) ?? 0) + 1);
+      }
+
+      topPaths = Array.from(counter.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([path, views]) => ({ path, views }));
+      recentVisitors = pageviewEvents.slice(0, 12);
+    }
+
+    if (activeSection === "home") {
+      const [recentPostsResult, recentMessagesResult, recentSubscribersResult] =
+        await Promise.all([
+          dataClient
+            .from("posts")
+            .select("id, title, slug, status, created_at, updated_at")
+            .order("created_at", { ascending: false })
+            .limit(8),
+          dataClient
+            .from("messages")
+            .select("id, name, email, message, created_at")
+            .order("created_at", { ascending: false })
+            .limit(8),
+          dataClient
+            .from("subscribers")
+            .select("id, email, created_at")
+            .order("created_at", { ascending: false })
+            .limit(8),
+        ]);
+
+      const detailError =
+        recentPostsResult.error ||
+        recentMessagesResult.error ||
+        recentSubscribersResult.error;
+
+      if (detailError) {
+        errorMsg = errorMsg || `Could not load dashboard details: ${detailError.message}`;
+      }
+
+      dashboardPosts = (recentPostsResult.data as Row[] | null) ?? [];
+      dashboardMessages = (recentMessagesResult.data as Row[] | null) ?? [];
+      dashboardSubscribers = (recentSubscribersResult.data as Row[] | null) ?? [];
+    }
+
+    if (activeSection === "messages") {
+      if (formAction === "delete_message") {
+        const deleteId = getFormString(requestFormData, "message_id").trim();
+        const deleteEmail = getFormString(requestFormData, "message_email").trim();
+        const deleteCreatedAt = getFormString(requestFormData, "message_created_at").trim();
+
+        if (!deleteId && (!deleteEmail || !deleteCreatedAt)) {
+          errorMsg = "Message identifier is missing for delete.";
+        } else {
+          let deleteQuery = dataClient.from("messages").delete();
+          if (deleteId) {
+            deleteQuery = deleteQuery.eq("id", deleteId);
+          } else {
+            deleteQuery = deleteQuery.eq("email", deleteEmail).eq("created_at", deleteCreatedAt);
+          }
+
+          const { error: deleteError } = await deleteQuery;
+          if (deleteError) {
+            errorMsg = `Could not delete message: ${deleteError.message}`;
+          } else {
+            return Astro.redirect("/nekaya?section=messages&message_deleted=1");
+          }
+        }
+      }
+
+      const { data, error } = await dataClient
+        .from("messages")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(120);
+
+      if (error) {
+        errorMsg = errorMsg || `Could not load messages: ${error.message}`;
+      }
+      messages = (data as Row[] | null) ?? [];
+
+      if (messages.length > 0) {
+        if (!selectedMessageId) {
+          selectedMessageId = textOrEmpty(messages[0]?.id);
+        }
+        selectedMessage =
+          messages.find((message) => textOrEmpty(message.id) === selectedMessageId) ??
+          (messages[0] as Row);
+      }
+    }
+
+    if (activeSection === "subscribers") {
+      if (formAction === "delete_subscriber") {
+        const deleteId = getFormString(requestFormData, "subscriber_id").trim();
+        const deleteEmail = getFormString(requestFormData, "subscriber_email").trim();
+
+        if (!deleteId && !deleteEmail) {
+          errorMsg = "Subscriber identifier is missing for delete.";
+        } else {
+          let deleteQuery = dataClient.from("subscribers").delete();
+          deleteQuery = deleteId
+            ? deleteQuery.eq("id", deleteId)
+            : deleteQuery.eq("email", deleteEmail);
+
+          const { error: deleteError } = await deleteQuery;
+          if (deleteError) {
+            errorMsg = `Could not delete subscriber: ${deleteError.message}`;
+          } else {
+            return Astro.redirect("/nekaya?section=subscribers&subscriber_deleted=1");
+          }
+        }
+      }
+
+      const { data, error } = await dataClient
+        .from("subscribers")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(120);
+
+      if (error) {
+        errorMsg = errorMsg || `Could not load subscribers: ${error.message}`;
+      }
+      subscribers = (data as Row[] | null) ?? [];
+    }
+  }
+}
+---
+
+<Layout
+  title="Nekaya Admin | duolb"
+  description="Protected duolb admin section."
+  robots={NEKAYA_ROBOTS}
+>
+  <main class="nekaya-shell min-h-screen px-4 py-10 md:px-8 md:py-14">
+    <section class="mx-auto w-full max-w-7xl rounded-[2rem] border border-[#EFE7E2] bg-white/90 p-6 shadow-2xl shadow-[#C6A75E]/10 backdrop-blur md:p-10">
+      <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[#C6A75E]">
+        Restricted
+      </p>
+      <h1 class="mb-6 text-4xl font-serif text-gray-900 md:text-5xl">Nekaya Control Room</h1>
+
+      {
+        successMsg && (
+          <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+            {successMsg}
+          </div>
+        )
+      }
+
+      {
+        errorMsg && (
+          <div class="mb-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMsg}
+          </div>
+        )
+      }
+
+      {
+        authorized && user ? (
+          <div class="space-y-8">
+            <header class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#EFE7E2] bg-[#FBF6F2] p-4 md:p-5">
+              <div>
+                <p class="text-sm font-semibold text-[#9CAF9A]">Signed in</p>
+                <p class="break-all text-sm text-gray-700">{user.email ?? "unknown email"}</p>
+                <p class="mt-1 break-all text-xs text-gray-500">User ID: {user.id}</p>
+              </div>
+              <form method="POST">
+                <button
+                  type="submit"
+                  name="action"
+                  value="logout"
+                  class="rounded-xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
+                >
+                  Sign out
+                </button>
+              </form>
+            </header>
+
+            <nav class="flex flex-wrap gap-2">
+              {
+                SECTION_ITEMS.map((item) => (
+                  <a
+                    href={`/nekaya?section=${item.id}`}
+                    class={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                      activeSection === item.id
+                        ? "bg-[#C6A75E] text-white shadow"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                ))
+              }
+            </nav>
+
+            {
+              activeSection === "home" && (
+                <div class="space-y-5">
+                  <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">All Posts</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.posts}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Published</p>
+                      <p class="mt-2 text-2xl font-bold text-emerald-700">{stats.publishedPosts}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Drafts</p>
+                      <p class="mt-2 text-2xl font-bold text-amber-700">{stats.draftPosts}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Messages</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.messages}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Subscribers</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.subscribers}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Total Pageviews</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.pageviews}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Pageviews (24h)</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.last24hPageviews}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Unique Visitors (24h)</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.uniqueVisitors24h}</p>
+                    </div>
+                  </div>
+
+                  <div class="grid gap-4 xl:grid-cols-3">
+                    <section class="rounded-2xl border border-gray-200 bg-white p-4">
+                      <div class="mb-3 flex items-center justify-between gap-3">
+                        <h2 class="text-base font-semibold text-gray-900">Recent Posts</h2>
+                        <a href="/nekaya?section=posts" class="text-xs font-semibold text-[#9CAF9A] hover:underline">
+                          Manage
+                        </a>
+                      </div>
+                      {dashboardPosts.length > 0 ? (
+                        <ul class="space-y-2">
+                          {dashboardPosts.map((post) => {
+                            const postId = textOrEmpty(post.id);
+                            const postSlug = textOrEmpty(post.slug);
+                            return (
+                              <li class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                                <p class="text-sm font-semibold text-gray-900">{asText(post.title)}</p>
+                                <div class="mt-2 flex items-center justify-between gap-2 text-xs text-gray-600">
+                                  <span class="rounded-md bg-white px-2 py-1 uppercase tracking-wide">
+                                    {asText(post.status)}
+                                  </span>
+                                  <span>{formatDate(post.updated_at || post.created_at)}</span>
+                                </div>
+                                <div class="mt-2 flex items-center gap-3 text-xs">
+                                  {postId && (
+                                    <a href={`/nekaya?section=posts&edit=${postId}`} class="font-semibold text-[#9CAF9A] hover:underline">
+                                      Edit
+                                    </a>
+                                  )}
+                                  {postSlug && (
+                                    <a href={`/posts/${postSlug}`} target="_blank" rel="noreferrer" class="text-gray-600 hover:underline">
+                                      View
+                                    </a>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p class="text-sm text-gray-500">No posts found.</p>
+                      )}
+                    </section>
+
+                    <section class="rounded-2xl border border-gray-200 bg-white p-4">
+                      <div class="mb-3 flex items-center justify-between gap-3">
+                        <h2 class="text-base font-semibold text-gray-900">Recent Messages</h2>
+                        <a href="/nekaya?section=messages" class="text-xs font-semibold text-[#9CAF9A] hover:underline">
+                          Open inbox
+                        </a>
+                      </div>
+                      {dashboardMessages.length > 0 ? (
+                        <ul class="space-y-2">
+                          {dashboardMessages.map((message) => {
+                            const messageId = textOrEmpty(message.id);
+                            return (
+                              <li class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                                <p class="text-sm font-semibold text-gray-900">{asText(message.name)}</p>
+                                <p class="mt-0.5 text-xs text-gray-500">{asText(message.email)}</p>
+                                <p class="mt-2 text-sm text-gray-700">{truncate(asText(message.message, ""), 120)}</p>
+                                <div class="mt-2 flex items-center justify-between gap-2 text-xs text-gray-600">
+                                  <span>{formatDate(message.created_at)}</span>
+                                  {messageId && (
+                                    <a href={`/nekaya?section=messages&message=${messageId}`} class="font-semibold text-[#9CAF9A] hover:underline">
+                                      Read
+                                    </a>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p class="text-sm text-gray-500">No messages found.</p>
+                      )}
+                    </section>
+
+                    <section class="rounded-2xl border border-gray-200 bg-white p-4">
+                      <div class="mb-3 flex items-center justify-between gap-3">
+                        <h2 class="text-base font-semibold text-gray-900">Recent Subscribers</h2>
+                        <a href="/nekaya?section=subscribers" class="text-xs font-semibold text-[#9CAF9A] hover:underline">
+                          Manage
+                        </a>
+                      </div>
+                      {dashboardSubscribers.length > 0 ? (
+                        <ul class="space-y-2">
+                          {dashboardSubscribers.map((subscriber) => (
+                            <li class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                              <p class="text-sm font-semibold text-gray-900">{asText(subscriber.email)}</p>
+                              <p class="mt-1 text-xs text-gray-500">{formatDate(subscriber.created_at)}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p class="text-sm text-gray-500">No subscribers found.</p>
+                      )}
+                    </section>
+                  </div>
+
+                  <div class="grid gap-4 xl:grid-cols-2">
+                    <section class="rounded-2xl border border-gray-200 bg-white p-4">
+                      <h2 class="text-base font-semibold text-gray-900">Top Paths</h2>
+                      <p class="mt-1 text-sm text-gray-600">Most visited routes based on recent analytics.</p>
+                      {topPaths.length > 0 ? (
+                        <ul class="mt-3 space-y-2 text-sm text-gray-700">
+                          {topPaths.map((entry) => (
+                            <li class="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                              <span class="truncate">{entry.path}</span>
+                              <span class="rounded-md bg-white px-2 py-1 text-xs font-semibold">{entry.views}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p class="mt-3 text-sm text-gray-500">No analytics data found.</p>
+                      )}
+                    </section>
+
+                    <section class="rounded-2xl border border-gray-200 bg-white p-4">
+                      <h2 class="text-base font-semibold text-gray-900">Recent Visitors</h2>
+                      <p class="mt-1 text-sm text-gray-600">Latest pageview events with device and location.</p>
+                      {recentVisitors.length > 0 ? (
+                        <div class="mt-3 max-h-[300px] overflow-auto">
+                          <table class="min-w-full text-left text-xs">
+                            <thead class="uppercase tracking-wide text-gray-500">
+                              <tr>
+                                <th class="pb-2 pr-3">Path</th>
+                                <th class="pb-2 pr-3">Device</th>
+                                <th class="pb-2 pr-3">Country</th>
+                                <th class="pb-2">Time</th>
+                              </tr>
+                            </thead>
+                            <tbody class="text-gray-700">
+                              {recentVisitors.map((event) => (
+                                <tr class="border-t border-gray-100 align-top">
+                                  <td class="py-2 pr-3">{truncate(asText(event.path, "-"), 44)}</td>
+                                  <td class="py-2 pr-3">{asText(event.device_type, "-")}</td>
+                                  <td class="py-2 pr-3">{asText(event.country, "-")}</td>
+                                  <td class="py-2">{formatDate(event.created_at)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p class="mt-3 text-sm text-gray-500">No visitor events found.</p>
+                      )}
+                    </section>
+                  </div>
+                </div>
+              )
+            }
+
+            {
+              activeSection === "posts" && (
+                <div class="grid gap-6 xl:grid-cols-[340px,minmax(0,1fr)]">
+                  <aside class="rounded-2xl border border-[#ddd8ad] bg-[#FBF6F2] p-4 md:p-5">
+                    <div class="mb-4 flex items-center justify-between gap-3">
+                      <h2 class="text-lg font-semibold text-gray-900">Posts</h2>
+                      <a
+                        href="/nekaya?section=posts"
+                        class="rounded-lg border border-[#C6A75E] px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#9CAF9A] transition hover:bg-[#C6A75E] hover:text-white"
+                      >
+                        New
+                      </a>
+                    </div>
+                    {
+                      posts.length > 0 ? (
+                        <ul class="space-y-2">
+                          {
+                            posts.map((post) => {
+                              const postId = textOrEmpty(post.id);
+                              const isActive = postId.length > 0 && postId === editingPostId;
+                              return (
+                                <li>
+                                  <a
+                                    href={`/nekaya?section=posts&edit=${postId}`}
+                                    class={`block rounded-xl border px-3 py-3 transition ${
+                                      isActive
+                                        ? "border-[#C6A75E] bg-[#FBF6F2]"
+                                        : "border-[#ece8ca] bg-white hover:border-[#EFE7E2]"
+                                    }`}
+                                  >
+                                    <p class="line-clamp-2 text-sm font-semibold text-gray-900">
+                                      {asText(post.title)}
+                                    </p>
+                                    <div class="mt-2 flex items-center justify-between gap-2">
+                                      <span class="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-600">
+                                        {asText(post.status)}
+                                      </span>
+                                      <span class="text-[11px] text-gray-500">
+                                        {formatDate(post.updated_at || post.created_at)}
+                                      </span>
+                                    </div>
+                                  </a>
+                                </li>
+                              );
+                            })
+                          }
+                        </ul>
+                      ) : (
+                        <p class="text-sm text-gray-500">No posts found.</p>
+                      )
+                    }
+                  </aside>
+
+                  <section class="rounded-2xl border border-[#ddd8ad] bg-[#FBF6F2] p-4 md:p-6">
+                    <div class="mb-5">
+                      <h2 class="text-2xl font-semibold text-gray-900">HTML Editor</h2>
+                      <p class="mt-1 text-sm text-gray-600">
+                        Visual mode, HTML mode, live preview, and autosave.
+                      </p>
+                    </div>
+
+                    <form id="post-editor-form" method="POST" class="space-y-5">
+                      <input id="post-id" type="hidden" name="post_id" value={postEditor.id} />
+
+                      <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                          <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500" for="post-title">
+                            Title
+                          </label>
+                          <input
+                            id="post-title"
+                            name="title"
+                            required
+                            value={postEditor.title}
+                            class="nekaya-input"
+                            placeholder="Post title"
+                          />
+                        </div>
+
+                        <div>
+                          <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500" for="post-slug">
+                            Slug
+                          </label>
+                          <input
+                            id="post-slug"
+                            name="slug"
+                            required
+                            value={postEditor.slug}
+                            class="nekaya-input"
+                            placeholder="post-slug"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500" for="post-description">
+                          Description
+                        </label>
+                        <textarea
+                          id="post-description"
+                          name="description"
+                          rows="3"
+                          class="nekaya-textarea"
+                          placeholder="Short meta description"
+                        >{postEditor.description}</textarea>
+                      </div>
+
+                      <div class="grid gap-4 md:grid-cols-3">
+                        <div class="md:col-span-2">
+                          <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500" for="post-featured-image">
+                            Featured image URL
+                          </label>
+                          <input
+                            id="post-featured-image"
+                            name="featured_image"
+                            value={postEditor.featuredImage}
+                            class="nekaya-input"
+                            placeholder="https://..."
+                          />
+                        </div>
+
+                        <div>
+                          <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500" for="post-category">
+                            Category
+                          </label>
+                          <select id="post-category" name="category_id" class="nekaya-select">
+                            <option value="">No category</option>
+                            {
+                              postCategories.map((category) => {
+                                const categoryId = textOrEmpty(category.id);
+                                return (
+                                  <option value={categoryId} selected={categoryId === postEditor.categoryId}>
+                                    {asText(category.name)}
+                                  </option>
+                                );
+                              })
+                            }
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500" for="post-status">
+                          Status
+                        </label>
+                        <select id="post-status" name="status" class="nekaya-select max-w-xs">
+                          <option value="draft" selected={postEditor.status === "draft"}>Draft</option>
+                          <option value="published" selected={postEditor.status === "published"}>Published</option>
+                        </select>
+                      </div>
+
+                      <div class="overflow-hidden rounded-2xl border border-[#EFE7E2] bg-[#FBF6F2]">
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#EFE7E2] bg-[#f7f3d9] p-3">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" data-editor-mode="visual" class="nekaya-mode-btn">Visual</button>
+                            <button type="button" data-editor-mode="html" class="nekaya-mode-btn">HTML</button>
+                            <button type="button" data-editor-mode="preview" class="nekaya-mode-btn">Preview</button>
+                          </div>
+                          <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" data-editor-command="bold" class="nekaya-tool-btn">Bold</button>
+                            <button type="button" data-editor-command="italic" class="nekaya-tool-btn">Italic</button>
+                            <button type="button" data-editor-command="underline" class="nekaya-tool-btn">Underline</button>
+                            <button type="button" data-editor-command="formatBlock" data-editor-value="h2" class="nekaya-tool-btn">H2</button>
+                            <button type="button" data-editor-command="formatBlock" data-editor-value="h3" class="nekaya-tool-btn">H3</button>
+                            <button type="button" data-editor-command="insertUnorderedList" class="nekaya-tool-btn">List</button>
+                            <button type="button" data-editor-command="insertOrderedList" class="nekaya-tool-btn">1.2.3</button>
+                            <button type="button" data-editor-command="createLink" class="nekaya-tool-btn">Link</button>
+                            <button type="button" data-editor-command="insertHTML" data-editor-value="quote" class="nekaya-tool-btn">Quote</button>
+                            <button type="button" data-editor-command="insertHTML" data-editor-value="code" class="nekaya-tool-btn">Code</button>
+                            <button type="button" data-editor-command="insertHTML" data-editor-value="hr" class="nekaya-tool-btn">HR</button>
+                          </div>
+                        </div>
+
+                        <div
+                          id="post-editor-visual"
+                          contenteditable="true"
+                          class="max-h-[520px] min-h-[320px] overflow-auto p-5 text-[15px] leading-7 text-gray-800"
+                        ></div>
+
+                        <textarea
+                          id="post-editor-source"
+                          name="content_blocks"
+                          class="hidden max-h-[520px] min-h-[320px] w-full resize-y border-0 bg-[#13151d] p-5 font-mono text-sm leading-6 text-[#e6ecff] outline-none"
+                          placeholder="<h2>Write HTML</h2>"
+                        >{postEditor.content}</textarea>
+
+                        <div
+                          id="post-editor-preview"
+                          class="hidden max-h-[520px] min-h-[320px] overflow-auto bg-white p-5 text-[15px] leading-7 text-gray-800"
+                        ></div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-[#EFE7E2] bg-[#f7f3d9] px-4 py-3 text-xs text-gray-600">
+                          <p id="post-editor-metrics">0 words | 0 min read</p>
+                          <p id="post-editor-autosave">Local autosave ready.</p>
+                        </div>
+                      </div>
+
+                      <div class="flex flex-wrap items-center gap-3">
+                        <button
+                          type="submit"
+                          name="action"
+                          value="save_post"
+                          class="rounded-xl bg-[#C6A75E] px-6 py-3 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-[#9CAF9A]"
+                        >
+                          {postEditor.id ? "Update Post" : "Create Post"}
+                        </button>
+                        {
+                          postEditor.id && (
+                            <a
+                              href="/nekaya?section=posts"
+                              class="rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-100"
+                            >
+                              New empty editor
+                            </a>
+                          )
+                        }
+                      </div>
+                    </form>
+
+                    {
+                      postEditor.id && (
+                        <form method="POST" class="mt-3" onsubmit="return confirm('Delete this post permanently?');">
+                          <input type="hidden" name="post_id" value={postEditor.id} />
+                          <button
+                            type="submit"
+                            name="action"
+                            value="delete_post"
+                            class="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-red-700 transition hover:bg-red-100"
+                          >
+                            Delete post
+                          </button>
+                        </form>
+                      )
+                    }
+                  </section>
+                </div>
+              )
+            }
+
+            {
+              activeSection === "messages" && (
+                <div class="grid gap-6 xl:grid-cols-[340px,minmax(0,1fr)]">
+                  <aside class="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                    <h2 class="text-lg font-semibold text-gray-900">Messages</h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                      Read and manage incoming contact requests.
+                    </p>
+
+                    {messages.length > 0 ? (
+                      <ul class="mt-4 space-y-2">
+                        {messages.map((message) => {
+                          const messageId = textOrEmpty(message.id);
+                          const isActive = messageId && messageId === selectedMessageId;
+                          const href = messageId
+                            ? `/nekaya?section=messages&message=${messageId}`
+                            : "/nekaya?section=messages";
+
+                          return (
+                            <li>
+                              <a
+                                href={href}
+                                class={`block rounded-xl border px-3 py-3 transition ${
+                                  isActive
+                                    ? "border-[#C6A75E] bg-[#FBF6F2]"
+                                    : "border-gray-200 bg-white hover:border-[#EFE7E2]"
+                                }`}
+                              >
+                                <p class="text-sm font-semibold text-gray-900">{asText(message.name)}</p>
+                                <p class="mt-0.5 text-xs text-gray-500">{asText(message.email)}</p>
+                                <p class="mt-2 text-xs text-gray-600">
+                                  {truncate(asText(message.message, ""), 90)}
+                                </p>
+                                <p class="mt-2 text-[11px] text-gray-500">{formatDate(message.created_at)}</p>
+                              </a>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p class="mt-4 text-sm text-gray-500">No messages found.</p>
+                    )}
+                  </aside>
+
+                  <section class="rounded-2xl border border-gray-200 bg-white p-5">
+                    {selectedMessage ? (
+                      <>
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <h3 class="text-xl font-semibold text-gray-900">{asText(selectedMessage.name)}</h3>
+                            <p class="mt-1 text-sm text-gray-600">{asText(selectedMessage.email)}</p>
+                            <p class="mt-1 text-xs text-gray-500">{formatDate(selectedMessage.created_at)}</p>
+                          </div>
+                          <a
+                            href={`mailto:${asText(selectedMessage.email, "")}`}
+                            class="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-100"
+                          >
+                            Reply by email
+                          </a>
+                        </div>
+
+                        <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                          <p class="whitespace-pre-wrap text-sm leading-7 text-gray-800">
+                            {asText(selectedMessage.message, "-")}
+                          </p>
+                        </div>
+
+                        <form
+                          method="POST"
+                          class="mt-4"
+                          onsubmit="return confirm('Delete this message permanently?');"
+                        >
+                          <input type="hidden" name="message_id" value={textOrEmpty(selectedMessage.id)} />
+                          <input type="hidden" name="message_email" value={textOrEmpty(selectedMessage.email)} />
+                          <input
+                            type="hidden"
+                            name="message_created_at"
+                            value={textOrEmpty(selectedMessage.created_at)}
+                          />
+                          <button
+                            type="submit"
+                            name="action"
+                            value="delete_message"
+                            class="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-red-700 transition hover:bg-red-100"
+                          >
+                            Delete message
+                          </button>
+                        </form>
+                      </>
+                    ) : (
+                      <p class="text-sm text-gray-500">Select a message to read it in full.</p>
+                    )}
+                  </section>
+                </div>
+              )
+            }
+
+            {
+              activeSection === "subscribers" && (
+                <div class="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+                  <h2 class="text-lg font-semibold text-gray-900">Subscribers</h2>
+                  <p class="mt-1 text-sm text-gray-600">
+                    Latest newsletter subscribers. You can remove any record below.
+                  </p>
+
+                  {subscribers.length > 0 ? (
+                    <div class="mt-4 overflow-x-auto">
+                      <table class="min-w-full text-left text-sm">
+                        <thead class="text-xs uppercase tracking-wider text-gray-500">
+                          <tr>
+                            <th class="pb-2 pr-4">Email</th>
+                            <th class="pb-2">Created</th>
+                            <th class="pb-2 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody class="text-gray-700">
+                          {subscribers.map((subscriber) => {
+                            const subscriberId = textOrEmpty(subscriber.id);
+                            return (
+                              <tr class="border-t border-gray-200 align-top">
+                                <td class="py-3 pr-4">{asText(subscriber.email)}</td>
+                                <td class="py-3">{formatDate(subscriber.created_at)}</td>
+                                <td class="py-3 text-right">
+                                  <form
+                                    method="POST"
+                                    class="inline-block"
+                                    onsubmit="return confirm('Delete this subscriber?');"
+                                  >
+                                    <input type="hidden" name="subscriber_id" value={subscriberId} />
+                                    <input
+                                      type="hidden"
+                                      name="subscriber_email"
+                                      value={textOrEmpty(subscriber.email)}
+                                    />
+                                    <button
+                                      type="submit"
+                                      name="action"
+                                      value="delete_subscriber"
+                                      class="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-red-700 transition hover:bg-red-100"
+                                    >
+                                      Delete
+                                    </button>
+                                  </form>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p class="mt-4 text-sm text-gray-500">No subscribers found.</p>
+                  )}
+                </div>
+              )
+            }
+
+            {
+              activeSection === "statistics" && (
+                <div class="space-y-4 rounded-2xl border border-gray-100 bg-gray-50 p-5">
+                  <h2 class="text-lg font-semibold text-gray-900">Statistics</h2>
+                  <p class="mt-1 text-sm text-gray-600">
+                    Live overview of posts, inbox activity, subscribers, and visitor analytics.
+                  </p>
+
+                  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">All Posts</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.posts}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Published Posts</p>
+                      <p class="mt-2 text-2xl font-bold text-emerald-700">{stats.publishedPosts}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Draft Posts</p>
+                      <p class="mt-2 text-2xl font-bold text-amber-700">{stats.draftPosts}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Messages</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.messages}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Subscribers</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.subscribers}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Total Pageviews</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.pageviews}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Pageviews (24h)</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.last24hPageviews}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Unique Visitors (24h)</p>
+                      <p class="mt-2 text-2xl font-bold text-gray-900">{stats.uniqueVisitors24h}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <p class="text-xs uppercase tracking-widest text-gray-500">Last Event</p>
+                      <p class="mt-2 text-sm font-semibold text-gray-900">{stats.lastEventAt}</p>
+                    </div>
+                  </div>
+
+                  <div class="grid gap-4 xl:grid-cols-2">
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <h3 class="text-sm font-semibold text-gray-900">Top Paths (recent 1000 events)</h3>
+                      {topPaths.length > 0 ? (
+                        <ul class="mt-3 space-y-2 text-sm text-gray-700">
+                          {topPaths.map((entry) => (
+                            <li class="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                              <span class="truncate">{entry.path}</span>
+                              <span class="rounded-md bg-white px-2 py-1 text-xs font-semibold text-gray-700">
+                                {entry.views}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p class="mt-2 text-sm text-gray-500">No analytics data found.</p>
+                      )}
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 bg-white p-4">
+                      <h3 class="text-sm font-semibold text-gray-900">Recent Visitor Events</h3>
+                      {recentVisitors.length > 0 ? (
+                        <div class="mt-3 max-h-[320px] overflow-auto">
+                          <table class="min-w-full text-left text-xs">
+                            <thead class="uppercase tracking-wide text-gray-500">
+                              <tr>
+                                <th class="pb-2 pr-3">Path</th>
+                                <th class="pb-2 pr-3">Device</th>
+                                <th class="pb-2 pr-3">Country</th>
+                                <th class="pb-2">Time</th>
+                              </tr>
+                            </thead>
+                            <tbody class="text-gray-700">
+                              {recentVisitors.map((event) => (
+                                <tr class="border-t border-gray-100 align-top">
+                                  <td class="py-2 pr-3">{truncate(asText(event.path, "-"), 44)}</td>
+                                  <td class="py-2 pr-3">{asText(event.device_type, "-")}</td>
+                                  <td class="py-2 pr-3">{asText(event.country, "-")}</td>
+                                  <td class="py-2">{formatDate(event.created_at)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p class="mt-2 text-sm text-gray-500">No visitor events found.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+
+            {
+              activeSection === "posts" && (
+                <script is:inline>
+                  (() => {
+                    const form = document.getElementById("post-editor-form");
+                    if (!form) return;
+
+                    const titleInput = document.getElementById("post-title");
+                    const slugInput = document.getElementById("post-slug");
+                    const source = document.getElementById("post-editor-source");
+                    const visual = document.getElementById("post-editor-visual");
+                    const preview = document.getElementById("post-editor-preview");
+                    const metricsNode = document.getElementById("post-editor-metrics");
+                    const autosaveNode = document.getElementById("post-editor-autosave");
+                    const postIdInput = document.getElementById("post-id");
+
+                    if (!(titleInput && slugInput && source && visual && preview && metricsNode && postIdInput)) {
+                      return;
+                    }
+
+                    const modeButtons = form.querySelectorAll("[data-editor-mode]");
+                    const toolButtons = form.querySelectorAll("[data-editor-command]");
+
+                    let mode = "visual";
+                    let autosaveTimer = null;
+                    let slugWasEdited = slugInput.value.trim().length > 0;
+                    const autosaveKey = `nekaya_editor_v1_${postIdInput.value || "new"}`;
+
+                    const makeSlug = (value) =>
+                      value
+                        .toLowerCase()
+                        .normalize("NFD")
+                        .replace(/[\u0300-\u036f]/g, "")
+                        .replace(/[^a-z0-9\\s-]/g, "")
+                        .trim()
+                        .replace(/\s+/g, "-")
+                        .replace(/-+/g, "-");
+
+                    const textFromHtml = (html) => {
+                      const wrapper = document.createElement("div");
+                      wrapper.innerHTML = html;
+                      return (wrapper.textContent || "").replace(/\s+/g, " ").trim();
+                    };
+
+                    const syncVisualFromSource = () => {
+                      visual.innerHTML = source.value.trim() ? source.value : "<p></p>";
+                    };
+
+                    const syncSourceFromVisual = () => {
+                      source.value = visual.innerHTML;
+                    };
+
+                    const updatePreview = () => {
+                      preview.innerHTML = source.value;
+                    };
+
+                    const updateMetrics = () => {
+                      const text = textFromHtml(source.value);
+                      const words = text.length > 0 ? text.split(" ").length : 0;
+                      const minutes = words > 0 ? Math.max(1, Math.ceil(words / 200)) : 0;
+                      metricsNode.textContent = `${words} words | ${minutes} min read`;
+                    };
+
+                    const setMode = (nextMode) => {
+                      mode = nextMode;
+
+                      modeButtons.forEach((button) => {
+                        const isActive = button.getAttribute("data-editor-mode") === nextMode;
+                        button.setAttribute("data-active", isActive ? "true" : "false");
+                      });
+
+                      if (nextMode === "visual") {
+                        syncVisualFromSource();
+                        visual.classList.remove("hidden");
+                        source.classList.add("hidden");
+                        preview.classList.add("hidden");
+                        visual.focus();
+                        return;
+                      }
+
+                      if (nextMode === "html") {
+                        syncSourceFromVisual();
+                        visual.classList.add("hidden");
+                        source.classList.remove("hidden");
+                        preview.classList.add("hidden");
+                        source.focus();
+                        return;
+                      }
+
+                      syncSourceFromVisual();
+                      updatePreview();
+                      visual.classList.add("hidden");
+                      source.classList.add("hidden");
+                      preview.classList.remove("hidden");
+                    };
+
+                    const queueAutosave = () => {
+                      if (autosaveTimer) clearTimeout(autosaveTimer);
+                      autosaveTimer = setTimeout(() => {
+                        try {
+                          localStorage.setItem(
+                            autosaveKey,
+                            JSON.stringify({
+                              title: titleInput.value,
+                              slug: slugInput.value,
+                              content: source.value,
+                              description: document.getElementById("post-description")?.value || "",
+                              featuredImage: document.getElementById("post-featured-image")?.value || "",
+                              categoryId: document.getElementById("post-category")?.value || "",
+                              status: document.getElementById("post-status")?.value || "draft",
+                              savedAt: Date.now(),
+                            })
+                          );
+                          if (autosaveNode) autosaveNode.textContent = "Local draft autosaved.";
+                        } catch {
+                          if (autosaveNode) autosaveNode.textContent = "Local autosave unavailable.";
+                        }
+                      }, 450);
+                    };
+
+                    const canRestore =
+                      !postIdInput.value &&
+                      !titleInput.value.trim() &&
+                      !slugInput.value.trim() &&
+                      !source.value.trim();
+
+                    if (canRestore) {
+                      try {
+                        const raw = localStorage.getItem(autosaveKey);
+                        if (raw) {
+                          const parsed = JSON.parse(raw);
+                          titleInput.value = parsed.title || "";
+                          slugInput.value = parsed.slug || "";
+                          source.value = parsed.content || "";
+                          if (document.getElementById("post-description")) {
+                            document.getElementById("post-description").value = parsed.description || "";
+                          }
+                          if (document.getElementById("post-featured-image")) {
+                            document.getElementById("post-featured-image").value = parsed.featuredImage || "";
+                          }
+                          if (document.getElementById("post-category")) {
+                            document.getElementById("post-category").value = parsed.categoryId || "";
+                          }
+                          if (document.getElementById("post-status")) {
+                            document.getElementById("post-status").value = parsed.status || "draft";
+                          }
+                          if (autosaveNode) autosaveNode.textContent = "Recovered local draft.";
+                        }
+                      } catch {
+                        // no-op
+                      }
+                    }
+
+                    if (!slugInput.value.trim() && titleInput.value.trim()) {
+                      slugInput.value = makeSlug(titleInput.value);
+                    }
+
+                    syncVisualFromSource();
+                    updatePreview();
+                    updateMetrics();
+                    setMode("visual");
+
+                    titleInput.addEventListener("input", () => {
+                      if (!slugWasEdited || !slugInput.value.trim()) {
+                        slugInput.value = makeSlug(titleInput.value);
+                      }
+                      queueAutosave();
+                    });
+
+                    slugInput.addEventListener("input", () => {
+                      slugWasEdited = true;
+                      queueAutosave();
+                    });
+
+                    source.addEventListener("input", () => {
+                      updatePreview();
+                      updateMetrics();
+                      queueAutosave();
+                    });
+
+                    visual.addEventListener("input", () => {
+                      syncSourceFromVisual();
+                      updatePreview();
+                      updateMetrics();
+                      queueAutosave();
+                    });
+
+                    modeButtons.forEach((button) => {
+                      button.addEventListener("click", () => {
+                        setMode(button.getAttribute("data-editor-mode") || "visual");
+                      });
+                    });
+
+                    toolButtons.forEach((button) => {
+                      button.addEventListener("click", () => {
+                        const command = button.getAttribute("data-editor-command");
+                        const value = button.getAttribute("data-editor-value") || "";
+                        if (!command) return;
+
+                        setMode("visual");
+                        visual.focus();
+
+                        if (command === "createLink") {
+                          const link = window.prompt("Enter URL", "https://");
+                          if (!link) return;
+                          document.execCommand("createLink", false, link);
+                        } else if (command === "formatBlock") {
+                          document.execCommand("formatBlock", false, value);
+                        } else if (command === "insertHTML") {
+                          const templateMap = {
+                            quote: "<blockquote><p>Quote...</p></blockquote>",
+                            code: "<pre><code>&lt;code&gt;</code></pre>",
+                            hr: "<hr />",
+                          };
+                          document.execCommand(
+                            "insertHTML",
+                            false,
+                            templateMap[value] || value
+                          );
+                        } else {
+                          document.execCommand(command, false);
+                        }
+
+                        syncSourceFromVisual();
+                        updatePreview();
+                        updateMetrics();
+                        queueAutosave();
+                      });
+                    });
+
+                    form.addEventListener("submit", (event) => {
+                      if (mode !== "html") {
+                        syncSourceFromVisual();
+                      }
+
+                      if (!slugInput.value.trim()) {
+                        slugInput.value = makeSlug(titleInput.value);
+                      }
+
+                      if (!source.value.trim()) {
+                        event.preventDefault();
+                        window.alert("Post content cannot be empty.");
+                        return;
+                      }
+
+                      try {
+                        localStorage.removeItem(autosaveKey);
+                      } catch {
+                        // no-op
+                      }
+                    });
+                  })();
+                </script>
+              )
+            }
+          </div>
+        ) : (
+          <form method="POST" class="space-y-5">
+            <div>
+              <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500" for="email">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                required
+                class="nekaya-input"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500" for="password">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                class="nekaya-input"
+                placeholder="Your Supabase password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              name="action"
+              value="login"
+              class="w-full rounded-xl bg-[#C6A75E] px-5 py-3 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-[#9CAF9A]"
+            >
+              Sign in to Nekaya
+            </button>
+          </form>
+        )
+      }
+    </section>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style is:global>
+  .nekaya-shell {
+    background:
+      radial-gradient(circle at 10% 10%, rgba(149, 142, 9, 0.16), transparent 34%),
+      radial-gradient(circle at 90% 0%, rgba(255, 222, 173, 0.42), transparent 45%),
+      linear-gradient(180deg, #fffdf7 0%, #fff 56%, #fffcef 100%);
+  }
+
+  .nekaya-input,
+  .nekaya-select,
+  .nekaya-textarea {
+    width: 100%;
+    border: 1px solid #EFE7E2;
+    background: #fffef8;
+    border-radius: 0.85rem;
+    padding: 0.7rem 0.85rem;
+    color: #1f2937;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+    outline: none;
+  }
+
+  .nekaya-input:focus,
+  .nekaya-select:focus,
+  .nekaya-textarea:focus {
+    border-color: #C6A75E;
+    box-shadow: 0 0 0 3px rgba(149, 142, 9, 0.18);
+    background: #fff;
+  }
+
+  .nekaya-mode-btn,
+  .nekaya-tool-btn {
+    border: 1px solid #EFE7E2;
+    background: #fffef7;
+    color: #4b5563;
+    border-radius: 0.65rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 120ms ease;
+  }
+
+  .nekaya-mode-btn:hover,
+  .nekaya-tool-btn:hover {
+    border-color: #C6A75E;
+    color: #9CAF9A;
+    background: #fff9db;
+  }
+
+  .nekaya-mode-btn[data-active="true"] {
+    background: #C6A75E;
+    border-color: #C6A75E;
+    color: #fff;
+  }
+
+  #post-editor-visual:focus,
+  #post-editor-source:focus,
+  #post-editor-preview:focus {
+    outline: none;
+  }
+
+  #post-editor-visual h1,
+  #post-editor-visual h2,
+  #post-editor-visual h3,
+  #post-editor-preview h1,
+  #post-editor-preview h2,
+  #post-editor-preview h3 {
+    font-weight: 700;
+    margin: 1rem 0 0.6rem;
+    line-height: 1.3;
+  }
+
+  #post-editor-visual p,
+  #post-editor-preview p {
+    margin: 0.8rem 0;
+  }
+
+  #post-editor-visual blockquote,
+  #post-editor-preview blockquote {
+    margin: 1rem 0;
+    border-left: 4px solid #c7bf67;
+    padding-left: 0.8rem;
+    color: #4b5563;
+  }
+
+  #post-editor-visual pre,
+  #post-editor-preview pre {
+    margin: 1rem 0;
+    border-radius: 0.7rem;
+    background: #111827;
+    color: #f9fafb;
+    padding: 0.85rem;
+    overflow-x: auto;
+  }
+</style>
+

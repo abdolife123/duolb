@@ -38,22 +38,22 @@ Astro.response.headers.set(
     <div class="max-w-4xl mx-auto">
       <header class="text-center mb-24">
         <span
-          class="text-[#958e09] font-bold tracking-[0.4em] uppercase text-[10px] mb-4 block italic"
+          class="text-[#C6A75E] font-bold tracking-[0.4em] uppercase text-[10px] mb-4 block italic"
           >Kuration</span
         >
         <h1 class="text-5xl md:text-6xl font-serif text-gray-900 mb-6">
           Alle Beiträge
         </h1>
-        <div class="h-px w-24 bg-[#958e09]/30 mx-auto"></div>
+        <div class="h-px w-24 bg-[#C6A75E]/30 mx-auto"></div>
       </header>
 
       <div class="space-y-12">
         {
           posts.map((post) => (
             <a href={`/posts/${post.slug}`} class="group block">
-              <article class="flex flex-col md:flex-row gap-8 items-center border-b border-gray-50 pb-12 transition-all group-hover:border-[#958e09]/20">
+              <article class="flex flex-col md:flex-row gap-8 items-center border-b border-gray-50 pb-12 transition-all group-hover:border-[#C6A75E]/20">
                 <div class="hidden md:block w-32 shrink-0">
-                  <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-[#958e09] transition-colors">
+                  <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-[#C6A75E] transition-colors">
                     {new Date(post.created_at).toLocaleDateString("de-DE", {
                       day: "2-digit",
                       month: "short",
@@ -73,7 +73,7 @@ Astro.response.headers.set(
                 </div>
 
                 <div class="flex-grow">
-                  <h2 class="text-2xl md:text-3xl font-serif text-gray-900 leading-snug group-hover:text-[#958e09] transition-colors">
+                  <h2 class="text-2xl md:text-3xl font-serif text-gray-900 leading-snug group-hover:text-[#C6A75E] transition-colors">
                     {post.title}
                   </h2>
                   <div class="mt-4 flex items-center gap-4">
@@ -112,5 +112,6 @@ Astro.response.headers.set(
     font-family: "Cormorant Garamond", serif;
   }
 </style>
+
 
 

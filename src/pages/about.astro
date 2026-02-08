@@ -1,14 +1,14 @@
----
+﻿---
 import Footer from "../components/Footer.astro";
 import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Über uns | duolb Beauty Blog">
 
-  <main class="bg-gradient-to-b from-[#ffdead]/30 to-white min-h-screen">
+  <main class="bg-gradient-to-b from-[#F6F4F1]/35 to-white min-h-screen">
     <header class="max-w-4xl mx-auto pt-20 pb-12 px-6 text-center">
       <span
-        class="text-[#958e09] font-semibold tracking-[0.2em] uppercase text-sm mb-4 block"
+        class="text-[#C6A75E] font-semibold tracking-[0.2em] uppercase text-sm mb-4 block"
       >
         Unsere Geschichte
       </span>
@@ -18,8 +18,8 @@ import Layout from "../layouts/Layout.astro";
       <p
         class="text-xl md:text-2xl text-gray-700 leading-relaxed font-light italic"
       >
-        Willkommen bei <strong class="text-[#958e09] font-semibold not-italic"
-          >duolb</strong
+        Willkommen bei <strong class="text-[#C6A75E] font-semibold not-italic"
+        >duolb</strong
         > – deinem Schönheitsblog für ehrliche Tipps, moderne Hautpflege und echte Erfahrungen.
       </p>
     </header>
@@ -27,13 +27,13 @@ import Layout from "../layouts/Layout.astro";
     <section class="max-w-3xl mx-auto pb-24 px-6 space-y-16">
       <div class="relative">
         <div
-          class="absolute -left-4 top-0 w-1 h-full bg-[#958e09]/20 hidden md:block"
+          class="absolute -left-4 top-0 w-1 h-full bg-[#C6A75E]/20 hidden md:block"
         >
         </div>
         <h2
           class="text-2xl font-serif text-gray-900 mb-4 flex items-center gap-3"
         >
-          <span class="text-[#958e09]">01.</span> Unsere Mission
+          <span class="text-[#C6A75E]">01.</span> Unsere Mission
         </h2>
         <p class="text-gray-600 leading-loose text-lg">
           Wir glauben, dass Schönheit nichts mit Perfektion zu tun hat, sondern mit
@@ -44,7 +44,7 @@ import Layout from "../layouts/Layout.astro";
       </div>
 
       <div
-        class="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-[#958e09]/10"
+        class="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-[#C6A75E]/10"
       >
         <h2 class="text-2xl font-serif text-gray-900 mb-8 text-center">
           Was du hier findest
@@ -60,7 +60,7 @@ import Layout from "../layouts/Layout.astro";
               { emoji: "✨", text: "Schönheitstrends einfach erklärt" },
               { emoji: "🔍", text: "Ehrliche Rezensionen ohne Filter" },
             ].map((item) => (
-              <li class="flex items-start gap-4 p-4 rounded-xl hover:bg-[#ffdead]/20 transition-colors">
+              <li class="flex items-start gap-4 p-4 rounded-xl hover:bg-[#FBF6F2]/20 transition-colors">
                 <span class="text-2xl">{item.emoji}</span>
                 <span class="text-gray-700 font-medium">{item.text}</span>
               </li>
@@ -80,15 +80,15 @@ import Layout from "../layouts/Layout.astro";
       </div>
 
       <div
-        class="bg-[#958e09] rounded-[2rem] p-10 text-center text-white shadow-xl shadow-[#958e09]/20"
+        class="bg-[#F3ECE8] rounded-[2rem] p-10 text-center text-gray-900 shadow-sm border border-[#E8E1DA]"
       >
         <h2 class="text-2xl font-serif mb-4">Lass uns vernetzen</h2>
-        <p class="mb-8 opacity-90">
+        <p class="mb-8 text-gray-600">
           Du hast Fragen, Feedback oder möchtest mit uns zusammenarbeiten?
         </p>
         <a
           href="mailto:contact@duolb.com"
-          class="inline-block bg-white text-[#958e09] px-10 py-4 rounded-full font-bold hover:bg-[#ffdead] hover:scale-105 transition-all uppercase tracking-widest text-sm"
+          class="inline-block bg-[#D8A7B1] text-[#FBF6F2] px-10 py-4 rounded-full font-bold hover:bg-[#9CAF9A] hover:scale-105 transition-all uppercase tracking-widest text-sm"
         >
           contact@duolb.com
         </a>
@@ -106,3 +106,4 @@ import Layout from "../layouts/Layout.astro";
     font-family: "Cormorant Garamond", serif;
   }
 </style>
+

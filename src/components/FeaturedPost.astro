@@ -1,4 +1,4 @@
----
+﻿---
 // FeaturedPost.astro
 const { post } = Astro.props || {};
 
@@ -21,16 +21,18 @@ const slug = post?.slug ?? "";
 ---
 
 <section
-  class="relative bg-white py-12 lg:py-20 overflow-hidden border-b border-gray-50"
+  class="relative overflow-hidden rounded-[28px] border border-[#E8E1DA] bg-gradient-to-br from-[#F7F4F1] via-[#FFFEFD] to-[#F2EDE8] py-14 lg:py-20 shadow-sm"
 >
-  <div class="absolute top-0 left-0 w-full h-1/2 bg-[#ffdead]/10 -z-10"></div>
+  <div class="pointer-events-none absolute -left-16 -top-20 h-72 w-72 rounded-full bg-[#C98FA0]/9 blur-3xl"></div>
+  <div class="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-[#A8B8A2]/8 blur-3xl"></div>
+  <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.36),rgba(255,255,255,0))]"></div>
 
-<div class="max-w-7xl mx-auto px-6 lg:px-8">
+<div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
   <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
     <div class="w-full lg:w-3/5 order-2 lg:order-1">
       <div class="relative group">
         <div
-          class="absolute -inset-4 border border-[#958e09]/20 rounded-sm translate-x-2 translate-y-2 -z-10 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"
+          class="absolute -inset-4 border border-[#C9AE84]/20 rounded-sm translate-x-2 translate-y-2 -z-10 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"
         ></div>
 
         <div class="overflow-hidden rounded-sm shadow-xl aspect-[16/10] lg:aspect-[4/3]">
@@ -56,9 +58,9 @@ const slug = post?.slug ?? "";
     <div class="w-full lg:w-2/5 order-1 lg:order-2 space-y-8">
       <div class="space-y-4">
         <div class="flex items-center gap-3">
-          <span class="w-10 h-px bg-[#958e09]"></span>
+          <span class="w-10 h-px bg-[#A47864]"></span>
           <span
-            class="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6f6807]"
+            class="text-[10px] uppercase tracking-[0.3em] font-bold text-[#A8B8A2]"
           >
 Top-Artikel
           </span>
@@ -83,12 +85,12 @@ Top-Artikel
           class="group inline-flex items-center gap-6"
         >
           <span
-            class="text-[11px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-200 pb-2 group-hover:border-[#6f6807] transition-all"
+            class="text-[11px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-200 pb-2 group-hover:border-[#A8B8A2] transition-all"
           >
             Weiterlesen
           </span>
           <div
-            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center group-hover:bg-[#958e09] group-hover:text-white transition-all"
+            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center group-hover:bg-[#7D425B] group-hover:text-white transition-all"
             aria-hidden="true"
           >
             <span class="text-lg">→</span>
@@ -107,3 +109,4 @@ Top-Artikel
     font-family: "Cormorant Garamond", serif;
   }
 </style>
+

@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import DirectoryLayout from "../../layouts/DirectoryLayout.astro"
+import SalonImage from "../../components/directory/SalonImage.astro"
 import { supabase } from "../../lib/supabase"
 
 const { slug } = Astro.params
@@ -47,6 +48,42 @@ if (salon.category_id) {
     .eq("id", salon.category_id)
     .maybeSingle()
   category = data
+}
+
+const relatedConditions = []
+if (salon.city_id) relatedConditions.push(`city_id.eq.${salon.city_id}`)
+if (salon.category_id) relatedConditions.push(`category_id.eq.${salon.category_id}`)
+
+let relatedSalons = []
+if (relatedConditions.length > 0) {
+  const { data: relatedRaw, error: relatedError } = await supabase
+    .from("salons")
+    .select(
+      "salon_name, slug, cover_image, rating_value, rating_count, full_address, city_id, category_id"
+    )
+    .neq("slug", salon.slug)
+    .or(relatedConditions.join(","))
+    .limit(24)
+
+  if (relatedError) {
+    console.error("related salons error", relatedError)
+  }
+
+  relatedSalons = (relatedRaw || [])
+    .map((item) => {
+      const isSameCity = Boolean(salon.city_id && item.city_id === salon.city_id)
+      const isSameCategory = Boolean(
+        salon.category_id && item.category_id === salon.category_id
+      )
+      const score = (isSameCity ? 2 : 0) + (isSameCategory ? 2 : 0)
+
+      return { ...item, score }
+    })
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score
+      return (b.rating_value ?? 0) - (a.rating_value ?? 0)
+    })
+    .slice(0, 6)
 }
 
 // SEO
@@ -212,6 +249,49 @@ const salonSchema = {
         src={`https://www.google.com/maps?q=${salon.latitude},${salon.longitude}&output=embed`}
       ></iframe>
     </div>
+  )}
+
+  {/* RELATED SALONS */}
+  {relatedSalons.length > 0 && (
+    <section class="mt-16 mb-10">
+      <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <h2 class="text-2xl font-semibold text-slate-900">
+          Ähnliche Salons
+        </h2>
+        {city && (
+          <a
+            href={`/directory/city/${city.slug}`}
+            class="text-sm font-semibold text-amber-700 hover:text-amber-800"
+          >
+            Mehr in {city.name}
+          </a>
+        )}
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {relatedSalons.map((item) => (
+          <a
+            href={`/salon/${item.slug}`}
+            class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-md transition"
+          >
+            <SalonImage
+              coverImage={item.cover_image}
+              alt={`${item.salon_name}${city ? ` in ${city.name}` : ""}`}
+              class="h-44 w-full object-cover"
+            />
+            <div class="p-4">
+              <h3 class="font-semibold text-slate-900 mb-2">{item.salon_name}</h3>
+              <p class="text-sm text-slate-500 line-clamp-2 mb-2">
+                {item.full_address || "Adresse nicht verfügbar"}
+              </p>
+              <div class="text-sm text-amber-700">
+                ⭐ {item.rating_value ?? "–"} ({item.rating_count ?? 0})
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
   )}
 
   {/* INTERNAL LINKS */}

@@ -1,4 +1,4 @@
----
+﻿---
 const { cities = [], categories = [] } = Astro.props;
 
 const url = new URL(Astro.request.url);
@@ -8,13 +8,13 @@ const selectedCategory = url.searchParams.get("category") || "";
 const selectedRating = url.searchParams.get("rating") || "";
 ---
 
-<div class="bg-[#ffdead]/40 border border-[#958e09]/20 rounded-xl p-4 mb-8">
+<div class="mb-10 rounded-3xl border border-[#EFE7E2] bg-[#F3ECE8]/45 p-6 shadow-sm">
   <form method="GET" class="grid gap-4 md:grid-cols-4 items-end">
 
     <!-- City Filter -->
     <div class="flex flex-col">
-      <label class="text-sm font-semibold mb-1">Stadt</label>
-      <select name="city" class="border rounded-lg px-3 py-2 bg-white">
+      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[#8C8587]">Stadt</label>
+      <select name="city" class="rounded-xl border border-[#EFE7E2] bg-[#FBF6F2] px-3 py-2.5">
         <option value="">Alle Städte</option>
         {cities.map(city => (
           <option value={city.slug} selected={city.slug === selectedCity}>
@@ -26,8 +26,8 @@ const selectedRating = url.searchParams.get("rating") || "";
 
     <!-- Category Filter -->
     <div class="flex flex-col">
-      <label class="text-sm font-semibold mb-1">Kategorie</label>
-      <select name="category" class="border rounded-lg px-3 py-2 bg-white">
+      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[#8C8587]">Kategorie</label>
+      <select name="category" class="rounded-xl border border-[#EFE7E2] bg-[#FBF6F2] px-3 py-2.5">
         <option value="">Alle Kategorien</option>
         {categories.map(cat => (
           <option value={cat.slug} selected={cat.slug === selectedCategory}>
@@ -39,8 +39,8 @@ const selectedRating = url.searchParams.get("rating") || "";
 
     <!-- Rating Filter -->
     <div class="flex flex-col">
-      <label class="text-sm font-semibold mb-1">Mindestbewertung</label>
-      <select name="rating" class="border rounded-lg px-3 py-2 bg-white">
+      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[#8C8587]">Mindestbewertung</label>
+      <select name="rating" class="rounded-xl border border-[#EFE7E2] bg-[#FBF6F2] px-3 py-2.5">
         <option value="">Beliebige Bewertung</option>
         <option value="4" selected={selectedRating === "4"}>4★ und höher</option>
         <option value="3" selected={selectedRating === "3"}>3★ und höher</option>
@@ -51,14 +51,14 @@ const selectedRating = url.searchParams.get("rating") || "";
     <div class="flex gap-2">
       <button
         type="submit"
-        class="bg-[#958e09] text-white px-4 py-2 rounded-lg hover:opacity-90 w-full"
+        class="w-full rounded-xl bg-[#D8A7B1] px-4 py-2.5 text-[#FBF6F2] hover:bg-[#9CAF9A]"
       >
         Anwenden
       </button>
 
       <a
         href={Astro.url.pathname}
-        class="border border-gray-300 px-4 py-2 rounded-lg text-center w-full hover:bg-gray-50"
+        class="w-full rounded-xl border border-[#D8A7B1]/60 px-4 py-2.5 text-center text-[#8E4A5A] hover:bg-[#FBF6F2]"
       >
         Zurücksetzen
       </a>
@@ -66,3 +66,4 @@ const selectedRating = url.searchParams.get("rating") || "";
 
   </form>
 </div>
+

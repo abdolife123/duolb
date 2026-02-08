@@ -1,4 +1,4 @@
----
+﻿---
 const label = "Go to top";
 ---
 
@@ -8,7 +8,7 @@ const label = "Go to top";
   title={label}
   class="back-to-top fixed right-5 bottom-5 z-[9999]
          w-12 h-12 rounded-full
-         bg-brand-gold text-brand-pure
+         bg-[#D8A7B1] text-[#FBF6F2]
          shadow-lg shadow-black/20
          flex items-center justify-center
          text-xl font-bold
@@ -41,15 +41,16 @@ const label = "Go to top";
 </script>
 
 <style>
-  /* تأثير Hover باستخدام ألوان البراند */
+  /* Hover effect using brand colors */
   .back-to-top:hover {
-    background-color: #ffdead; /* brand.cream */
-    color: #958e09; /* brand.gold */
+    background-color: #9CAF9A;
+    color: #FBF6F2;
     transform: translateY(-2px);
   }
 
   .back-to-top:focus-visible {
-    outline: 3px solid #ffdead;
+    outline: 3px solid rgba(198, 167, 94, 0.55);
     outline-offset: 3px;
   }
 </style>
+

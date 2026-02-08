@@ -1,8 +1,8 @@
----
+﻿---
 // PostCard.astro
 const { post } = Astro.props;
 
-// 🔥 NATIVE UTF-8 NORMALIZATION
+// UTF-8 normalization
 function fixText(str = "") {
   try {
     return new TextDecoder("utf-8").decode(new TextEncoder().encode(str));
@@ -51,11 +51,11 @@ const formattedDate = dateObj.toLocaleDateString("de-DE", {
 
   <div class="pt-4 pb-4 flex flex-col flex-grow">
     <div class="flex items-center gap-2 mb-2">
-      <span class="w-6 h-px bg-[#958e09]"></span>
-      <span class="text-[9px] uppercase tracking-[0.3em] font-bold text-[#958e09]">Redaktion</span>
+      <span class="w-6 h-px bg-[#C6A75E]"></span>
+      <span class="text-[9px] uppercase tracking-[0.3em] font-bold text-[#C6A75E]">Redaktion</span>
     </div>
 
-    <h2 class="font-serif text-xl md:text-2xl text-gray-900 leading-snug mb-4 line-clamp-2 group-hover:text-[#958e09] transition-colors">
+    <h2 class="font-serif text-xl md:text-2xl text-gray-900 leading-snug mb-4 line-clamp-2 group-hover:text-[#C6A75E] transition-colors">
       <a href={`/posts/${safeSlug}`}>
         {safeTitle}
       </a>
@@ -69,7 +69,7 @@ const formattedDate = dateObj.toLocaleDateString("de-DE", {
         <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 group-hover/link:text-gray-900 transition-colors">
           Weiterlesen
         </span>
-        <div class="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center group-hover/link:bg-[#958e09] group-hover/link:text-white transition-all duration-300">
+        <div class="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center group-hover/link:bg-[#C6A75E] group-hover/link:text-white transition-all duration-300">
           <span class="text-sm">→</span>
         </div>
       </a>
@@ -82,3 +82,4 @@ const formattedDate = dateObj.toLocaleDateString("de-DE", {
     font-family: "Cormorant Garamond", serif; /*  */
   }
 </style>
+

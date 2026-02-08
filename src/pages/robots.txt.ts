@@ -1,6 +1,7 @@
 export async function GET() {
   const body = `User-agent: *
 Allow: /
+Disallow: /nekaya
 
 Sitemap: https://duolb.com/sitemap-index.xml
 `
