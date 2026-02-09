@@ -21,10 +21,10 @@ const slug = post?.slug ?? "";
 ---
 
 <section
-  class="relative overflow-hidden rounded-[28px] border border-[#E8E1DA] bg-gradient-to-br from-[#F7F4F1] via-[#FFFEFD] to-[#F2EDE8] py-14 lg:py-20 shadow-sm"
+  class="relative overflow-hidden rounded-[28px] border border-[var(--color-light-taupe)] bg-gradient-to-br from-[var(--color-warm-cream)] via-[var(--color-soft-white)] to-[var(--color-soft-rose)] py-14 lg:py-20 shadow-[var(--shadow-sm)]"
 >
-  <div class="pointer-events-none absolute -left-16 -top-20 h-72 w-72 rounded-full bg-[#C98FA0]/9 blur-3xl"></div>
-  <div class="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-[#A8B8A2]/8 blur-3xl"></div>
+  <div class="pointer-events-none absolute -left-16 -top-20 h-72 w-72 rounded-full bg-[var(--color-dusty-mauve)] blur-3xl opacity-[0.10]"></div>
+  <div class="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-[var(--color-sage-green)] blur-3xl opacity-[0.10]"></div>
   <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.36),rgba(255,255,255,0))]"></div>
 
 <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
@@ -32,7 +32,7 @@ const slug = post?.slug ?? "";
     <div class="w-full lg:w-3/5 order-2 lg:order-1">
       <div class="relative group">
         <div
-          class="absolute -inset-4 border border-[#C9AE84]/20 rounded-sm translate-x-2 translate-y-2 -z-10 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"
+          class="absolute -inset-4 border border-[rgba(230,226,221,0.2)] rounded-sm translate-x-2 translate-y-2 -z-10 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"
         ></div>
 
         <div class="overflow-hidden rounded-sm shadow-xl aspect-[16/10] lg:aspect-[4/3]">
@@ -48,7 +48,7 @@ const slug = post?.slug ?? "";
         </div>
 
         <span
-          class="absolute -right-8 top-1/2 -rotate-90 text-[10px] tracking-[0.5em] uppercase text-gray-400 hidden xl:block"
+          class="absolute -right-8 top-1/2 -rotate-90 text-[10px] tracking-[0.5em] uppercase text-[var(--color-medium-gray)] hidden xl:block"
         >
           Gegr. 2026 Redaktion
         </span>
@@ -58,22 +58,22 @@ const slug = post?.slug ?? "";
     <div class="w-full lg:w-2/5 order-1 lg:order-2 space-y-8">
       <div class="space-y-4">
         <div class="flex items-center gap-3">
-          <span class="w-10 h-px bg-[#A47864]"></span>
+          <span class="w-10 h-px bg-[var(--color-gentle-gold)]"></span>
           <span
-            class="text-[10px] uppercase tracking-[0.3em] font-bold text-[#A8B8A2]"
+            class="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--color-gentle-gold)]"
           >
 Top-Artikel
           </span>
         </div>
 
         <h2
-          class="text-3xl md:text-4xl lg:text-5xl font-serif text-gray-900 leading-[1.2] tracking-tight"
+          class="text-3xl md:text-4xl lg:text-5xl font-serif text-[var(--color-deep-slate)] leading-[1.2] tracking-tight"
         >
           {title}
         </h2>
 
         <p
-          class="text-gray-600 text-base md:text-lg leading-relaxed font-light max-w-md"
+          class="text-[var(--color-charcoal)] text-base md:text-lg leading-relaxed font-light max-w-md"
         >
           {description}
         </p>
@@ -85,12 +85,12 @@ Top-Artikel
           class="group inline-flex items-center gap-6"
         >
           <span
-            class="text-[11px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-200 pb-2 group-hover:border-[#A8B8A2] transition-all"
+            class="text-[11px] uppercase tracking-[0.3em] font-bold text-[var(--color-terracotta)] border-b border-[rgba(230,226,221,0.7)] pb-2 transition-all group-hover:text-[var(--color-gentle-gold)] group-hover:border-[var(--color-gentle-gold)]"
           >
             Weiterlesen
           </span>
           <div
-            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center group-hover:bg-[#7D425B] group-hover:text-white transition-all"
+            class="w-10 h-10 rounded-full border border-[rgba(230,226,221,0.7)] flex items-center justify-center transition-all group-hover:bg-[var(--color-gentle-gold)] group-hover:text-white"
             aria-hidden="true"
           >
             <span class="text-lg">→</span>

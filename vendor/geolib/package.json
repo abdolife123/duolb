@@ -1,0 +1,13 @@
+{
+  "name": "geolib",
+  "version": "0.0.0-local",
+  "description": "Local minimal geolib-compatible package (getDistance only).",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "types": "./index.d.ts",
+  "license": "MIT"
+}
+

@@ -33,7 +33,7 @@ const { data: salons } = await supabase
 
 // Fetch categories for internal linking
 const { data: categories } = await supabase
-  .from("categories")
+  .from("business_categories")
   .select("id, name, slug")
 
 // SEO
@@ -74,11 +74,11 @@ const itemListSchema = {
 
 <section class="max-w-6xl mx-auto px-6 py-16">
 
-  <h1 class="text-4xl font-serif text-[#C6A75E] mb-6">
+  <h1 class="text-4xl font-serif text-[var(--color-deep-slate)] mb-6">
     Die besten Salons in {cityData.name}
   </h1>
 
-  <p class="text-gray-700 max-w-3xl mb-12">
+  <p class="text-[var(--color-charcoal)] max-w-3xl mb-12">
     {description}
   </p>
 
@@ -89,15 +89,15 @@ const itemListSchema = {
 
   <div class="grid md:grid-cols-3 gap-8">
     {salons?.map(salon => (
-      <a href={`/salon/${salon.slug}`} class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
+      <a href={`/salon/${salon.slug}`} class="bg-white rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] shadow-[var(--shadow-sm)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)] overflow-hidden">
         <SalonImage
           coverImage={salon.cover_image}
           alt={`${salon.salon_name} in ${cityData.name}`}
           class="h-48 w-full object-cover"
         />
         <div class="p-5">
-          <h3 class="font-semibold text-lg mb-1">{salon.salon_name}</h3>
-          <div class="text-[#C6A75E] text-sm">
+          <h3 class="font-semibold text-lg mb-1 text-[var(--color-deep-slate)]">{salon.salon_name}</h3>
+          <div class="text-[var(--color-gentle-gold)] text-sm">
             ⭐ {salon.rating_value ?? "–"} ({salon.rating_count ?? 0})
           </div>
         </div>
@@ -107,14 +107,14 @@ const itemListSchema = {
 
   {/* Category Internal Links */}
   <section class="mt-20">
-    <h2 class="text-2xl font-serif text-[#C6A75E] mb-6">
+    <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-6">
       Beliebte Kategorien in {cityData.name}
     </h2>
     <div class="flex flex-wrap gap-3">
       {categories?.map(cat => (
         <a
           href={`/directory/city/${cityData.slug}/${cat.slug}`}
-          class="px-4 py-2 bg-[#FBF6F2] rounded-full text-sm hover:bg-[#C6A75E] hover:text-white transition"
+          class="px-4 py-2 bg-[var(--color-warm-cream)] border border-[var(--color-light-taupe)] rounded-full text-sm text-[var(--color-deep-slate)] transition-colors hover:bg-[var(--color-gentle-gold)] hover:text-white hover:border-[var(--color-gentle-gold)]"
         >
           {cat.name} in {cityData.name}
         </a>

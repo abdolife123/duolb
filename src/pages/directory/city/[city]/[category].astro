@@ -6,7 +6,7 @@ import { supabase } from "../../../../lib/supabase"
 export async function getStaticPaths() {
   const [{ data: cities }, { data: categories }] = await Promise.all([
     supabase.from("cities").select("slug"),
-    supabase.from("categories").select("slug")
+    supabase.from("business_categories").select("slug")
   ])
 
   const paths = []
@@ -33,8 +33,8 @@ const { data: cityData } = await supabase
 
 // Fetch category info
 const { data: categoryData } = await supabase
-  .from("categories")
-  .select("id, name, slug, seo_title, seo_description, seo_h1")
+  .from("business_categories")
+  .select("id, name, slug, seo_title, seo_description")
   .eq("slug", category)
   .single()
 
@@ -53,11 +53,11 @@ const { data: salons } = await supabase
 
 // SEO content
 const title =
-  cityData.seo_title ||
+  categoryData.seo_title ||
   `${categoryData.name} in ${cityData.name} – Bewertungen & Adressen`
 
 const description =
-  cityData.seo_description ||
+  categoryData.seo_description ||
   `Finde die besten ${categoryData.name} in ${cityData.name}. Vergleiche Bewertungen, Adressen und Leistungen der Top Salons in deiner Nähe.`
 
 Astro.response.headers.set(
@@ -88,11 +88,11 @@ const itemListSchema = {
 >
 
   <section class="mb-10">
-    <h1 class="text-3xl font-serif text-[#C6A75E] mb-4">
+    <h1 class="text-3xl font-serif text-[var(--color-deep-slate)] mb-4">
       {categoryData.seo_h1 || `Die besten ${categoryData.name} in ${cityData.name}`}
     </h1>
 
-    <p class="text-gray-700 max-w-3xl">
+    <p class="text-[var(--color-charcoal)] max-w-3xl">
       {description}
     </p>
   </section>
@@ -100,18 +100,18 @@ const itemListSchema = {
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     {salons?.length ? (
       salons.map(salon => (
-        <a href={`/salon/${salon.slug}`} class="bg-white rounded-3xl overflow-hidden shadow-md group">
+        <a href={`/salon/${salon.slug}`} class="bg-white rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] overflow-hidden shadow-[var(--shadow-sm)] group transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)]">
           <SalonImage
             coverImage={salon.cover_image}
             alt={`${salon.salon_name} in ${cityData.name}`}
-            class="h-48 w-full object-cover group-hover:scale-105 transition-transform"
+            class="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div class="p-5">
-            <div class="text-[#C6A75E] text-sm mb-1">
+            <div class="text-[var(--color-gentle-gold)] text-sm mb-1">
               ⭐ {salon.rating_value ?? "–"} ({salon.rating_count ?? 0})
             </div>
-            <h3 class="font-semibold">{salon.salon_name}</h3>
-            <p class="text-gray-500 text-sm">{salon.full_address}</p>
+            <h3 class="font-semibold text-[var(--color-deep-slate)]">{salon.salon_name}</h3>
+            <p class="text-[var(--color-medium-gray)] text-sm">{salon.full_address}</p>
           </div>
         </a>
       ))
@@ -152,6 +152,7 @@ const itemListSchema = {
   </section>
 
 </DirectoryLayout>
+
 
 
 

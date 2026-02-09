@@ -39,19 +39,19 @@ const itemListSchema = {
   description={description}
   canonical="https://duolb.com/directory/city"
 >
-  <section class="bg-[#FBF6F2] py-16 px-6 text-center rounded-3xl mb-12">
+  <section class="bg-[var(--color-warm-cream)] py-16 px-6 text-center rounded-3xl border border-[var(--color-light-taupe)] shadow-[var(--shadow-sm)] mb-12">
     <div class="max-w-4xl mx-auto">
-      <h1 class="text-4xl md:text-6xl font-serif text-[#C6A75E] mb-4">
+      <h1 class="text-4xl md:text-6xl font-serif text-[var(--color-deep-slate)] mb-4">
         Salons nach Stadt
       </h1>
-      <p class="text-lg text-[#C6A75E]/80 mb-2 italic">
+      <p class="text-lg text-[var(--color-medium-gray)] mb-2 italic">
         Entdecke die beliebtesten Städte und finde Salons in deiner Nähe.
       </p>
     </div>
   </section>
 
   <section class="py-6 px-6">
-    <h2 class="text-2xl md:text-3xl font-serif text-center mb-10 text-[#C6A75E]">
+    <h2 class="text-2xl md:text-3xl font-serif text-center mb-10 text-[var(--color-deep-slate)]">
       Top Städte in Deutschland
     </h2>
 
@@ -63,10 +63,10 @@ const itemListSchema = {
       {cities?.map((city) => (
         <a
           href={`/directory/city/${city.slug}`}
-          class="bg-white p-6 rounded-2xl shadow-sm hover:ring-1 hover:ring-[#C6A75E] transition-all"
+          class="bg-white p-6 rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] shadow-[var(--shadow-sm)] transition-all hover:-translate-y-1 hover:border-[var(--color-gentle-gold)] hover:shadow-[var(--shadow-md)]"
         >
-          <div class="text-[#C6A75E] font-semibold">{city.name}</div>
-          <div class="text-sm text-gray-500 mt-1">
+          <div class="text-[var(--color-deep-slate)] font-semibold">{city.name}</div>
+          <div class="text-sm text-[var(--color-medium-gray)] mt-1">
             {city.salon_count ?? 0} Salons
           </div>
         </a>
@@ -74,7 +74,7 @@ const itemListSchema = {
     </div>
   </section>
 
-  <section class="py-16 px-6 border-t border-[#FBF6F2] max-w-5xl mx-auto prose">
+  <section class="py-16 px-6 border-t border-[rgba(230,226,221,0.2)] max-w-5xl mx-auto prose">
     <h2>Salons für Schönheit & Wellness nach Stadt finden</h2>
     <p>
       Wähle eine Stadt, um die besten Salons, Studios und Wellnessanbieter vor Ort

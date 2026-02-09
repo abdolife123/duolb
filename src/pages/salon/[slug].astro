@@ -39,7 +39,7 @@ if (salon.city_id) {
 let category = null
 if (salon.category_id) {
   const { data } = await supabase
-    .from("categories")
+    .from("business_categories")
     .select("name, slug")
     .eq("id", salon.category_id)
     .maybeSingle()
@@ -146,10 +146,10 @@ const salonSchema = {
   image={coverImage}
 >
 
-<section class="max-w-6xl mx-auto px-6 py-14 text-slate-800">
+<section class="max-w-6xl mx-auto px-6 py-14 text-[var(--color-charcoal)]">
 
   {/* HERO IMAGE */}
-  <div class="rounded-3xl overflow-hidden shadow-xl ring-1 ring-slate-200 mb-10">
+  <div class="salon-hero relative rounded-3xl overflow-hidden shadow-[var(--shadow-md)] ring-1 ring-[rgba(230,226,221,0.55)] mb-10">
     <SalonImage
       coverImage={salon.cover_image}
       alt={`${salon.salon_name}${city ? ` in ${city.name}` : ""}`}
@@ -161,29 +161,29 @@ const salonSchema = {
   </div>
 
   {/* HEADER */}
-  <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-10">
+  <div class="salon-hero-header flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-10">
     <div>
-      <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-3 leading-tight">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[var(--color-soft-white)] mb-3 leading-tight">
         {salon.salon_name}{city ? ` in ${city.name}` : ""}
       </h1>
 
-      <p class="text-base md:text-lg text-slate-600 max-w-3xl mb-4">
+      <p class="text-base md:text-lg text-[var(--color-light-taupe)] max-w-3xl mb-4">
         Entdecke Leistungen, Standort und Kontaktdaten auf einen Blick.
       </p>
 
       <div class="flex flex-wrap items-center gap-3 text-sm">
         {category && (
-          <a href={`/directory/city/${city?.slug}/${category.slug}`} class="bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1 rounded-full hover:bg-amber-100 transition">
+          <a href={`/directory/city/${city?.slug}/${category.slug}`} class="salon-hero-pill px-3 py-1 rounded-full transition">
             {category.name}
           </a>
         )}
         {salon.rating_value && (
-          <span class="text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
+          <span class="salon-hero-pill salon-rating-pill px-3 py-1 rounded-full font-semibold">
             ⭐ {salon.rating_value} ({salon.rating_count ?? 0})
           </span>
         )}
         {salon.has_offers && (
-          <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
+          <span class="salon-hero-pill px-3 py-1 rounded-full">
             Angebote verfügbar
           </span>
         )}
@@ -192,12 +192,12 @@ const salonSchema = {
 
     <div class="flex flex-wrap gap-3 md:justify-end">
       {phoneLink && (
-        <a href={`tel:${phoneLink}`} class="bg-slate-900 text-white px-6 py-3 rounded-xl font-semibold shadow-sm hover:bg-slate-800 transition">
+        <a href={`tel:${phoneLink}`} class="salon-cta px-6 py-3 rounded-xl font-semibold shadow-[var(--shadow-sm)] transition">
           Anrufen
         </a>
       )}
       {salon.website && (
-        <a href={salon.website} target="_blank" rel="noopener" class="border border-slate-300 text-slate-700 bg-white px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition">
+        <a href={salon.website} target="_blank" rel="noopener" class="salon-cta-secondary border border-[rgba(230,226,221,0.55)] text-[var(--color-soft-white)] bg-transparent px-6 py-3 rounded-xl font-semibold transition">
           Website
         </a>
       )}
@@ -205,9 +205,9 @@ const salonSchema = {
   </div>
 
   {/* ADDRESS */}
-  <div class="bg-white rounded-2xl shadow-sm p-6 mb-10 border border-slate-200">
-    <h2 class="text-xl font-semibold text-slate-900 mb-3">Adresse</h2>
-    <p class="text-slate-700 leading-relaxed">
+  <div class="bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6 mb-10 border border-[var(--color-light-taupe)]">
+    <h2 class="text-[11px] font-semibold uppercase tracking-[0.25em] text-[var(--color-medium-gray)] mb-3">Adresse</h2>
+    <p class="text-[var(--color-charcoal)] leading-relaxed">
       {salon.full_address}, {salon.postal_code} {city?.name}
     </p>
   </div>
@@ -235,12 +235,12 @@ const salonSchema = {
   {/* MAP */}
   {salon.latitude && salon.longitude && (
     <div class="mb-12">
-      <h2 class="text-2xl font-semibold text-slate-900 mb-4">Standort auf der Karte</h2>
+      <h2 class="text-2xl font-semibold text-[var(--color-deep-slate)] mb-4">Standort auf der Karte</h2>
       <iframe
         width="100%"
         height="350"
         loading="lazy"
-        class="rounded-2xl border border-slate-200"
+        class="rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] bg-white"
         src={`https://www.google.com/maps?q=${salon.latitude},${salon.longitude}&output=embed`}
       ></iframe>
     </div>
@@ -250,13 +250,13 @@ const salonSchema = {
   {relatedSalons.length > 0 && (
     <section class="mt-16 mb-10">
       <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <h2 class="text-2xl font-semibold text-slate-900">
+        <h2 class="text-2xl font-semibold text-[var(--color-deep-slate)]">
           Ähnliche Salons
         </h2>
         {city && (
           <a
             href={`/directory/city/${city.slug}`}
-            class="text-sm font-semibold text-amber-700 hover:text-amber-800"
+            class="text-sm font-semibold text-[var(--color-terracotta)] transition-colors hover:text-[var(--color-gentle-gold)]"
           >
             Mehr in {city.name}
           </a>
@@ -267,7 +267,7 @@ const salonSchema = {
         {relatedSalons.map((item) => (
           <a
             href={`/salon/${item.slug}`}
-            class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-md transition"
+            class="bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-sm)] border border-[var(--color-light-taupe)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)]"
           >
             <SalonImage
               coverImage={item.cover_image}
@@ -275,11 +275,11 @@ const salonSchema = {
               class="h-44 w-full object-cover"
             />
             <div class="p-4">
-              <h3 class="font-semibold text-slate-900 mb-2">{item.salon_name}</h3>
-              <p class="text-sm text-slate-500 line-clamp-2 mb-2">
+              <h3 class="font-semibold text-[var(--color-deep-slate)] mb-2">{item.salon_name}</h3>
+              <p class="text-sm text-[var(--color-medium-gray)] line-clamp-2 mb-2">
                 {item.full_address || "Adresse nicht verfügbar"}
               </p>
-              <div class="text-sm text-amber-700">
+              <div class="text-sm text-[var(--color-gentle-gold)] font-semibold">
                 ⭐ {item.rating_value ?? "–"} ({item.rating_count ?? 0})
               </div>
             </div>
@@ -292,10 +292,10 @@ const salonSchema = {
   {/* INTERNAL LINKS */}
   {city && category && (
     <div class="mt-16">
-      <h2 class="text-xl font-semibold text-slate-900 mb-4">Mehr {category.name} in {city.name}</h2>
+      <h2 class="text-xl font-semibold text-[var(--color-deep-slate)] mb-4">Mehr {category.name} in {city.name}</h2>
       <a
         href={`/directory/city/${city.slug}/${category.slug}`}
-        class="inline-block bg-amber-50 text-amber-900 border border-amber-200 px-6 py-3 rounded-xl hover:bg-amber-100 transition"
+        class="inline-block bg-[var(--color-warm-cream)] text-[var(--color-deep-slate)] border border-[var(--color-light-taupe)] px-6 py-3 rounded-xl transition-colors hover:border-[var(--color-gentle-gold)] hover:text-[var(--color-gentle-gold)]"
       >
         Alle {category.name} in {city.name} anzeigen
       </a>
@@ -305,6 +305,63 @@ const salonSchema = {
 </section>
 
 </DirectoryLayout>
+
+<style>
+  .salon-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--color-deep-slate) 88%, transparent) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Pull header onto the hero so text sits on the overlay without changing markup. */
+  .salon-hero-header {
+    margin-top: -7rem;
+    padding: 0 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (min-width: 768px) {
+    .salon-hero-header { margin-top: -8.5rem; padding: 0 1.5rem; }
+  }
+
+  .salon-hero-pill {
+    background: color-mix(in srgb, var(--color-deep-slate) 60%, transparent);
+    border: 1px solid rgba(230,226,221,0.25);
+    color: var(--color-soft-white);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Rating stars should read as gold on the dark hero. */
+  .salon-rating-pill {
+    color: var(--color-gentle-gold);
+    border-color: color-mix(in srgb, var(--color-gentle-gold) 40%, transparent);
+  }
+
+  a.salon-hero-pill:hover {
+    border-color: rgba(230,226,221,0.45);
+    background: color-mix(in srgb, var(--color-deep-slate) 70%, transparent);
+  }
+
+  /* Primary CTA matches "Book button": terracotta + white text, darker on hover. */
+  .salon-cta {
+    background: var(--color-terracotta);
+    color: var(--color-soft-white);
+  }
+
+  .salon-cta:hover { filter: brightness(0.92); }
+
+  .salon-cta-secondary:hover {
+    border-color: rgba(230,226,221,0.8);
+    background: color-mix(in srgb, var(--color-deep-slate) 40%, transparent);
+  }
+</style>
 
 
 

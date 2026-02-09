@@ -138,7 +138,7 @@ Astro.response.headers.set(
           {post.title}
         </h1>
 
-        <div class="text-sm text-gray-500 mt-6 flex items-center gap-2">
+        <div class="text-sm text-[var(--color-medium-gray)] mt-6 flex items-center gap-2">
           <span>Duolb Redaktion</span>
           <span>•</span>
           <time datetime={post.created_at}>
@@ -151,12 +151,12 @@ Astro.response.headers.set(
     </article>
 
     {relatedPosts.length > 0 && (
-      <section class="mt-16 pt-12 border-t border-gray-100" aria-label="Ähnliche Beiträge">
+      <section class="mt-16 pt-12 border-t border-[rgba(230,226,221,0.35)]" aria-label="Ähnliche Beiträge">
         <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
-          <h2 class="text-3xl font-serif text-gray-900">Ähnliche Beiträge</h2>
+          <h2 class="text-3xl font-serif text-[var(--color-deep-slate)]">Ähnliche Beiträge</h2>
           <a
             href="/posts"
-            class="text-xs font-bold uppercase tracking-[0.2em] text-[#C6A75E] hover:text-[#9CAF9A]"
+            class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--color-terracotta)] transition-colors hover:text-[var(--color-gentle-gold)]"
           >
             Alle Beiträge ansehen
           </a>
@@ -241,10 +241,10 @@ Astro.response.headers.set(
 
   /* ================= TITLE ================= */
   .post-title {
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-heading);
     font-size: clamp(2.2rem, 4vw, 3.5rem);
     font-weight: 900;
-    color: #111;
+    color: var(--color-deep-slate);
     text-align: center;
     line-height: 1.1;
     margin: 2.5rem 0 3rem 0;
@@ -256,7 +256,7 @@ Astro.response.headers.set(
     display: block;
     width: 90px;
     height: 6px;
-    background: linear-gradient(90deg, #C6A75E, #c9c24d);
+    background: linear-gradient(90deg, var(--color-gentle-gold), var(--color-terracotta));
     margin: 1.5rem auto 0;
     border-radius: 10px;
   }
@@ -265,7 +265,7 @@ Astro.response.headers.set(
   .post-content {
     font-size: 1.15rem;
     line-height: 1.9;
-    color: #333;
+    color: var(--color-charcoal);
   }
 
   .post-content p {
@@ -299,4 +299,6 @@ Astro.response.headers.set(
     }
   }
 </style>
+
+
 

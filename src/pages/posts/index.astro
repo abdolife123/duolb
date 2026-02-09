@@ -32,28 +32,31 @@ Astro.response.headers.set(
 )
 ---
 
-<Layout title="Archiv | duolb Beauty Blog">
+<Layout
+  title="Archiv | duolb Beauty Blog"
+  description="Alle Beiträge im Duolb Beauty Blog: Hautpflege, Akne, Laser, RF Microneedling und Beauty-Tech im Überblick."
+>
 
-  <main class="bg-white min-h-screen py-24 px-6">
+  <main class="bg-[var(--color-soft-white)] min-h-screen py-24 px-6">
     <div class="max-w-4xl mx-auto">
       <header class="text-center mb-24">
         <span
-          class="text-[#C6A75E] font-bold tracking-[0.4em] uppercase text-[10px] mb-4 block italic"
+          class="text-[var(--color-gentle-gold)] font-bold tracking-[0.4em] uppercase text-[10px] mb-4 block italic"
           >Kuration</span
         >
-        <h1 class="text-5xl md:text-6xl font-serif text-gray-900 mb-6">
+        <h1 class="text-5xl md:text-6xl font-serif text-[var(--color-deep-slate)] mb-6">
           Alle Beiträge
         </h1>
-        <div class="h-px w-24 bg-[#C6A75E]/30 mx-auto"></div>
+        <div class="h-px w-24 bg-[var(--color-light-taupe)] mx-auto"></div>
       </header>
 
       <div class="space-y-12">
         {
           posts.map((post) => (
             <a href={`/posts/${post.slug}`} class="group block">
-              <article class="flex flex-col md:flex-row gap-8 items-center border-b border-gray-50 pb-12 transition-all group-hover:border-[#C6A75E]/20">
+              <article class="flex flex-col md:flex-row gap-8 items-center border-b border-[rgba(230,226,221,0.35)] pb-12 transition-all group-hover:border-[var(--color-dusty-mauve)]">
                 <div class="hidden md:block w-32 shrink-0">
-                  <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-[#C6A75E] transition-colors">
+                  <p class="text-[11px] font-bold uppercase tracking-widest text-[var(--color-medium-gray)] transition-colors group-hover:text-[var(--color-gentle-gold)]">
                     {new Date(post.created_at).toLocaleDateString("de-DE", {
                       day: "2-digit",
                       month: "short",
@@ -73,11 +76,11 @@ Astro.response.headers.set(
                 </div>
 
                 <div class="flex-grow">
-                  <h2 class="text-2xl md:text-3xl font-serif text-gray-900 leading-snug group-hover:text-[#C6A75E] transition-colors">
+                  <h2 class="text-2xl md:text-3xl font-serif text-[var(--color-deep-slate)] leading-snug transition-colors group-hover:text-[var(--color-dusty-mauve)]">
                     {post.title}
                   </h2>
                   <div class="mt-4 flex items-center gap-4">
-                    <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 group-hover:text-gray-900 transition-colors">
+                    <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-[var(--color-terracotta)] transition-colors group-hover:text-[var(--color-gentle-gold)]">
                       Artikel lesen
                     </span>
                     <span class="text-gray-300 group-hover:translate-x-2 transition-transform duration-300">
@@ -94,12 +97,12 @@ Astro.response.headers.set(
       {
         posts.length === 0 && (
           <div class="text-center py-20">
-            <p class="font-serif italic text-gray-400 text-xl text-center">
+            <p class="font-serif italic text-[var(--color-medium-gray)] text-xl text-center">
               In Kürze folgen neue Beiträge...
             </p>
-          </div>
-        )
-      }
+      </div>
+    )
+  }
     </div>
   </main>
 

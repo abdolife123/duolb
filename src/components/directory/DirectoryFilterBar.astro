@@ -8,13 +8,13 @@ const selectedCategory = url.searchParams.get("category") || "";
 const selectedRating = url.searchParams.get("rating") || "";
 ---
 
-<div class="mb-10 rounded-3xl border border-[#EFE7E2] bg-[#F3ECE8]/45 p-6 shadow-sm">
+<div class="mb-10 rounded-3xl border border-[var(--color-light-taupe)] bg-white p-6 shadow-[var(--shadow-sm)]">
   <form method="GET" class="grid gap-4 md:grid-cols-4 items-end">
 
     <!-- City Filter -->
     <div class="flex flex-col">
-      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[#8C8587]">Stadt</label>
-      <select name="city" class="rounded-xl border border-[#EFE7E2] bg-[#FBF6F2] px-3 py-2.5">
+      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[var(--color-medium-gray)]">Stadt</label>
+      <select name="city" class="rounded-xl border border-[var(--color-light-taupe)] bg-[var(--color-warm-cream)] px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-gentle-gold)]">
         <option value="">Alle Städte</option>
         {cities.map(city => (
           <option value={city.slug} selected={city.slug === selectedCity}>
@@ -26,8 +26,8 @@ const selectedRating = url.searchParams.get("rating") || "";
 
     <!-- Category Filter -->
     <div class="flex flex-col">
-      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[#8C8587]">Kategorie</label>
-      <select name="category" class="rounded-xl border border-[#EFE7E2] bg-[#FBF6F2] px-3 py-2.5">
+      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[var(--color-medium-gray)]">Kategorie</label>
+      <select name="category" class="rounded-xl border border-[var(--color-light-taupe)] bg-[var(--color-warm-cream)] px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-gentle-gold)]">
         <option value="">Alle Kategorien</option>
         {categories.map(cat => (
           <option value={cat.slug} selected={cat.slug === selectedCategory}>
@@ -39,8 +39,8 @@ const selectedRating = url.searchParams.get("rating") || "";
 
     <!-- Rating Filter -->
     <div class="flex flex-col">
-      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[#8C8587]">Mindestbewertung</label>
-      <select name="rating" class="rounded-xl border border-[#EFE7E2] bg-[#FBF6F2] px-3 py-2.5">
+      <label class="mb-2 text-sm font-medium uppercase tracking-[0.16em] text-[var(--color-medium-gray)]">Mindestbewertung</label>
+      <select name="rating" class="rounded-xl border border-[var(--color-light-taupe)] bg-[var(--color-warm-cream)] px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-gentle-gold)]">
         <option value="">Beliebige Bewertung</option>
         <option value="4" selected={selectedRating === "4"}>4★ und höher</option>
         <option value="3" selected={selectedRating === "3"}>3★ und höher</option>
@@ -51,14 +51,14 @@ const selectedRating = url.searchParams.get("rating") || "";
     <div class="flex gap-2">
       <button
         type="submit"
-        class="w-full rounded-xl bg-[#D8A7B1] px-4 py-2.5 text-[#FBF6F2] hover:bg-[#9CAF9A]"
+        class="w-full rounded-xl bg-[var(--color-gentle-gold)] px-4 py-2.5 text-white shadow-[var(--shadow-sm)] transition duration-300 hover:brightness-95 hover:scale-[1.01]"
       >
         Anwenden
       </button>
 
       <a
         href={Astro.url.pathname}
-        class="w-full rounded-xl border border-[#D8A7B1]/60 px-4 py-2.5 text-center text-[#8E4A5A] hover:bg-[#FBF6F2]"
+        class="w-full rounded-xl border border-[var(--color-light-taupe)] bg-[var(--color-warm-cream)] px-4 py-2.5 text-center text-[var(--color-deep-slate)] transition-colors hover:border-[var(--color-gentle-gold)] hover:text-[var(--color-deep-slate)]"
       >
         Zurücksetzen
       </a>

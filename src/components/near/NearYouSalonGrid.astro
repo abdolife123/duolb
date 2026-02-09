@@ -1,0 +1,43 @@
+---
+import type { NearbySalon } from "../../types/nearby";
+
+interface Props {
+  salons: NearbySalon[];
+}
+
+const { salons } = Astro.props;
+---
+
+<section class="near-you-grid">
+  {salons.map((salon) => (
+    <a href={`/salon/${salon.slug}`} class="near-salon-card">
+      {salon.cover_image && (
+        <img
+          src={salon.cover_image}
+          alt={salon.salon_name ?? "Salon"}
+          loading="lazy"
+        />
+      )}
+
+      <div class="near-salon-card__content">
+        <h3>{salon.salon_name}</h3>
+
+        {salon.full_address && (
+          <p class="near-salon-address">{salon.full_address}</p>
+        )}
+
+        <div class="near-salon-meta">
+          <span class="near-salon-distance">
+            📍 {salon.distance_km} km entfernt
+          </span>
+
+          {salon.rating_value && (
+            <span class="near-salon-rating">
+              ⭐ {salon.rating_value.toFixed(1)} ({salon.rating_count ?? 0})
+            </span>
+          )}
+        </div>
+      </div>
+    </a>
+  ))}
+</section>

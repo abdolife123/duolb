@@ -1,0 +1,105 @@
+---
+type CategoryLink = { name: string; slug: string };
+type CityLink = { name: string; slug: string };
+
+interface Props {
+  categories: CategoryLink[];
+  cities: CityLink[];
+}
+
+const { categories, cities } = Astro.props;
+---
+
+<section class="relative overflow-hidden rounded-3xl border border-[var(--color-light-taupe)] bg-[linear-gradient(135deg,var(--color-warm-cream),var(--color-soft-rose))]">
+  <div class="absolute inset-0 pointer-events-none opacity-60">
+    <div class="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[var(--color-gentle-gold)] blur-3xl opacity-[0.15]"></div>
+    <div class="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-[var(--color-dusty-mauve)] blur-3xl opacity-[0.18]"></div>
+  </div>
+
+  <div class="relative px-6 py-14 md:px-10 md:py-20">
+    <div class="max-w-3xl">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.35em] text-[var(--color-gentle-gold)] opacity-80">
+        Beauty & Wellness Verzeichnis Deutschland
+      </p>
+      <h1 class="mt-4 text-4xl md:text-6xl font-serif tracking-tight text-slate-900">
+        Die besten Beauty- & Wellness-Salons in Deutschland finden
+      </h1>
+      <p class="mt-6 text-base md:text-lg text-slate-600 leading-relaxed">
+        Entdecke Friseure, Kosmetikstudios, Nagelstudios und Wellnessanbieter in ganz Deutschland.
+        Vergleiche Bewertungen, Leistungen und Standorte, ohne lange zu suchen.
+      </p>
+    </div>
+
+    <div class="mt-10">
+      <form
+        action="/directory"
+        method="GET"
+        class="grid gap-4 rounded-2xl border border-[var(--color-light-taupe)] bg-white/70 p-5 shadow-[var(--shadow-sm)] backdrop-blur md:grid-cols-[1fr_1fr_auto]"
+        aria-label="Salons suchen"
+      >
+        <div class="min-w-0">
+          <label for="home-city" class="block text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+            Stadt
+          </label>
+          <select
+            id="home-city"
+            name="city"
+            class="mt-2 w-full rounded-xl border border-[var(--color-light-taupe)] bg-white px-4 py-3 text-slate-800 shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gentle-gold)]"
+          >
+            <option value="">Alle St&auml;dte</option>
+            {cities.map((city) => (
+              <option value={city.slug}>{city.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="min-w-0">
+          <label for="home-category" class="block text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+            Kategorie
+          </label>
+          <select
+            id="home-category"
+            name="category"
+            class="mt-2 w-full rounded-xl border border-[var(--color-light-taupe)] bg-white px-4 py-3 text-slate-800 shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gentle-gold)]"
+          >
+            <option value="">Alle Kategorien</option>
+            {categories.map((cat) => (
+              <option value={cat.slug}>{cat.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="flex items-end gap-3">
+          <button
+            type="submit"
+            class="inline-flex w-full items-center justify-center rounded-xl bg-[var(--color-gentle-gold)] px-5 py-3 text-sm font-semibold text-[var(--color-soft-white)] shadow-[var(--shadow-sm)] transition duration-300 hover:brightness-95 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-gentle-gold)] md:w-auto"
+          >
+            Suchen
+          </button>
+
+          <button
+            type="button"
+            id="near-me-btn"
+            class="inline-flex w-full items-center justify-center rounded-xl border border-[rgba(230,226,221,0.8)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-terracotta)] shadow-[var(--shadow-sm)] transition duration-300 hover:border-[var(--color-gentle-gold)] hover:bg-[var(--color-warm-cream)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gentle-gold)] md:w-auto"
+          >
+            Salons in meiner N&auml;he
+          </button>
+        </div>
+      </form>
+
+      <p class="mt-4 text-xs text-slate-500">
+        Tipp: Die Suche funktioniert ohne JavaScript. F&uuml;r &ldquo;in meiner N&auml;he&rdquo; wird Standort-Freigabe ben&ouml;tigt.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Tailwind can't reliably apply alpha to CSS-var ring colors; keep the focus halo consistent here. */
+  form[aria-label="Salons suchen"] select:focus,
+  form[aria-label="Salons suchen"] button:focus {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-gentle-gold) 28%, transparent);
+  }
+</style>
+
+

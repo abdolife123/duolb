@@ -3,19 +3,25 @@ import mdx from '@astrojs/mdx'
 import sitemap from '@astrojs/sitemap'
 import react from '@astrojs/react'
 import tailwindcss from '@tailwindcss/vite'
-import cloudflare from '@astrojs/cloudflare'
-import node from '@astrojs/node'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+// NOTE:
+// @astrojs/cloudflare pulls in wrangler, which may spawn subprocesses at import-time.
+// Use dynamic imports so local builds can run with the Node adapter without loading wrangler.
 
 const isDev = process.env.NODE_ENV === 'development'
+
+const adapter = isDev
+  ? (await import('@astrojs/node')).default({ mode: 'standalone' })
+  : (await import('@astrojs/cloudflare')).default({ sessions: false })
 
 export default defineConfig({
   site: 'https://duolb.com',
   output: 'server',
 
   // Use Node locally, Cloudflare in production
-  adapter: isDev
-    ? node({ mode: 'standalone' })
-    : cloudflare({ sessions: false}),
+  adapter,
 
   integrations: [
     mdx(),
@@ -24,6 +30,8 @@ export default defineConfig({
   ],
 
   vite: {
+    // Avoid writing cache into the project folder (can be locked by OneDrive/AV on Windows).
+    cacheDir: join(tmpdir(), 'duolb-vite'),
     plugins: [tailwindcss()],
   },
 })

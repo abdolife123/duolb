@@ -5,7 +5,7 @@ export async function GET() {
 
   const [{ data: cities }, { data: categories }, { data: salons }] = await Promise.all([
     supabase.from("cities").select("slug, updated_at"),
-    supabase.from("categories").select("slug, updated_at"),
+    supabase.from("business_categories").select("slug, updated_at"),
     supabase.from("salons").select("slug, updated_at")
   ]);
 

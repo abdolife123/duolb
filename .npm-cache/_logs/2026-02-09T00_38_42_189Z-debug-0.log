@@ -1,0 +1,30 @@
+0 verbose cli C:\nvm4w\nodejs\node.exe C:\nvm4w\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.6.2
+2 info using node@v24.13.0
+3 silly config load:file:C:\Users\Me\AppData\Local\nvm\v24.13.0\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\Me\OneDrive\Desktop\duolb\.npmrc
+5 warn config optional Use `--omit=optional` to exclude optional dependencies, or
+5 warn config `--include=optional` to include them.
+5 warn config
+5 warn config       Default value does install optional deps unless otherwise omitted.
+6 silly config load:file:C:\Users\Me\.npmrc
+7 silly config load:file:C:\nvm4w\nodejs\etc\npmrc
+8 verbose title npm install
+9 verbose argv "install" "--cache" ".npm-cache"
+10 verbose logfile logs-max:10 dir:C:\Users\Me\OneDrive\Desktop\duolb\.npm-cache\_logs\2026-02-09T00_38_42_189Z-
+11 verbose logfile C:\Users\Me\OneDrive\Desktop\duolb\.npm-cache\_logs\2026-02-09T00_38_42_189Z-debug-0.log
+12 silly logfile done cleaning log files
+13 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with ECONNREFUSED
+14 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+15 verbose shrinkwrap failed to load node_modules/.package-lock.json out of date, updated: node_modules
+16 silly idealTree buildDeps
+17 silly placeDep ROOT geolib@0.0.0-local OK for: duolb@0.0.1 want: file:vendor/geolib
+18 silly reify moves {}
+19 silly audit report null
+20 silly ADD node_modules/geolib
+21 verbose cwd C:\Users\Me\OneDrive\Desktop\duolb
+22 verbose os Windows_NT 10.0.26200
+23 verbose node v24.13.0
+24 verbose npm  v11.6.2
+25 verbose exit 0
+26 info ok

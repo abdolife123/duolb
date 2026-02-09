@@ -65,23 +65,24 @@ const canonicalURL = canonical || `https://duolb.com${Astro.url.pathname}`;
     {Astro.url.hostname === "duolb.pages.dev" && (
       <>
         <meta http-equiv="refresh" content={`0; url=https://duolb.com${Astro.url.pathname}`} />
-        <link rel="canonical" href={`https://duolb.com${Astro.url.pathname}`} />
       </>
     )}
   </head>
 
-  <body class="bg-[#F6F4F1] text-[#595252] font-['Montserrat']">
+  <body class="bg-[var(--color-soft-white)] text-[var(--color-charcoal)]">
 
-    <!-- Real navbar component -->
-    <Navbar />
+    <div class="site-frame">
+      <!-- Real navbar component -->
+      <Navbar />
 
-    <!-- Main content -->
-    <main class="max-w-7xl mx-auto px-6 py-14">
-      <slot />
-    </main>
+      <!-- Main content -->
+      <main class="w-full py-14">
+        <slot />
+      </main>
 
-    <!-- Real footer component -->
-    <Footer />
+      <!-- Real footer component -->
+      <Footer />
+    </div>
 
   </body>
 </html>

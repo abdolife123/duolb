@@ -1,0 +1,24 @@
+---
+interface Props {
+  categoryName: string;
+  radiusKm?: number;
+}
+
+const { categoryName, radiusKm } = Astro.props;
+---
+
+<section class="near-you-empty">
+  <div class="near-you-empty__inner">
+    <h2>Keine {categoryName} in deiner Nähe gefunden</h2>
+
+    <p>Im Umkreis von {radiusKm ?? 15} km wurden aktuell keine passenden Anbieter gefunden.</p>
+
+    <p class="near-you-empty-hint">
+      Versuche es später erneut oder suche in einer anderen Stadt über unsere Kategorienübersicht.
+    </p>
+
+    <a href="/directory" class="near-you-empty-btn">
+      Zur Kategorienübersicht
+    </a>
+  </div>
+</section>

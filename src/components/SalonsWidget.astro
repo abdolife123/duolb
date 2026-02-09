@@ -8,14 +8,14 @@ const { data: salons } = await supabase
   .limit(6)
 ---
 
-<section class="py-20 px-6 bg-white rounded-3xl shadow-sm">
+<section class="py-20 px-6 bg-white rounded-3xl shadow-[var(--shadow-sm)] border border-[var(--color-light-taupe)]">
   <div class="max-w-7xl mx-auto">
 
     <div class="flex items-center justify-between mb-12">
-      <h2 class="text-3xl font-serif text-[#C6A75E]">
+      <h2 class="text-3xl font-serif text-[var(--color-deep-slate)]">
         Schönheitssalons
       </h2>
-      <a href="/directory" class="text-sm text-[#C6A75E] font-semibold hover:underline">
+      <a href="/directory" class="text-sm text-[var(--color-terracotta)] font-semibold transition-colors hover:text-[var(--color-gentle-gold)]">
         Alle ansehen →
       </a>
     </div>
@@ -24,7 +24,7 @@ const { data: salons } = await supabase
       {salons?.map(salon => (
         <a
           href={`/salon/${salon.slug}`}
-          class="group bg-[#FBF6F2]/30 rounded-3xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 border border-transparent hover:border-[#C6A75E]/40"
+          class="group bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-sm)] transition-all duration-300 border border-[var(--color-light-taupe)] hover:-translate-y-1 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-dusty-mauve)]"
         >
           <div class="h-52 overflow-hidden">
             <SalonImage
@@ -35,13 +35,13 @@ const { data: salons } = await supabase
           </div>
 
           <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2 group-hover:text-[#C6A75E] transition-colors">
+            <h3 class="text-lg font-semibold text-[var(--color-deep-slate)] mb-2 transition-colors group-hover:text-[var(--color-terracotta)]">
               {salon.salon_name}
             </h3>
 
-            <div class="text-sm text-[#C6A75E] font-medium">
+            <div class="text-sm text-[var(--color-gentle-gold)] font-semibold">
               ⭐ {salon.rating_value ?? "Neu"} 
-              <span class="text-gray-500 ml-1">
+              <span class="text-[var(--color-medium-gray)] ml-1 font-medium">
                 ({salon.rating_count ?? 0})
               </span>
             </div>

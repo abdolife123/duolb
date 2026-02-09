@@ -1,0 +1,74 @@
+﻿---
+interface Props {
+  categories: { name: string; slug: string }[];
+}
+
+const { categories } = Astro.props;
+---
+
+<section class="home-near-me">
+  <h2>Salons in deiner Nähe</h2>
+  <p>Wähle eine Kategorie, dann zeigen wir dir Anbieter in der Umgebung.</p>
+
+  <div class="near-category-grid">
+    {categories.map((cat) => (
+      <a href={`/near-you/${cat.slug}`} class="near-category-card">
+        {cat.name}
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .home-near-me {
+    text-align: center;
+    margin: 4rem auto;
+    max-width: 1100px;
+    padding: 3rem 2rem;
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(230,226,221,0.2);
+    background: linear-gradient(135deg, var(--color-soft-rose), var(--color-warm-cream));
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-body);
+    color: var(--color-deep-slate);
+  }
+
+  .home-near-me h2 {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+    color: var(--color-deep-slate);
+  }
+
+  .home-near-me p {
+    margin: 0 auto 2rem;
+    max-width: 52rem;
+    color: var(--color-charcoal);
+  }
+
+  .near-category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .near-category-card {
+    display: block;
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-warm-cream);
+    border: 1px solid var(--color-light-taupe);
+    text-decoration: none;
+    color: var(--color-deep-slate);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+  }
+
+  .near-category-card:hover {
+    border-color: var(--color-gentle-gold);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    color: var(--color-terracotta);
+  }
+</style>

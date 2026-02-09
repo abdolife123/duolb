@@ -1,0 +1,81 @@
+﻿UI file structure (generated 2026-02-09 09:35:20)
+
++-- public
+|   +-- fonts
+|   |   +-- atkinson-bold.woff
+|   |   \\-- atkinson-regular.woff
+|   \\-- robots.txt
+\\-- src
+    +-- assets
+    |   +-- blog-placeholder-1.jpg
+    |   +-- blog-placeholder-2.jpg
+    |   +-- blog-placeholder-3.jpg
+    |   +-- blog-placeholder-4.jpg
+    |   +-- blog-placeholder-5.jpg
+    |   \\-- blog-placeholder-about.jpg
+    +-- components
+    |   +-- BackToTop.astro
+    |   +-- BaseHead.astro
+    |   +-- directory
+    |   |   +-- DirectoryFilterBar.astro
+    |   |   \\-- SalonImage.astro
+    |   +-- FeaturedPost.astro
+    |   +-- Footer.astro
+    |   +-- FormattedDate.astro
+    |   +-- Header.astro
+    |   +-- HeaderLink.astro
+    |   +-- home
+    |   |   +-- HomeCategoryGrid.astro
+    |   |   +-- HomeCityGrid.astro
+    |   |   +-- HomeFeaturedSalons.astro
+    |   |   +-- HomeHero.astro
+    |   |   +-- HomeNearMe.astro
+    |   |   \\-- HomeSeoBlock.astro
+    |   +-- navbar.astro
+    |   +-- near
+    |   |   +-- NearYouEmptyState.astro
+    |   |   +-- NearYouHeader.astro
+    |   |   \\-- NearYouSalonGrid.astro
+    |   +-- Newsletter.astro
+    |   +-- PostCard.astro
+    |   \\-- SalonsWidget.astro
+    +-- layouts
+    |   +-- DirectoryLayout.astro
+    |   +-- Layout.astro
+    |   \\-- NearYouLayout.astro
+    +-- pages
+    |   +-- [category].astro
+    |   +-- 404.astro
+    |   +-- about.astro
+    |   +-- autor
+    |   |   \\-- duolb.astro
+    |   +-- contact.astro
+    |   +-- datenschutz.astro
+    |   +-- directory
+    |   |   +-- category
+    |   |   |   +-- [category].astro
+    |   |   |   \\-- index.astro
+    |   |   +-- city
+    |   |   |   +-- [city].astro
+    |   |   |   +-- [city]
+    |   |   |   |   \\-- [category].astro
+    |   |   |   \\-- index.astro
+    |   |   \\-- index.astro
+    |   +-- impressum.astro
+    |   +-- index.astro
+    |   +-- near-you
+    |   |   +-- [category].astro
+    |   |   \\-- index.astro
+    |   +-- nekaya.astro
+    |   +-- posts
+    |   |   +-- [slug].astro
+    |   |   \\-- index.astro
+    |   +-- salon
+    |   |   \\-- [slug].astro
+    |   +-- salons.astro
+    |   +-- salons
+    |   |   \\-- [slug].astro
+    |   \\-- search.astro
+    \\-- styles
+        +-- global.css
+        \\-- near-you.css

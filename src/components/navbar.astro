@@ -2,19 +2,19 @@
 // Navbar.astro
 ---
 
-<header class="sticky top-0 z-50 border-b border-[#EFE7E2] bg-[#FBF6F2]/90 backdrop-blur-md">
-  <div class="max-w-7xl mx-auto px-6 lg:px-8">
-    <div class="h-24 flex items-center justify-between">
+<header class="sticky top-0 z-50 border-b border-[var(--color-light-taupe)] bg-[var(--color-soft-white)] shadow-[var(--shadow-sm)]">
+  <div class="max-w-7xl mx-auto px-8">
+    <div class="h-[72px] flex items-center justify-between">
       <a href="/" class="flex items-center gap-4 group shrink-0">
         <div class="relative flex items-center justify-center">
           <svg width="42" height="42" viewBox="0 0 100 100">
             <path
               d="M30 10 V90 H55 C75 90 90 75 90 50 C90 25 75 10 55 10 H30 Z"
-              stroke="#C6A75E"
+              stroke="var(--color-gentle-gold)"
               stroke-width="3"
               fill="none"></path>
           </svg>
-          <div class="absolute h-1.5 w-1.5 rounded-full bg-[#C6A75E]"></div>
+          <div class="absolute h-1.5 w-1.5 rounded-full bg-[var(--color-gentle-gold)]"></div>
         </div>
         <div class="flex flex-col">
           <span
@@ -31,27 +31,27 @@
       <nav class="hidden lg:flex items-center gap-12">
         <a
           href="/"
-          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[var(--color-gentle-gold)]"
           >Startseite</a
         >
         <a
           href="/directory"
-          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[var(--color-gentle-gold)]"
           >Verzeichnis</a
         >
         <a
           href="/posts"
-          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[var(--color-gentle-gold)]"
           >Blog</a
         >
         <a
           href="/about"
-          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[var(--color-gentle-gold)]"
           >Über uns</a
         >
           <a
           href="/contact"
-          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[#C6A75E]"
+          class="nav-link text-[13px] font-medium uppercase tracking-[0.2em] text-gray-600 hover:text-[var(--color-gentle-gold)]"
           >Kontakt</a
         >
         
@@ -63,7 +63,7 @@
     aria-label="Open search"
     aria-controls="site-search"
     aria-expanded="false"
-    class="text-gray-400 hover:text-[#C6A75E] transition-colors p-2 focus:outline-none"
+    class="text-gray-400 hover:text-[var(--color-gentle-gold)] transition-colors p-2 focus:outline-none"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +96,7 @@
 
   <div
     id="searchContainer"
-    class="max-h-0 overflow-hidden border-t border-[#EFE7E2] bg-[#F3ECE8]/70 transition-all duration-500 ease-in-out"
+    class="max-h-0 overflow-hidden border-t border-[var(--color-light-taupe)] bg-[var(--color-warm-cream)] transition-all duration-500 ease-in-out"
   >
     <div class="max-w-7xl mx-auto px-6 py-8">
       <form action="/search" method="GET" class="relative">
@@ -114,6 +114,42 @@
     </div>
   </div>
 </header>
+
+<style>
+  header {
+    color: var(--color-deep-slate);
+    transition: box-shadow var(--transition-base), background-color var(--transition-base);
+  }
+
+  /* Match design system typography without changing markup structure. */
+  header .text-3xl.font-serif {
+    font-family: var(--font-accent);
+  }
+
+  header .nav-link {
+    font-family: var(--font-body);
+    color: var(--color-charcoal);
+    border-bottom: 2px solid transparent;
+    padding-bottom: 4px;
+    transition: color var(--transition-base), border-color var(--transition-base);
+  }
+
+  /* Disable global underline animation for .nav-link in the header. */
+  header .nav-link::after {
+    content: none !important;
+  }
+
+  header .nav-link:hover {
+    color: var(--color-gentle-gold);
+  }
+
+  /* If an active class or aria-current is applied elsewhere, render it per design system. */
+  header .nav-link.active,
+  header .nav-link[aria-current="page"] {
+    color: var(--color-terracotta);
+    border-bottom-color: var(--color-terracotta);
+  }
+</style>
 
 <script>
   const initSearch = () => {

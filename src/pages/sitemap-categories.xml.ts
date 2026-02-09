@@ -59,8 +59,7 @@ export async function GET({ request }: { request: Request }) {
     .join("");
 
   const debugComment = debug
-    ? `\n<!-- debug: categoriesCount=${categoriesCount ?? "null"} rows=${(categories || [])
-        .length} -->\n`
+    ? `\n<!-- debug: categoriesCount=${categoriesCount ?? "null"} uniqueSlugs=${seen.size} -->\n`
     : "\n";
 
   return new Response(

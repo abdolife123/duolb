@@ -1,22 +1,22 @@
-ï»¿<section class="relative w-full py-16 px-6 overflow-hidden">
+<section class="relative w-full py-16 px-6 overflow-hidden">
   <!-- Soft background glow -->
-  <div class="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#D8A7B1]/10 blur-3xl"></div>
-  <div class="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-[#9CAF9A]/10 blur-3xl"></div>
+  <div class="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[var(--color-soft-lavender)] blur-3xl opacity-[0.28]"></div>
+  <div class="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-[var(--color-dusty-mauve)] blur-3xl opacity-[0.22]"></div>
 
-  <div class="relative w-full rounded-[2rem] border border-[#EFE7E2] bg-white px-8 py-12 shadow-xl">
+  <div class="relative w-full rounded-[2rem] border border-[rgba(230,226,221,0.2)] bg-[linear-gradient(135deg,var(--color-soft-lavender),var(--color-dusty-mauve))] px-8 py-12 shadow-[var(--shadow-md)]">
 
     <!-- Header -->
     <div class="text-center mb-8">
-      <span class="inline-block mb-3 rounded-full bg-[#D8A7B1] px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#FBF6F2] shadow">
+      <span class="inline-block mb-3 rounded-full bg-[var(--color-deep-slate)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--color-soft-white)] shadow-[var(--shadow-sm)]">
         Newsletter
       </span>
 
       <h2 class="text-2xl md:text-3xl lg:text-4xl font-serif text-gray-900 mb-3">
-        Werde Teil unseres SchÃ¶nheitskreises
+        Werde Teil unseres Schönheitskreises
       </h2>
 
       <p class="text-gray-600 text-sm md:text-base max-w-2xl mx-auto">
-        Erhalte exklusive SchÃ¶nheitstipps, neue Trends und Premium-Inhalte. Kein Spam. Nur das Gute.
+        Erhalte exklusive Schönheitstipps, neue Trends und Premium-Inhalte. Kein Spam. Nur das Gute.
       </p>
     </div>
 
@@ -27,12 +27,12 @@
         name="email"
         required
         placeholder="Deine E-Mail-Adresse"
-        class="flex-1 w-full rounded-full border border-[#EFE7E2] bg-[#FBF6F2] px-6 py-3 text-gray-800 placeholder-gray-500 transition focus:outline-none focus:ring-2 focus:ring-[#C6A75E]/40"
+        class="flex-1 w-full rounded-full border border-[var(--color-light-taupe)] bg-white px-6 py-3 text-gray-800 placeholder-gray-500 transition focus:outline-none focus:ring-2 focus:ring-[var(--color-gentle-gold)]"
       />
 
       <button
         type="submit"
-        class="rounded-full bg-[#D8A7B1] px-8 py-3 font-semibold text-[#FBF6F2] shadow transition hover:scale-105 hover:bg-[#9CAF9A] hover:shadow-lg"
+        class="rounded-full bg-[var(--color-deep-slate)] px-8 py-3 font-semibold text-[var(--color-soft-white)] shadow-[var(--shadow-sm)] transition hover:scale-105 hover:bg-[var(--color-charcoal)] hover:shadow-[var(--shadow-md)]"
       >
         Abonnieren
       </button>
@@ -42,9 +42,10 @@
     <p id="newsletter-message" class="mt-6 text-center text-sm font-medium"></p>
 
     <!-- Footer note -->
-    <p class="mt-4 text-center text-xs text-gray-400 tracking-wide">
+    <p class="mt-4 text-center text-xs text-[var(--color-light-taupe)] tracking-wide">
       Du kannst dich jederzeit wieder abmelden.
     </p>
   </div>
 </section>
+
 

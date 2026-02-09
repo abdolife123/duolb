@@ -1,0 +1,78 @@
+---
+import { supabase } from "../../lib/supabase";
+
+const { data: salons } = await supabase
+  .from("salons")
+  .select("salon_name, slug, cover_image, rating_value, rating_count, full_address")
+  .order("rating_value", { ascending: false })
+  .limit(6);
+---
+
+<section class="near-you-top-salons" aria-labelledby="near-you-top-salons-title">
+  <div class="near-you-top-salons__head">
+    <h2 id="near-you-top-salons-title">Schönheitssalons</h2>
+    <a class="near-you-top-salons__btn" href="/directory">Alle ansehen</a>
+  </div>
+
+  <section class="near-you-grid">
+    {(salons || []).map((salon) => (
+      <a href={`/salon/${salon.slug}`} class="near-salon-card">
+        {salon.cover_image && (
+          <img
+            src={salon.cover_image}
+            alt={salon.salon_name ?? "Salon"}
+            loading="lazy"
+          />
+        )}
+
+        <div class="near-salon-card__content">
+          <h3>{salon.salon_name}</h3>
+
+          {salon.full_address && (
+            <p class="near-salon-address">{salon.full_address}</p>
+          )}
+
+          <div class="near-salon-meta">
+            <span class="near-salon-distance"></span>
+            <span class="near-salon-rating">
+              ⭐ {salon.rating_value ? Number(salon.rating_value).toFixed(1) : "Neu"} ({salon.rating_count ?? 0})
+            </span>
+          </div>
+        </div>
+      </a>
+    ))}
+  </section>
+</section>
+
+<style>
+  .near-you-top-salons__head h2 {
+    font-family: var(--font-heading, "Cormorant Garamond", serif);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--color-deep-slate, #2C2926);
+  }
+
+  .near-you-top-salons__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(230,226,221,0.6);
+    background: var(--color-warm-cream, #F5F1ED);
+    color: var(--color-terracotta, #C88B73);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: color var(--transition-base, 0.3s ease),
+      border-color var(--transition-base, 0.3s ease),
+      background-color var(--transition-base, 0.3s ease),
+      transform var(--transition-base, 0.3s ease);
+  }
+
+  .near-you-top-salons__btn:hover {
+    border-color: var(--color-gentle-gold, #D4AF77);
+    color: var(--color-gentle-gold, #D4AF77);
+    transform: translateY(-1px);
+  }
+</style>

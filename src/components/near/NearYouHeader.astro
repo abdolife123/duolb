@@ -1,0 +1,13 @@
+---
+type Props = {
+  title: string;
+  subtitle?: string;
+};
+
+const { title, subtitle } = Astro.props as Props;
+---
+
+<header class="near-you-header">
+  <h1>{title}</h1>
+  {subtitle && <p class="near-you-subtitle">{subtitle}</p>}
+</header>

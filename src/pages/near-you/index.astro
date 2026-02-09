@@ -1,0 +1,51 @@
+---
+import NearYouLayout from "../../layouts/NearYouLayout.astro";
+import { supabase } from "../../lib/supabase";
+
+const DEFAULT_NEAR_CATEGORY = "friseure";
+
+const { data: categories, error } = await supabase
+  .from("business_categories")
+  .select("name, slug")
+  .order("name")
+  .limit(60);
+
+if (error) {
+  console.error("near-you index categories query error:", error);
+}
+
+const title = "Salons in deiner Nähe in Deutschland";
+const description =
+  "Wähle eine Kategorie und finde passende Anbieter in deiner Nähe. Optional mit Standort-Freigabe für bessere Ergebnisse.";
+const canonical = "https://duolb.com/near-you";
+---
+
+<NearYouLayout title={title} description={description} canonical={canonical}>
+  <header class="near-you-header">
+    <h1 class="near-you-title">Salons in deiner Nähe</h1>
+    <p class="near-you-subtitle">
+      Wähle eine Kategorie, dann zeigen wir dir Anbieter in der Umgebung.
+    </p>
+  </header>
+
+  <section class="near-you-controls" aria-label="Kategorieauswahl">
+    <div class="near-you-category-grid">
+      {(categories || []).map((cat) => (
+        <a class="near-you-category-card" href={`/near-you/${cat.slug}`}>
+          <span class="near-you-category-name">{cat.name}</span>
+        </a>
+      ))}
+    </div>
+
+    {(!categories || categories.length === 0) && (
+      <div class="near-you-empty">
+        <div class="near-you-empty__inner">
+          <h2>Keine Kategorien gefunden</h2>
+          <a href={`/near-you/${DEFAULT_NEAR_CATEGORY}`} class="near-you-empty-btn">
+            Trotzdem starten
+          </a>
+        </div>
+      </div>
+    )}
+  </section>
+</NearYouLayout>

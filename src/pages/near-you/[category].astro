@@ -1,0 +1,288 @@
+﻿---
+import NearYouLayout from "../../layouts/NearYouLayout.astro";
+import NearYouHeader from "../../components/near/NearYouHeader.astro";
+import NearYouTopSalons from "../../components/near/NearYouTopSalons.astro";
+import SalonMap from "../../components/map/SalonMap.astro";
+
+import { supabase } from "../../lib/supabase";
+import { buildNearYouSeo } from "../../lib/seo/nearYouSeo";
+
+const { category } = Astro.params;
+
+if (!category) {
+  return Astro.redirect("/directory");
+}
+
+const { data: categoryData, error: categoryError } = await supabase
+  .from("business_categories")
+  .select("name, seo_title, seo_description")
+  .eq("slug", category)
+  .maybeSingle();
+
+if (categoryError) {
+  console.error("near-you category query error:", categoryError);
+}
+
+const categoryName = categoryData?.name || category.charAt(0).toUpperCase() + category.slice(1);
+
+// SEO
+const seo = buildNearYouSeo({ categoryName, radiusKm: 25 });
+const title = categoryData?.seo_title || seo.title;
+const description = categoryData?.seo_description || seo.description;
+const canonical = `https://duolb.com/near-you/${category}`;
+---
+
+<NearYouLayout title={title} description={description} canonical={canonical}>
+  <SalonMap />
+
+  <NearYouHeader
+    title={seo.h1}
+    subtitle="Finde die besten Anbieter in deiner Nähe."
+  />
+
+  <div class="near-you-controls-bar" aria-label="Filter und Sortierung">
+    <label class="near-you-control">
+      <span class="near-you-control__label">Umkreis</span>
+      <select id="near-you-radius" class="near-you-control__select">
+        <option value="5">5 km</option>
+        <option value="10">10 km</option>
+        <option value="25" selected>25 km</option>
+      </select>
+    </label>
+
+    <label class="near-you-control">
+      <span class="near-you-control__label">Sortierung</span>
+      <select id="near-you-sort" class="near-you-control__select">
+        <option value="distance" selected>Nearest</option>
+        <option value="rating">Best Rated</option>
+      </select>
+    </label>
+  </div>
+
+  <div id="near-you-page" data-category={category} hidden></div>
+
+  <div id="near-you-results">
+    <p class="near-you-loading">Standort wird ermittelt… 🔍</p>
+  </div>
+
+  <script type="module">
+    import { getUserLocation } from "/src/lib/location/getUserLocation.ts";
+    import { calculateDistanceKm } from "/src/lib/location/calculateDistance.ts";
+    import { supabase } from "/src/lib/supabase.ts";
+
+    window.__nearbyState = {
+      salons: [],
+      userLocation: null
+    };
+
+    const pageEl = document.getElementById("near-you-page");
+    const container = document.getElementById("near-you-results");
+    const categorySlug = pageEl?.dataset.category || "";
+
+    const radiusSelect = document.getElementById("near-you-radius");
+    const sortSelect = document.getElementById("near-you-sort");
+
+    if (container) {
+      let currentRadius = 25;
+      let currentSort = "distance";
+      let lastUserLocation = null;
+      let lastRawSalons = [];
+
+      function emitNearbyStateUpdated() {
+        window.dispatchEvent(new Event("nearbyStateUpdated"));
+      }
+
+      function toNumber(value, fallback) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
+      function renderEmpty() {
+        container.innerHTML = `
+          <section class="near-you-empty">
+            <div class="near-you-empty__inner">
+              <h2>Keine Anbieter in deiner Nähe gefunden.</h2>
+              <a href="/directory" class="near-you-empty-btn">Zur Übersicht</a>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderSalons(salons) {
+        container.innerHTML = `
+          <section class="near-you-grid">
+            ${salons
+              .map((salon) => {
+                const img = salon.cover_image
+                  ? `<img src="${salon.cover_image}" alt="${salon.salon_name ?? "Salon"}" loading="lazy" />`
+                  : "";
+
+                const rating = salon.rating_value
+                  ? `<span class="near-salon-rating">⭐ ${Number(salon.rating_value).toFixed(1)} (${salon.rating_count ?? 0})</span>`
+                  : `<span class="near-salon-rating">⭐ – (${salon.rating_count ?? 0})</span>`;
+
+                const distanceText =
+                  typeof salon.distance_km === "number" && Number.isFinite(salon.distance_km)
+                    ? `${salon.distance_km.toFixed(1)} km entfernt`
+                    : "";
+
+                return `
+                  <a href="/salon/${salon.slug}" class="near-salon-card">
+                    ${img}
+                    <div class="near-salon-card__content">
+                      <h3>${salon.salon_name ?? ""}</h3>
+                      ${salon.full_address ? `<p class="near-salon-address">${salon.full_address}</p>` : ""}
+                      <div class="near-salon-meta">
+                        <span class="near-salon-distance">📍 ${distanceText}</span>
+                        ${rating}
+                      </div>
+                    </div>
+                  </a>
+                `;
+              })
+              .join("")}
+          </section>
+        `;
+      }
+
+      async function fetchRawSalons() {
+        if (!categorySlug) return [];
+
+        const { data, error } = await supabase
+          .from("salons")
+          .select(
+            "id,salon_name,slug,cover_image,full_address,latitude,longitude,rating_value,rating_count,category_slug,city_slug"
+          )
+          .eq("category_slug", categorySlug)
+          .not("latitude", "is", null)
+          .not("longitude", "is", null)
+          .limit(500);
+
+        if (error || !data) {
+          console.error("near-you salons query error:", error);
+          return [];
+        }
+
+        return data;
+      }
+
+      function computeAndFilter({ rawSalons, userLocation, radiusKm, sortMode }) {
+        const hasCoords =
+          userLocation &&
+          typeof userLocation.latitude === "number" &&
+          Number.isFinite(userLocation.latitude) &&
+          typeof userLocation.longitude === "number" &&
+          Number.isFinite(userLocation.longitude);
+
+        if (!hasCoords) return [];
+
+        const coords = userLocation;
+
+        const withDistance = (rawSalons || [])
+          .map((salon) => {
+            const lat = toNumber(salon.latitude, NaN);
+            const lon = toNumber(salon.longitude, NaN);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+            const distance_km = calculateDistanceKm(
+              { latitude: coords.latitude, longitude: coords.longitude },
+              { latitude: lat, longitude: lon }
+            );
+
+            if (distance_km == null) return null;
+            return { ...salon, distance_km };
+          })
+          .filter(Boolean)
+          .filter((s) => s.distance_km <= radiusKm);
+
+        if (sortMode === "rating") {
+          withDistance.sort((a, b) => (b.rating_value ?? 0) - (a.rating_value ?? 0));
+        } else {
+          withDistance.sort((a, b) => a.distance_km - b.distance_km);
+        }
+
+        return withDistance;
+      }
+
+      async function loadNearby({ refetch = true } = {}) {
+        container.innerHTML = `<p class="near-you-loading">Standort wird ermittelt…</p>`;
+
+        const userLocation = await getUserLocation();
+        window.__nearbyState.userLocation = userLocation;
+        emitNearbyStateUpdated();
+
+        if (!userLocation) {
+          // No user coords available, and we are explicitly not doing backend/fallback city logic here.
+          window.__nearbyState.salons = [];
+          emitNearbyStateUpdated();
+          renderEmpty();
+          return;
+        }
+
+        container.innerHTML = `<p class="near-you-loading">Salons werden geladen…</p>`;
+
+        if (refetch || !lastRawSalons.length) {
+          lastRawSalons = await fetchRawSalons();
+        }
+
+        lastUserLocation = userLocation;
+        const radiusKm = currentRadius;
+        const filtered = computeAndFilter({
+          rawSalons: lastRawSalons,
+          userLocation,
+          radiusKm,
+          sortMode: currentSort,
+        });
+
+        window.__nearbyState.salons = filtered;
+        emitNearbyStateUpdated();
+
+        if (!filtered.length) {
+          renderEmpty();
+          return;
+        }
+
+        renderSalons(filtered);
+      }
+
+      function rerenderOnly() {
+        const userLocation = lastUserLocation;
+        if (!userLocation || !lastRawSalons.length) {
+          loadNearby({ refetch: true });
+          return;
+        }
+
+        const filtered = computeAndFilter({
+          rawSalons: lastRawSalons,
+          userLocation,
+          radiusKm: currentRadius,
+          sortMode: currentSort,
+        });
+
+        window.__nearbyState.salons = filtered;
+        emitNearbyStateUpdated();
+
+        if (!filtered.length) {
+          renderEmpty();
+          return;
+        }
+
+        renderSalons(filtered);
+      }
+
+      radiusSelect?.addEventListener("change", () => {
+        currentRadius = toNumber(radiusSelect.value, 25);
+        loadNearby({ refetch: true });
+      });
+
+      sortSelect?.addEventListener("change", () => {
+        currentSort = sortSelect.value === "rating" ? "rating" : "distance";
+        rerenderOnly();
+      });
+
+      loadNearby({ refetch: true });
+    }
+  </script>
+
+  <NearYouTopSalons />
+</NearYouLayout>

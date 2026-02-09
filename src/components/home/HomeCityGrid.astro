@@ -1,0 +1,52 @@
+---
+type CityLink = { name: string; slug: string; salon_count?: number | null };
+
+interface Props {
+  cities: CityLink[];
+}
+
+const { cities } = Astro.props;
+---
+
+<section class="mt-16" aria-labelledby="home-cities">
+  <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <div>
+      <h2 id="home-cities" class="text-2xl md:text-3xl font-serif text-slate-900">
+        Top Städte
+      </h2>
+      <p class="mt-2 text-sm text-slate-600 max-w-2xl">
+        Finde Salons in den beliebtesten Städten Deutschlands. Alle Links führen zu crawlbaren Verzeichnis-Seiten.
+      </p>
+    </div>
+    <a
+      href="/directory/city"
+      class="text-sm font-semibold text-[var(--color-terracotta)] transition-colors hover:text-[var(--color-gentle-gold)]"
+    >
+      Alle Städte ansehen
+    </a>
+  </div>
+
+  <ul class="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4" role="list">
+    {cities.map((city) => (
+      <li>
+        <a
+          href={`/directory/city/${city.slug}`}
+          class="group relative block overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] bg-white p-5 shadow-[var(--shadow-sm)] transition hover:border-[var(--color-gentle-gold)] hover:shadow-[var(--shadow-md)]"
+        >
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(44,41,38,0)_0%,rgba(44,41,38,0.82)_100%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          >
+          </div>
+
+          <div class="relative z-10 text-base font-semibold text-slate-900 transition-colors duration-300 group-hover:text-white">
+            {city.name}
+          </div>
+          <div class="relative z-10 mt-1 text-xs text-slate-500 transition-colors duration-300 group-hover:text-white/90">
+            {city.salon_count ?? "Viele"} Salons
+          </div>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

@@ -1,0 +1,62 @@
+0 verbose cli C:\nvm4w\nodejs\node.exe C:\nvm4w\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.6.2
+2 info using node@v24.13.0
+3 silly config load:file:C:\Users\Me\AppData\Local\nvm\v24.13.0\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\Me\OneDrive\Desktop\duolb\.npmrc
+5 warn config optional Use `--omit=optional` to exclude optional dependencies, or
+5 warn config `--include=optional` to include them.
+5 warn config
+5 warn config       Default value does install optional deps unless otherwise omitted.
+6 silly config load:file:C:\Users\Me\.npmrc
+7 silly config load:file:C:\nvm4w\nodejs\etc\npmrc
+8 verbose title npm install leaflet
+9 verbose argv "install" "leaflet"
+10 verbose logfile logs-max:10 dir:C:\Users\Me\OneDrive\Desktop\duolb\.npm-cache\_logs\2026-02-09T08_51_56_057Z-
+11 verbose logfile C:\Users\Me\OneDrive\Desktop\duolb\.npm-cache\_logs\2026-02-09T08_51_56_057Z-debug-0.log
+12 silly logfile done cleaning log files
+13 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+14 silly idealTree buildDeps
+15 silly fetch manifest leaflet@^1.9.4
+16 silly packumentCache full:https://registry.npmjs.org/leaflet cache-miss
+17 http fetch GET https://registry.npmjs.org/leaflet attempt 1 failed with ECONNREFUSED
+18 http fetch GET https://registry.npmjs.org/leaflet attempt 2 failed with ECONNREFUSED
+19 http fetch GET https://registry.npmjs.org/leaflet attempt 3 failed with ECONNREFUSED
+20 silly placeDep ROOT leaflet@ REPLACE for: duolb@0.0.1 want: ^1.9.4
+21 verbose type system
+22 verbose stack FetchError: request to https://registry.npmjs.org/leaflet failed, reason: connect ECONNREFUSED 127.0.0.1:9
+22 verbose stack     at ClientRequest.<anonymous> (C:\Users\Me\AppData\Local\nvm\v24.13.0\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+22 verbose stack     at ClientRequest.emit (node:events:508:28)
+22 verbose stack     at emitErrorEvent (node:_http_client:108:11)
+22 verbose stack     at _destroy (node:_http_client:962:9)
+22 verbose stack     at onSocketNT (node:_http_client:982:5)
+22 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+23 error code ECONNREFUSED
+24 error syscall connect
+25 error errno ECONNREFUSED
+26 error FetchError: request to https://registry.npmjs.org/leaflet failed, reason: connect ECONNREFUSED 127.0.0.1:9
+26 error     at ClientRequest.<anonymous> (C:\Users\Me\AppData\Local\nvm\v24.13.0\node_modules\npm\node_modules\minipass-fetch\lib\index.js:130:14)
+26 error     at ClientRequest.emit (node:events:508:28)
+26 error     at emitErrorEvent (node:_http_client:108:11)
+26 error     at _destroy (node:_http_client:962:9)
+26 error     at onSocketNT (node:_http_client:982:5)
+26 error     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+26 error   code: 'ECONNREFUSED',
+26 error   errno: 'ECONNREFUSED',
+26 error   syscall: 'connect',
+26 error   address: '127.0.0.1',
+26 error   port: 9,
+26 error   type: 'system',
+26 error   requiredBy: '.'
+26 error }
+27 error
+27 error If you are behind a proxy, please make sure that the
+27 error 'proxy' config is set properly.  See: 'npm help config'
+28 silly unfinished npm timer reify 1770627116482
+29 silly unfinished npm timer reify:loadTrees 1770627116484
+30 verbose cwd C:\Users\Me\OneDrive\Desktop\duolb
+31 verbose os Windows_NT 10.0.26200
+32 verbose node v24.13.0
+33 verbose npm  v11.6.2
+34 verbose exit 1
+35 verbose code 1
+36 error A complete log of this run can be found in: C:\Users\Me\OneDrive\Desktop\duolb\.npm-cache\_logs\2026-02-09T08_51_56_057Z-debug-0.log

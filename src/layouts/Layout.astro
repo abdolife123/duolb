@@ -94,14 +94,15 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
   {Astro.url.hostname === 'duolb.pages.dev' && (
     <>
       <meta http-equiv="refresh" content={`0; url=https://duolb.com${Astro.url.pathname}`} />
-      <link rel="canonical" href={`https://duolb.com${Astro.url.pathname}`} />
     </>
   )}
 </head>
 
 <body class="bg-[#F6F4F1] text-[#595252]">
-  <Navbar />
-  <slot />
+  <div class="site-frame">
+    <Navbar />
+    <slot />
+  </div>
   <script is:inline>
   console.log("Tracker running");
 

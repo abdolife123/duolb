@@ -1,0 +1,56 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  robots?: string;
+  image?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  robots = "index, follow, max-image-preview:large",
+  image = "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png",
+} = Astro.props as Props;
+
+const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).toString();
+
+// Let Astro/Vite bundle this stylesheet instead of linking to /src/...
+import "../styles/near-you.css";
+---
+
+<!DOCTYPE html>
+<html lang="de-DE">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="robots" content={robots} />
+
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={image} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+
+    <!-- Prevent indexing of geo-personalized results if needed later -->
+    <!-- <meta name="robots" content="noindex,follow" /> -->
+  </head>
+
+  <body>
+    <main class="near-you-page site-frame">
+      <slot />
+    </main>
+  </body>
+</html>
