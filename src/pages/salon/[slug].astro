@@ -4,11 +4,9 @@ export const prerender = false;
 import DirectoryLayout from "../../layouts/DirectoryLayout.astro"
 import SalonImage from "../../components/directory/SalonImage.astro"
 import { supabase } from "../../lib/supabase"
+import { resolveSalonCoverImage } from "../../lib/images"
 
 const { slug } = Astro.params
-
-const fallbackCover =
-  "https://res.cloudinary.com/daxbch3om/image/upload/v1770339624/7b93947b-000b-4572-beb1-fbcd14924b7b_1_lo30fm.png"
 
 const { data: salon } = await supabase
   .from("salons")
@@ -21,9 +19,7 @@ if (!salon) {
 }
 
 const coverImage =
-  typeof salon.cover_image === "string" && salon.cover_image.trim()
-    ? salon.cover_image
-    : fallbackCover
+  resolveSalonCoverImage(salon.cover_image)
 
 const phoneLink =
   typeof salon.phone === "string"
@@ -154,14 +150,13 @@ const salonSchema = {
 
   {/* HERO IMAGE */}
   <div class="rounded-3xl overflow-hidden shadow-xl ring-1 ring-slate-200 mb-10">
-    <img
-      src={coverImage}
+    <SalonImage
+      coverImage={salon.cover_image}
       alt={`${salon.salon_name}${city ? ` in ${city.name}` : ""}`}
       class="w-full h-80 object-cover"
       loading="eager"
       decoding="async"
       fetchpriority="high"
-      onerror={`this.onerror=null;this.src='${fallbackCover}';`}
     />
   </div>
 
