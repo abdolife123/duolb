@@ -17,6 +17,10 @@ const {
 
 const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).toString();
 
+import Navbar from "@components/navbar.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+
 // Let Astro/Vite bundle this stylesheet instead of linking to /src/...
 import "../styles/near-you.css";
 ---
@@ -48,9 +52,15 @@ import "../styles/near-you.css";
     <!-- <meta name="robots" content="noindex,follow" /> -->
   </head>
 
-  <body>
-    <main class="near-you-page site-frame">
-      <slot />
-    </main>
+  <body class="bg-[var(--color-soft-white)] text-[var(--color-charcoal)]">
+    <div class="site-frame">
+      <Navbar />
+
+      <main class="near-you-page">
+        <slot />
+      </main>
+
+      <Footer />
+    </div>
   </body>
 </html>
