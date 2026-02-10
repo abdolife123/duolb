@@ -1,14 +1,17 @@
 ﻿---
 import Layout from "../layouts/Layout.astro";
 import PostCard from "../components/PostCard.astro";
+import SalonImage from "../components/directory/SalonImage.astro";
 import Footer from "../components/Footer.astro";
 import { supabase } from "../lib/supabase";
 
 // 1. Get search term
 const query = Astro.url.searchParams.get("q")?.trim() || "";
+const orSafeQuery = query.replace(/[(),]/g, " ").replace(/\s+/g, " ").trim();
 
 // 2. Prepare safe posts array
 let posts = [];
+let salons = [];
 
 if (query.length > 0) {
     const { data, error } = await supabase
@@ -23,6 +26,30 @@ if (query.length > 0) {
 
     // ALWAYS force array
     posts = Array.isArray(data) ? data : [];
+
+    const salonPattern = `%${orSafeQuery}%`;
+    const salonSearchEnabled = orSafeQuery.length > 0;
+
+    if (salonSearchEnabled) {
+        const { data: salonsData, error: salonsError } = await supabase
+            .from("salons")
+            .select("salon_name, slug, cover_image, rating_value, rating_count, full_address")
+            .or(
+                [
+                    `salon_name.ilike.${salonPattern}`,
+                    `description.ilike.${salonPattern}`,
+                    `full_address.ilike.${salonPattern}`,
+                ].join(",")
+            )
+            .order("rating_value", { ascending: false })
+            .limit(24);
+
+        if (salonsError) {
+            console.error("Salon search error:", salonsError.message);
+        }
+
+        salons = Array.isArray(salonsData) ? salonsData : [];
+    }
 }
 
 Astro.response.headers.set(
@@ -41,27 +68,77 @@ Astro.response.headers.set(
             <h1 class="text-4xl font-serif text-gray-900">
                 Ergebnisse für: "{query}"
             </h1>
-            <p class="text-gray-500 mt-2">{posts.length} Beiträge gefunden</p>
+            <p class="text-gray-500 mt-2">
+                {posts.length} Beiträge, {salons.length} Salons gefunden
+            </p>
         </header>
 
         {
-            posts.length > 0 ? (
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-                    {posts.map((post) => (
-                        <PostCard post={post} />
-                    ))}
+            posts.length > 0 || salons.length > 0 ? (
+                <div class="space-y-16">
+                    {salons.length > 0 && (
+                        <section>
+                            <h2 class="text-2xl font-serif text-gray-900 mb-8">Salons</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {salons.map((salon) => (
+                                    <a
+                                        href={`/salon/${salon.slug}`}
+                                        class="bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-sm)] border border-[var(--color-light-taupe)] group transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)]"
+                                    >
+                                        <div class="h-48 bg-gray-200 overflow-hidden">
+                                            <SalonImage
+                                                coverImage={salon.cover_image}
+                                                alt={salon.salon_name}
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        </div>
+                                        <div class="p-6 text-left">
+                                            <div class="flex text-[var(--color-gentle-gold)] mb-2 text-sm">
+                                                ⭐ {salon.rating_value ?? "–"}{" "}
+                                                <span class="text-[var(--color-medium-gray)] ml-2">
+                                                    ({salon.rating_count ?? 0})
+                                                </span>
+                                            </div>
+                                            <h3 class="text-xl font-bold mb-1 text-[var(--color-deep-slate)]">
+                                                {salon.salon_name}
+                                            </h3>
+                                            <p class="text-[var(--color-medium-gray)] text-sm mb-4">
+                                                {salon.full_address}
+                                            </p>
+                                            <div class="py-3 rounded-xl border border-[var(--color-light-taupe)] bg-[var(--color-warm-cream)] text-center text-[var(--color-deep-slate)] font-semibold transition-colors group-hover:border-[var(--color-gentle-gold)] group-hover:text-[var(--color-gentle-gold)]">
+                                                Details ansehen
+                                            </div>
+                                        </div>
+                                    </a>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                    {posts.length > 0 && (
+                        <section>
+                            <h2 class="text-2xl font-serif text-gray-900 mb-8">Beiträge</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                                {posts.map((post) => (
+                                    <PostCard post={post} />
+                                ))}
+                            </div>
+                        </section>
+                    )}
                 </div>
             ) : (
                 <div class="text-center py-20 border-t border-gray-100">
                     <p class="font-serif italic text-2xl text-gray-300">
                         Leider keine Ergebnisse gefunden.
                     </p>
-                    <a
-                        href="/posts"
-                        class="text-[#C6A75E] underline mt-4 inline-block"
-                    >
-                        Alle Beiträge ansehen
-                    </a>
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-6">
+                        <a href="/directory" class="text-[#C6A75E] underline inline-block">
+                            Zum Verzeichnis
+                        </a>
+                        <a href="/posts" class="text-[#C6A75E] underline inline-block">
+                            Alle Beiträge ansehen
+                        </a>
+                    </div>
                 </div>
             )
         }
