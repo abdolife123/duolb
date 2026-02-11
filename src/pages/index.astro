@@ -9,7 +9,7 @@ import HomeCategoryGrid from "../components/home/HomeCategoryGrid.astro";
 import HomeCityGrid from "../components/home/HomeCityGrid.astro";
 import HomeFeaturedSalons from "../components/home/HomeFeaturedSalons.astro";
 import HomeSeoBlock from "../components/home/HomeSeoBlock.astro";
-import HomeNearMeClient from "../components/home/HomeNearMeClient";
+import HomeNearMe from "../components/home/HomeNearMe.astro";
 
 /* ---------------- UTF-8 REPAIR (posts) ---------------- */
 function repairUTF8(str = "") {
@@ -190,8 +190,7 @@ const featuredItemListSchema = {
     <HomeCategoryGrid categories={categories || []} />
     <HomeCityGrid cities={cities || []} />
 
-    <!-- Client-only so it doesn't become indexable static content -->
-    <HomeNearMeClient client:only="react" categories={categories || []} />
+    <HomeNearMe categories={categories || []} />
 
     <HomeSeoBlock
       topCities={(cities || []).slice(0, 6)}

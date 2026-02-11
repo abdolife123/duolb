@@ -145,27 +145,29 @@
   }
 </style>
 
-<script>
+<script is:inline>
   const initSearch = () => {
     const btn = document.getElementById("searchToggle");
     const container = document.getElementById("searchContainer");
-    const input = document.getElementById("searchInput") as HTMLInputElement;
+    const input = document.getElementById("searchInput");
 
-    btn?.addEventListener("click", () => {
+    if (!btn || !container) return;
+
+    btn.addEventListener("click", () => {
       const isHidden =
-        container?.style.maxHeight === "0px" || !container?.style.maxHeight;
+        container.style.maxHeight === "0px" || !container.style.maxHeight;
 
       if (isHidden) {
-        container!.style.maxHeight = "200px";
+        container.style.maxHeight = "200px";
         setTimeout(() => input?.focus(), 300); // Focus after animation
       } else {
-        container!.style.maxHeight = "0px";
+        container.style.maxHeight = "0px";
       }
     });
 
     // Close on Escape key
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") container!.style.maxHeight = "0px";
+      if (e.key === "Escape") container.style.maxHeight = "0px";
     });
   };
 
