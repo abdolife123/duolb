@@ -1,4 +1,4 @@
----
+﻿---
 import NearYouLayout from "../../layouts/NearYouLayout.astro";
 import { supabase } from "../../lib/supabase";
 
@@ -14,17 +14,30 @@ if (error) {
   console.error("near-you index categories query error:", error);
 }
 
-const title = "Salons in deiner Nähe in Deutschland";
+const title = "Salons in deiner Naehe in Deutschland";
 const description =
-  "Wähle eine Kategorie und finde passende Anbieter in deiner Nähe. Optional mit Standort-Freigabe für bessere Ergebnisse.";
+  "Waehle eine Kategorie und finde passende Anbieter in deiner Naehe. Optional mit Standort-Freigabe fuer bessere Ergebnisse.";
 const canonical = "https://duolb.com/near-you";
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Startseite", item: "https://duolb.com/" },
+    { "@type": "ListItem", position: 2, name: "Near You", item: canonical },
+  ],
+};
 ---
 
 <NearYouLayout title={title} description={description} canonical={canonical}>
+  <head>
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+  </head>
+
   <header class="near-you-header">
-    <h1 class="near-you-title">Salons in deiner Nähe</h1>
+    <h1 class="near-you-title">Salons in deiner Naehe</h1>
     <p class="near-you-subtitle">
-      Wähle eine Kategorie, dann zeigen wir dir Anbieter in der Umgebung.
+      Waehle eine Kategorie, dann zeigen wir dir Anbieter in der Umgebung.
     </p>
   </header>
 

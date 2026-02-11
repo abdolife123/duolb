@@ -7,3 +7,42 @@ export function resolveSalonCoverImage(value: unknown): string {
     : SALON_COVER_PLACEHOLDER;
 }
 
+type SupabaseImageOptions = {
+  width?: number;
+  height?: number;
+  quality?: number;
+  format?: "webp" | "avif" | "origin";
+  resize?: "cover" | "contain" | "fill";
+};
+
+export function optimizeSupabaseImageUrl(
+  value: unknown,
+  options: SupabaseImageOptions = {}
+): string {
+  if (typeof value !== "string" || !value.trim()) return SALON_COVER_PLACEHOLDER;
+
+  const src = value.trim();
+  if (!src.includes("supabase.co/storage/v1/")) return src;
+
+  try {
+    const url = new URL(src);
+
+    // Ensure we use Supabase's image transformation endpoint.
+    url.pathname = url.pathname.replace(
+      "/storage/v1/object/public/",
+      "/storage/v1/render/image/public/"
+    );
+
+    const { width, height, quality = 72, format = "webp", resize = "cover" } = options;
+
+    if (width && Number.isFinite(width)) url.searchParams.set("width", String(Math.round(width)));
+    if (height && Number.isFinite(height)) url.searchParams.set("height", String(Math.round(height)));
+    url.searchParams.set("quality", String(Math.max(30, Math.min(90, quality))));
+    url.searchParams.set("resize", resize);
+    if (format !== "origin") url.searchParams.set("format", format);
+
+    return url.toString();
+  } catch {
+    return src;
+  }
+}

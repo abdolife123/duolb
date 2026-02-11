@@ -153,54 +153,52 @@ const salonSchema = {
     <SalonImage
       coverImage={salon.cover_image}
       alt={`${salon.salon_name}${city ? ` in ${city.name}` : ""}`}
-      class="w-full h-80 object-cover"
+      class="w-full h-[420px] md:h-[520px] object-cover"
       loading="eager"
       decoding="async"
       fetchpriority="high"
     />
-  </div>
+    <div class="salon-hero-content">
+      <div>
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[var(--color-soft-white)] mb-3 leading-tight">
+          {salon.salon_name}{city ? ` in ${city.name}` : ""}
+        </h1>
 
-  {/* HEADER */}
-  <div class="salon-hero-header flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-10">
-    <div>
-      <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[var(--color-soft-white)] mb-3 leading-tight">
-        {salon.salon_name}{city ? ` in ${city.name}` : ""}
-      </h1>
+        <p class="text-base md:text-lg text-[var(--color-light-taupe)] max-w-3xl mb-4">
+          Entdecke Leistungen, Standort und Kontaktdaten auf einen Blick.
+        </p>
 
-      <p class="text-base md:text-lg text-[var(--color-light-taupe)] max-w-3xl mb-4">
-        Entdecke Leistungen, Standort und Kontaktdaten auf einen Blick.
-      </p>
+        <div class="flex flex-wrap items-center gap-3 text-sm">
+          {category && (
+            <a href={`/directory/city/${city?.slug}/${category.slug}`} class="salon-hero-pill px-3 py-1 rounded-full transition">
+              {category.name}
+            </a>
+          )}
+          {salon.rating_value && (
+            <span class="salon-hero-pill salon-rating-pill px-3 py-1 rounded-full font-semibold">
+              ⭐ {salon.rating_value} ({salon.rating_count ?? 0})
+            </span>
+          )}
+          {salon.has_offers && (
+            <span class="salon-hero-pill px-3 py-1 rounded-full">
+              Angebote verfügbar
+            </span>
+          )}
+        </div>
+      </div>
 
-      <div class="flex flex-wrap items-center gap-3 text-sm">
-        {category && (
-          <a href={`/directory/city/${city?.slug}/${category.slug}`} class="salon-hero-pill px-3 py-1 rounded-full transition">
-            {category.name}
+      <div class="flex flex-wrap gap-3 md:justify-end">
+        {phoneLink && (
+          <a href={`tel:${phoneLink}`} class="salon-cta px-6 py-3 rounded-xl font-semibold shadow-[var(--shadow-sm)] transition">
+            Anrufen
           </a>
         )}
-        {salon.rating_value && (
-          <span class="salon-hero-pill salon-rating-pill px-3 py-1 rounded-full font-semibold">
-            ⭐ {salon.rating_value} ({salon.rating_count ?? 0})
-          </span>
-        )}
-        {salon.has_offers && (
-          <span class="salon-hero-pill px-3 py-1 rounded-full">
-            Angebote verfügbar
-          </span>
+        {salon.website && (
+          <a href={salon.website} target="_blank" rel="noopener" class="salon-cta-secondary border border-[rgba(230,226,221,0.55)] text-[var(--color-soft-white)] bg-transparent px-6 py-3 rounded-xl font-semibold transition">
+            Website
+          </a>
         )}
       </div>
-    </div>
-
-    <div class="flex flex-wrap gap-3 md:justify-end">
-      {phoneLink && (
-        <a href={`tel:${phoneLink}`} class="salon-cta px-6 py-3 rounded-xl font-semibold shadow-[var(--shadow-sm)] transition">
-          Anrufen
-        </a>
-      )}
-      {salon.website && (
-        <a href={salon.website} target="_blank" rel="noopener" class="salon-cta-secondary border border-[rgba(230,226,221,0.55)] text-[var(--color-soft-white)] bg-transparent px-6 py-3 rounded-xl font-semibold transition">
-          Website
-        </a>
-      )}
     </div>
   </div>
 
@@ -319,16 +317,36 @@ const salonSchema = {
     pointer-events: none;
   }
 
-  /* Pull header onto the hero so text sits on the overlay without changing markup. */
-  .salon-hero-header {
-    margin-top: -7rem;
-    padding: 0 1rem;
-    position: relative;
+  .salon-hero-content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem 1rem;
+  }
+
+  .salon-hero-content h1 {
+    color: var(--color-soft-white);
+    margin: 0 0 0.75rem;
+  }
+
+  .salon-hero-content p {
+    color: var(--color-light-taupe);
+    margin: 0 0 1rem;
   }
 
   @media (min-width: 768px) {
-    .salon-hero-header { margin-top: -8.5rem; padding: 0 1.5rem; }
+    .salon-hero-content {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 1.75rem 1.5rem;
+    }
   }
 
   .salon-hero-pill {

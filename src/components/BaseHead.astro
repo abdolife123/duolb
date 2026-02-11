@@ -25,6 +25,9 @@ const imageURL = new URL(image.src, Astro.site).toString();
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="generator" content={Astro.generator} />
+<link rel="preload" href="/styles/enhancements.css" as="style" />
+<link rel="stylesheet" href="/styles/enhancements.css" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="/styles/enhancements.css" /></noscript>
 
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="icon" href="/favicon.ico" />

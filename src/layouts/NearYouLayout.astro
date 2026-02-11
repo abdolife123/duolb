@@ -42,6 +42,9 @@ import "../styles/near-you.css";
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:image" content={image} />
+    <link rel="preload" href="/styles/enhancements.css" as="style" />
+    <link rel="stylesheet" href="/styles/enhancements.css" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="/styles/enhancements.css" /></noscript>
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />

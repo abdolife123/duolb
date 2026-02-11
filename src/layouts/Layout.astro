@@ -34,6 +34,9 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
   <link rel="sitemap" href="/sitemap-index.xml" />
 
   <meta name="theme-color" content="#F6F4F1" />
+  <link rel="preload" href="/styles/enhancements.css" as="style" />
+  <link rel="stylesheet" href="/styles/enhancements.css" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="/styles/enhancements.css" /></noscript>
 
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
   <link rel="dns-prefetch" href="https://res.cloudinary.com" />

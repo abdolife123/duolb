@@ -30,9 +30,23 @@ const seo = buildNearYouSeo({ categoryName, radiusKm: 25 });
 const title = categoryData?.seo_title || seo.title;
 const description = categoryData?.seo_description || seo.description;
 const canonical = `https://duolb.com/near-you/${category}`;
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Startseite", item: "https://duolb.com/" },
+    { "@type": "ListItem", position: 2, name: "Near You", item: "https://duolb.com/near-you" },
+    { "@type": "ListItem", position: 3, name: categoryName, item: canonical },
+  ],
+};
 ---
 
 <NearYouLayout title={title} description={description} canonical={canonical}>
+  <head>
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+  </head>
+
   <SalonMap />
 
   <NearYouHeader

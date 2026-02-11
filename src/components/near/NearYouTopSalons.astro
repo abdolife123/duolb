@@ -1,5 +1,6 @@
 ---
 import { supabase } from "../../lib/supabase";
+import SalonImage from "../directory/SalonImage.astro";
 
 const { data: salons } = await supabase
   .from("salons")
@@ -18,8 +19,8 @@ const { data: salons } = await supabase
     {(salons || []).map((salon) => (
       <a href={`/salon/${salon.slug}`} class="near-salon-card">
         {salon.cover_image && (
-          <img
-            src={salon.cover_image}
+          <SalonImage
+            coverImage={salon.cover_image}
             alt={salon.salon_name ?? "Salon"}
             loading="lazy"
           />

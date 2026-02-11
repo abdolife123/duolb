@@ -1,5 +1,6 @@
 ---
 import type { NearbySalon } from "../../types/nearby";
+import SalonImage from "../directory/SalonImage.astro";
 
 interface Props {
   salons: NearbySalon[];
@@ -12,8 +13,8 @@ const { salons } = Astro.props;
   {salons.map((salon) => (
     <a href={`/salon/${salon.slug}`} class="near-salon-card">
       {salon.cover_image && (
-        <img
-          src={salon.cover_image}
+        <SalonImage
+          coverImage={salon.cover_image}
           alt={salon.salon_name ?? "Salon"}
           loading="lazy"
         />
