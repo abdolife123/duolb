@@ -12,6 +12,15 @@ import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 
 const canonicalURL = canonical || `https://duolb.com${Astro.url.pathname}`;
+const supabaseOrigin = (() => {
+  const value = import.meta.env.PUBLIC_SUPABASE_URL;
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+})();
 ---
 
 <!DOCTYPE html>
@@ -39,6 +48,8 @@ const canonicalURL = canonical || `https://duolb.com${Astro.url.pathname}`;
 
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+    {supabaseOrigin && <link rel="preconnect" href={supabaseOrigin} crossorigin />}
+    {supabaseOrigin && <link rel="dns-prefetch" href={supabaseOrigin} />}
 
     <!-- Open Graph -->
     <meta property="og:site_name" content="Duolb Beauty Directory" />

@@ -12,6 +12,15 @@ const {
 } = Astro.props;
 
 const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
+const supabaseOrigin = (() => {
+  const value = import.meta.env.PUBLIC_SUPABASE_URL;
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+})();
 ---
 
 <!doctype html>
@@ -40,6 +49,8 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
 
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
   <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+  {supabaseOrigin && <link rel="preconnect" href={supabaseOrigin} crossorigin />}
+  {supabaseOrigin && <link rel="dns-prefetch" href={supabaseOrigin} />}
 
   <!-- Open Graph -->
   <meta property="og:site_name" content="Duolb Beauty Blog" />
@@ -102,6 +113,7 @@ const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
 </head>
 
 <body class="bg-[#F6F4F1] text-[#595252]">
+  <div id="pageTopMarker" aria-hidden="true" class="absolute left-0 top-[400px] h-px w-px pointer-events-none"></div>
   <div class="site-frame">
     <Navbar />
     <slot />

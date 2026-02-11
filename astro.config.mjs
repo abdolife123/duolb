@@ -19,6 +19,9 @@ const adapter = isDev
 export default defineConfig({
   site: 'https://duolb.com',
   output: 'server',
+  build: {
+    inlineStylesheets: "always",
+  },
 
   // Use Node locally, Cloudflare in production
   adapter,

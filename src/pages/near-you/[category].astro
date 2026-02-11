@@ -111,6 +111,12 @@ const breadcrumbSchema = {
         return Number.isFinite(n) ? n : fallback;
       }
 
+      function proxyImageUrl(src) {
+        if (!src || typeof src !== "string") return "";
+        if (!src.includes("supabase.co/storage/v1/")) return src;
+        return `/api/image?src=${encodeURIComponent(src)}`;
+      }
+
       function renderEmpty() {
         container.innerHTML = `
           <section class="near-you-empty">
@@ -128,7 +134,7 @@ const breadcrumbSchema = {
             ${salons
               .map((salon) => {
                 const img = salon.cover_image
-                  ? `<img src="${salon.cover_image}" alt="${salon.salon_name ?? "Salon"}" loading="lazy" />`
+                  ? `<img src="${proxyImageUrl(salon.cover_image)}" alt="${salon.salon_name ?? "Salon"}" loading="lazy" />`
                   : "";
 
                 const rating = salon.rating_value

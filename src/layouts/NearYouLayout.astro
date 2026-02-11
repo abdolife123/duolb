@@ -16,6 +16,15 @@ const {
 } = Astro.props as Props;
 
 const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).toString();
+const supabaseOrigin = (() => {
+  const value = import.meta.env.PUBLIC_SUPABASE_URL;
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+})();
 
 import Navbar from "@components/navbar.astro";
 import Footer from "../components/Footer.astro";
@@ -45,6 +54,8 @@ import "../styles/near-you.css";
     <link rel="preload" href="/styles/enhancements.css" as="style" />
     <link rel="stylesheet" href="/styles/enhancements.css" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="/styles/enhancements.css" /></noscript>
+    {supabaseOrigin && <link rel="preconnect" href={supabaseOrigin} crossorigin />}
+    {supabaseOrigin && <link rel="dns-prefetch" href={supabaseOrigin} />}
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
@@ -56,10 +67,10 @@ import "../styles/near-you.css";
   </head>
 
   <body class="bg-[var(--color-soft-white)] text-[var(--color-charcoal)]">
-    <div class="site-frame">
+    <div class="site-frame min-h-screen flex flex-col">
       <Navbar />
 
-      <main class="near-you-page">
+      <main class="near-you-page flex-1">
         <slot />
       </main>
 

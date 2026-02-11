@@ -19,26 +19,42 @@ const label = "Go to top";
 </button>
 
 <script is:inline>
-  const btn = document.getElementById("backToTop");
-  if (btn) {
-    const toggle = () => {
-      if (window.scrollY > 400) {
-        btn.classList.add("opacity-100", "translate-y-0", "pointer-events-auto");
-        btn.classList.remove("opacity-0", "translate-y-2", "pointer-events-none");
-      } else {
-        btn.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
-        btn.classList.add("opacity-0", "translate-y-2", "pointer-events-none");
-      }
+  const initBackToTop = () => {
+    const btn = document.getElementById("backToTop");
+    const marker = document.getElementById("pageTopMarker");
+    if (!btn || !marker) return;
+
+    if (btn.dataset.initialized === "true") return;
+    btn.dataset.initialized = "true";
+
+    const show = () => {
+      btn.classList.add("opacity-100", "translate-y-0", "pointer-events-auto");
+      btn.classList.remove("opacity-0", "translate-y-2", "pointer-events-none");
     };
 
-    window.addEventListener("scroll", toggle, { passive: true });
-    toggle();
+    const hide = () => {
+      btn.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
+      btn.classList.add("opacity-0", "translate-y-2", "pointer-events-none");
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        hide();
+      } else {
+        show();
+      }
+    });
+
+    observer.observe(marker);
 
     btn.addEventListener("click", () => {
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
     });
-  }
+  };
+
+  initBackToTop();
+  document.addEventListener("astro:after-swap", initBackToTop);
 </script>
 
 <style>
