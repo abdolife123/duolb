@@ -1,4 +1,14 @@
 /* Page Layout */
+.near-you-frame {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.near-you-main {
+  flex: 1 0 auto;
+}
+
 .near-you-page {
   max-width: 1200px;
   margin: 0 auto;

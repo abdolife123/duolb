@@ -30,9 +30,9 @@ const breadcrumbSchema = {
 ---
 
 <NearYouLayout title={title} description={description} canonical={canonical}>
-  <head>
+  <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
-  </head>
+  </Fragment>
 
   <header class="near-you-header">
     <h1 class="near-you-title">Salons in deiner Naehe</h1>

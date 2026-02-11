@@ -1,4 +1,4 @@
----
+﻿---
 interface Props {
   title: string;
   description: string;
@@ -6,6 +6,11 @@ interface Props {
   robots?: string;
   image?: string;
 }
+
+import Navbar from "@components/navbar.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+import "../styles/near-you.css";
 
 const {
   title,
@@ -16,23 +21,9 @@ const {
 } = Astro.props as Props;
 
 const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).toString();
-const supabaseOrigin = (() => {
-  const value = import.meta.env.PUBLIC_SUPABASE_URL;
-  if (!value) return null;
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
-})();
-
-import Navbar from "@components/navbar.astro";
-import Footer from "../components/Footer.astro";
-import "../styles/global.css";
-import "../styles/near-you.css";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de-DE">
   <head>
     <meta charset="UTF-8" />
@@ -50,15 +41,11 @@ import "../styles/near-you.css";
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:image" content={image} />
 
-    <link rel="stylesheet" href="/styles/enhancements.css" />
-
-    {supabaseOrigin && <link rel="preconnect" href={supabaseOrigin} crossorigin />}
-    {supabaseOrigin && <link rel="dns-prefetch" href={supabaseOrigin} />}
-
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
+    <slot name="head" />
   </head>
 
   <body class="bg-[var(--color-soft-white)] text-[var(--color-charcoal)]">
@@ -71,15 +58,3 @@ import "../styles/near-you.css";
     </div>
   </body>
 </html>
-
-<style>
-  .near-you-frame {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .near-you-main {
-    flex: 1 0 auto;
-  }
-</style>

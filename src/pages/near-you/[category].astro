@@ -43,9 +43,9 @@ const breadcrumbSchema = {
 ---
 
 <NearYouLayout title={title} description={description} canonical={canonical}>
-  <head>
+  <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
-  </head>
+  </Fragment>
 
   <SalonMap />
 
