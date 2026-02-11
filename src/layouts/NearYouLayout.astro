@@ -29,8 +29,6 @@ const supabaseOrigin = (() => {
 import Navbar from "@components/navbar.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
-
-// Let Astro/Vite bundle this stylesheet instead of linking to /src/...
 import "../styles/near-you.css";
 ---
 
@@ -51,9 +49,9 @@ import "../styles/near-you.css";
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:image" content={image} />
-    <link rel="preload" href="/styles/enhancements.css" as="style" />
-    <link rel="stylesheet" href="/styles/enhancements.css" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="/styles/enhancements.css" /></noscript>
+
+    <link rel="stylesheet" href="/styles/enhancements.css" />
+
     {supabaseOrigin && <link rel="preconnect" href={supabaseOrigin} crossorigin />}
     {supabaseOrigin && <link rel="dns-prefetch" href={supabaseOrigin} />}
 
@@ -61,19 +59,14 @@ import "../styles/near-you.css";
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
-
-    <!-- Prevent indexing of geo-personalized results if needed later -->
-    <!-- <meta name="robots" content="noindex,follow" /> -->
   </head>
 
   <body class="bg-[var(--color-soft-white)] text-[var(--color-charcoal)]">
     <div class="site-frame min-h-screen flex flex-col">
       <Navbar />
-
       <main class="near-you-page flex-1">
         <slot />
       </main>
-
       <Footer />
     </div>
   </body>
