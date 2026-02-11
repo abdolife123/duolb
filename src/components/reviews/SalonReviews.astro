@@ -1,0 +1,12 @@
+---
+import SalonReviewsClient from "./SalonReviewsClient";
+
+interface Props {
+  salonId: string | number;
+  salonSlug?: string;
+}
+
+const { salonId, salonSlug } = Astro.props;
+---
+
+<SalonReviewsClient salonId={salonId} salonSlug={salonSlug} client:load />

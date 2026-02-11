@@ -3,6 +3,7 @@ export const prerender = false;
 
 import DirectoryLayout from "../../layouts/DirectoryLayout.astro"
 import SalonImage from "../../components/directory/SalonImage.astro"
+import SalonReviews from "../../components/reviews/SalonReviews.astro"
 import { supabase } from "../../lib/supabase"
 import { resolveSalonCoverImage } from "../../lib/images"
 
@@ -87,6 +88,8 @@ const title = `${salon.salon_name}${city ? ` in ${city.name}` : ""} – ${catego
 const description =
   salon.description?.slice(0, 155) ||
   `${salon.salon_name} in ${city?.name}. Adresse, Bewertungen und Leistungen im Überblick.`
+const salonDescription =
+  typeof salon.description === "string" ? salon.description.trim() : ""
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -211,12 +214,15 @@ const salonSchema = {
   </div>
 
   {/* DESCRIPTION */}
-  {salon.description && (
+  {salonDescription && (
     <div class="prose prose-slate max-w-none mb-12">
       <h2 class="!text-slate-900">Über {salon.salon_name}</h2>
-      <p class="whitespace-pre-line !leading-relaxed">{salon.description}</p>
+      <p class="whitespace-pre-line !leading-relaxed">{salonDescription}</p>
     </div>
   )}
+
+  {/* REVIEWS */}
+  <SalonReviews salonId={salon.id} salonSlug={salon.slug} />
 
   {/* SERVICES SEO BLOCK */}
   {category && city && (
