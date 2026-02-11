@@ -263,3 +263,20 @@
 .near-you-top-salons__link:hover {
   color: var(--color-gentle-gold, #D4AF77);
 }
+
+/* Keep "Schoenheitssalons" cards in a stable 3-column layout on desktop */
+.near-you-top-salons .near-you-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+  .near-you-top-salons .near-you-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .near-you-top-salons .near-you-grid {
+    grid-template-columns: 1fr;
+  }
+}
