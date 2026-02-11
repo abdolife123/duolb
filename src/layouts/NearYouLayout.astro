@@ -62,12 +62,24 @@ import "../styles/near-you.css";
   </head>
 
   <body class="bg-[var(--color-soft-white)] text-[var(--color-charcoal)]">
-    <div class="site-frame min-h-screen flex flex-col">
+    <div class="site-frame near-you-frame">
       <Navbar />
-      <main class="near-you-page flex-1">
+      <main class="near-you-page near-you-main">
         <slot />
       </main>
       <Footer />
     </div>
   </body>
 </html>
+
+<style>
+  .near-you-frame {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .near-you-main {
+    flex: 1 0 auto;
+  }
+</style>
