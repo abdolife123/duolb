@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { formatSitemapLastmod } from "../lib/sitemapLastmod";
 
 export async function GET() {
   const { data: salons } = await supabase
@@ -8,7 +9,7 @@ export async function GET() {
   const urls = (salons || []).map((salon) => `
     <url>
       <loc>https://duolb.com/salon/${salon.slug}</loc>
-      <lastmod>${salon.updated_at ?? new Date().toISOString()}</lastmod>
+      <lastmod>${formatSitemapLastmod(salon.updated_at)}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.8</priority>
     </url>

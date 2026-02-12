@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { formatSitemapLastmod } from "../lib/sitemapLastmod";
 
 const supabaseUrl =
   import.meta.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
@@ -47,7 +48,7 @@ export async function GET({ request }: { request: Request }) {
     .map((row) => `
     <url>
       <loc>https://duolb.com/directory/city/${row.city_slug}</loc>
-      <lastmod>${row.updated_at ?? new Date().toISOString()}</lastmod>
+      <lastmod>${formatSitemapLastmod(row.updated_at)}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.9</priority>
     </url>
@@ -55,7 +56,7 @@ export async function GET({ request }: { request: Request }) {
     .join("");
 
   const debugComment = debug
-    ? `\n<!-- debug: citiesCount=${citiesCount ?? "null"} rows=${(cities || [])
+    ? `\n<!-- debug: citiesCount=${citiesCount ?? "null"} rows=${(salonCitySlugs || [])
         .length} -->\n`
     : "\n";
 

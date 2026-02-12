@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { formatSitemapLastmod } from "../lib/sitemapLastmod";
 
 const supabaseUrl =
   import.meta.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
@@ -51,7 +52,7 @@ export async function GET({ request }: { request: Request }) {
     .map((row) => `
     <url>
       <loc>https://duolb.com/directory/category/${row.category_slug}</loc>
-      <lastmod>${row.updated_at ?? new Date().toISOString()}</lastmod>
+      <lastmod>${formatSitemapLastmod(row.updated_at)}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.9</priority>
     </url>

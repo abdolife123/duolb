@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { formatSitemapLastmod } from "../lib/sitemapLastmod";
 
 export async function GET() {
   const base = "https://duolb.com";
@@ -16,7 +17,7 @@ export async function GET() {
     urls += `
       <url>
         <loc>${base}/directory/city/${city.slug}</loc>
-        <lastmod>${city.updated_at ?? new Date().toISOString()}</lastmod>
+        <lastmod>${formatSitemapLastmod(city.updated_at)}</lastmod>
         <priority>0.9</priority>
       </url>`;
   }
@@ -26,7 +27,7 @@ export async function GET() {
     urls += `
       <url>
         <loc>${base}/directory/category/${cat.slug}</loc>
-        <lastmod>${cat.updated_at ?? new Date().toISOString()}</lastmod>
+        <lastmod>${formatSitemapLastmod(cat.updated_at)}</lastmod>
         <priority>0.9</priority>
       </url>`;
   }
@@ -36,7 +37,7 @@ export async function GET() {
     urls += `
       <url>
         <loc>${base}/salon/${salon.slug}</loc>
-        <lastmod>${salon.updated_at ?? new Date().toISOString()}</lastmod>
+        <lastmod>${formatSitemapLastmod(salon.updated_at)}</lastmod>
         <priority>0.8</priority>
       </url>`;
   }
