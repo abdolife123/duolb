@@ -27,6 +27,18 @@ const phoneLink =
     ? salon.phone.replace(/[^\d+]/g, "")
     : ""
 
+const bookingUrlRaw =
+  typeof salon.booking_url === "string" ? salon.booking_url.trim() : ""
+const bookingUrl =
+  bookingUrlRaw && /^https?:\/\//i.test(bookingUrlRaw)
+    ? bookingUrlRaw
+    : bookingUrlRaw
+      ? `https://${bookingUrlRaw}`
+      : ""
+const showBookNowCta = Boolean(salon.has_offers && bookingUrl)
+const minimumDiscountLabel =
+  salon.has_offers ? "Ab 10 % Rabatt" : ""
+
 let city = null
 if (salon.city_id) {
   const { data } = await supabase
@@ -195,9 +207,14 @@ const salonSchema = {
       </div>
 
       <div class="flex flex-wrap gap-3 md:justify-end">
-        {phoneLink && (
+        {!salon.has_offers && phoneLink && (
           <a href={`tel:${phoneLink}`} class="salon-cta px-6 py-3 rounded-xl font-semibold shadow-[var(--shadow-sm)] transition">
             Anrufen
+          </a>
+        )}
+        {showBookNowCta && (
+          <a href={bookingUrl} target="_blank" rel="noopener" class="salon-cta salon-cta-gold px-6 py-3 rounded-xl font-semibold shadow-[var(--shadow-sm)] transition">
+            Jetzt buchen
           </a>
         )}
         {salon.website && (
@@ -208,6 +225,23 @@ const salonSchema = {
       </div>
     </div>
   </div>
+
+  {salon.has_offers && bookingUrl && (
+    <div class="offer-banners mb-10">
+      <a href={bookingUrl} target="_blank" rel="noopener" class="offer-banner-card">
+        <p class="offer-banner-eyebrow">Sonderaktion</p>
+        <h2>{minimumDiscountLabel} bei {salon.salon_name}</h2>
+      </a>
+      <a href={bookingUrl} target="_blank" rel="noopener" class="offer-banner-card">
+        <p class="offer-banner-eyebrow">Vorteil</p>
+        <h2>Exklusive Angebote von {salon.salon_name}</h2>
+      </a>
+      <a href={bookingUrl} target="_blank" rel="noopener" class="offer-banner-card">
+        <p class="offer-banner-eyebrow">Schnell sichern</p>
+        <h2>Buche jetzt deinen Termin bei {salon.salon_name}</h2>
+      </a>
+    </div>
+  )}
 
   {/* ADDRESS */}
   <div class="bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] p-6 mb-10 border border-[var(--color-light-taupe)]">
@@ -385,9 +419,79 @@ const salonSchema = {
 
   .salon-cta:hover { filter: brightness(0.92); }
 
+  .salon-cta-gold {
+    color: color-mix(in srgb, var(--color-deep-slate) 92%, #2f2408);
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-soft-white) 22%, transparent) 0%, transparent 50%),
+      linear-gradient(120deg, color-mix(in srgb, var(--color-gentle-gold) 68%, #d4af37), color-mix(in srgb, var(--color-gentle-gold) 82%, #c89f2f));
+    border: 1px solid color-mix(in srgb, var(--color-gentle-gold) 45%, #b98d20);
+  }
+
+  .salon-cta-gold:hover {
+    filter: brightness(0.97);
+  }
+
   .salon-cta-secondary:hover {
     border-color: rgba(230,226,221,0.8);
     background: color-mix(in srgb, var(--color-deep-slate) 40%, transparent);
+  }
+
+  .offer-banners {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+
+  @media (min-width: 768px) {
+    .offer-banners {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .offer-banners {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .offer-banner-card {
+    display: block;
+    border: 1px solid color-mix(in srgb, var(--color-gentle-gold) 40%, var(--color-light-taupe));
+    border-radius: 1rem;
+    padding: 1rem;
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-soft-white) 22%, transparent) 0%, transparent 50%),
+      linear-gradient(120deg, color-mix(in srgb, var(--color-gentle-gold) 68%, #d4af37), color-mix(in srgb, var(--color-gentle-gold) 82%, #c89f2f));
+    text-decoration: none;
+    transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+  }
+
+  .offer-banner-card:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.97);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .offer-banner-card:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-deep-slate) 65%, transparent);
+    outline-offset: 2px;
+  }
+
+  .offer-banner-eyebrow {
+    margin: 0 0 0.4rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-deep-slate) 75%, #5b4a1a);
+    font-weight: 700;
+  }
+
+  .offer-banner-card h2 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--color-deep-slate) 90%, #2f2408);
+    font-weight: 700;
   }
 </style>
 
