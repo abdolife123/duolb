@@ -85,11 +85,15 @@ if (relatedConditions.length > 0) {
 
 // SEO
 const title = `${salon.salon_name}${city ? ` in ${city.name}` : ""} – ${category?.name || "Salon"}`
-const description =
-  salon.description?.slice(0, 155) ||
-  `${salon.salon_name} in ${city?.name}. Adresse, Bewertungen und Leistungen im Überblick.`
 const salonDescription =
   typeof salon.description === "string" ? salon.description.trim() : ""
+const salonDescriptionText = salonDescription
+  .replace(/<[^>]*>/g, " ")
+  .replace(/\s+/g, " ")
+  .trim()
+const description =
+  salonDescriptionText.slice(0, 155) ||
+  `${salon.salon_name} in ${city?.name}. Adresse, Bewertungen und Leistungen im Überblick.`
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -217,7 +221,7 @@ const salonSchema = {
   {salonDescription && (
     <div class="prose prose-slate max-w-none mb-12">
       <h2 class="!text-slate-900">Über {salon.salon_name}</h2>
-      <p class="whitespace-pre-line !leading-relaxed">{salonDescription}</p>
+      <div class="!leading-relaxed" set:html={salonDescription}></div>
     </div>
   )}
 
