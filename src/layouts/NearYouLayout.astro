@@ -34,6 +34,9 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).toStri
     <link rel="canonical" href={canonicalURL} />
     <meta name="robots" content={robots} />
     <meta name="msvalidate.01" content="B67B9187875C803F521B956542758582" />
+    <!-- Privacy Scripts FIRST -->
+    <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
+    <script data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
     <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
     <script is:inline>
       window.ezstandalone = window.ezstandalone || {};
