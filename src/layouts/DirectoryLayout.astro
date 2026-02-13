@@ -3,6 +3,7 @@ const {
   title = "Beauty & Wellness Directory",
   description = "",
   canonical,
+  robots = "index, follow, max-image-preview:large",
   image = "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png",
   type = "website",
 } = Astro.props;
@@ -32,7 +33,7 @@ const supabaseOrigin = (() => {
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content="Duolb Beauty Redaktion" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content={robots} />
     <meta name="google-adsense-account" content="ca-pub-6824827690109369" />
     <!-- Privacy Scripts FIRST -->
     <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>

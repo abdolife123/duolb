@@ -1,25 +1,34 @@
 ---
+export const prerender = true
+
 import DirectoryLayout from "../../../../layouts/DirectoryLayout.astro"
 import SalonImage from "@components/directory/SalonImage.astro"
 import { supabase } from "../../../../lib/supabase"
 
 export async function getStaticPaths() {
-  const [{ data: cities }, { data: categories }] = await Promise.all([
-    supabase.from("cities").select("slug"),
-    supabase.from("business_categories").select("slug")
-  ])
+  const { data, error } = await supabase
+    .from("salons")
+    .select("city_slug, category_slug")
+    .not("city_slug", "is", null)
+    .not("category_slug", "is", null)
 
-  const paths = []
-
-  for (const city of cities || []) {
-    for (const category of categories || []) {
-      paths.push({
-        params: { city: city.slug, category: category.slug }
-      })
-    }
+  if (error) {
+    console.error("getStaticPaths city/category salons error", error)
+    return []
   }
 
-  return paths
+  const pairs = new Set(
+    (data || [])
+      .map((row) => `${row.city_slug}::${row.category_slug}`)
+      .filter((key) => key !== "::")
+  )
+
+  return Array.from(pairs).map((key) => {
+    const [city, category] = key.split("::")
+    return {
+      params: { city, category }
+    }
+  })
 }
 
 const { city, category } = Astro.params
@@ -60,6 +69,10 @@ const description =
   categoryData.seo_description ||
   `Finde die besten ${categoryData.name} in ${cityData.name}. Vergleiche Bewertungen, Adressen und Leistungen der Top Salons in deiner Nähe.`
 
+const hasSalons = (salons?.length || 0) > 0
+const robots = hasSalons ? "index, follow" : "noindex, follow"
+const canonicalUrl = `https://duolb.com/directory/city/${cityData.slug}/${categoryData.slug}`
+
 Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
@@ -84,7 +97,8 @@ const itemListSchema = {
 <DirectoryLayout
   title={title}
   description={description}
-  canonical={`https://duolb.com/directory/city/${cityData.slug}/${categoryData.slug}`}
+  canonical={canonicalUrl}
+  robots={robots}
 >
 
   <section class="mb-10">
