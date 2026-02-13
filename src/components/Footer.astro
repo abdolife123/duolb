@@ -38,15 +38,31 @@ const currentYear = new Date().getFullYear();
       >
       </div>
 
-      <div class="flex gap-6 mb-8">
-        <span
-          class="transition-transform hover:-translate-y-1 cursor-pointer footer-social"
-          >Instagram</span
+      <div class="flex flex-wrap justify-center gap-6 mb-8">
+        <a
+          href="https://www.instagram.com/duolb_com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-transform hover:-translate-y-1 footer-social"
         >
-        <span
-          class="transition-transform hover:-translate-y-1 cursor-pointer footer-social"
-          >Pinterest</span
+          Instagram
+        </a>
+        <a
+          href="https://web.facebook.com/profile.php?id=61587828371941"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-transform hover:-translate-y-1 footer-social"
         >
+          Facebook
+        </a>
+        <a
+          href="https://de.pinterest.com/beautyguide_germany"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-transform hover:-translate-y-1 footer-social"
+        >
+          Pinterest
+        </a>
       </div>
 
       <div class="text-center">
@@ -64,14 +80,18 @@ const currentYear = new Date().getFullYear();
 
 <style>
   .footer-root {
-    background: linear-gradient(180deg, var(--color-charcoal), var(--color-deep-slate));
-    color: var(--color-light-taupe);
-    border-top-color: rgba(230,226,221,0.2);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-gentle-gold) 82%, #f1d176),
+      color-mix(in srgb, var(--color-gentle-gold) 92%, #c89f2f)
+    );
+    color: color-mix(in srgb, var(--color-deep-slate) 92%, #2f2408);
+    border-top-color: color-mix(in srgb, var(--color-gentle-gold) 55%, #b98d20);
     font-family: var(--font-body);
   }
 
   .footer-logo {
-    color: var(--color-warm-cream);
+    color: color-mix(in srgb, var(--color-deep-slate) 94%, #2f2408);
   }
 
   .footer-dot { color: var(--color-gentle-gold); }
@@ -90,17 +110,17 @@ const currentYear = new Date().getFullYear();
 
   .footer-link,
   .footer-social {
-    color: var(--color-warm-cream);
+    color: color-mix(in srgb, var(--color-deep-slate) 92%, #2f2408);
     transition: color var(--transition-base), transform var(--transition-base);
   }
 
   .footer-link:hover,
   .footer-social:hover {
-    color: var(--color-gentle-gold);
+    color: color-mix(in srgb, var(--color-deep-slate) 75%, #5b4a1a);
   }
 
   .footer-meta {
-    color: var(--color-light-taupe);
+    color: color-mix(in srgb, var(--color-deep-slate) 85%, #4b3b11);
   }
 </style>
 
