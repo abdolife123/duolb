@@ -6,48 +6,67 @@ import SalonImage from "@components/directory/SalonImage.astro"
 import { supabase } from "../../../../lib/supabase"
 
 export async function getStaticPaths() {
-  const { data, error } = await supabase
-    .from("salons")
-    .select("city_slug, category_slug")
-    .not("city_slug", "is", null)
-    .not("category_slug", "is", null)
+  const [{ data: cityCategoryPages, error: pagesError }, { data: cities, error: citiesError }, { data: categories, error: categoriesError }] = await Promise.all([
+    supabase
+      .from("city_category_pages")
+      .select("city_id, category_id"),
+    supabase
+      .from("cities")
+      .select("id, slug"),
+    supabase
+      .from("business_categories")
+      .select("id, slug"),
+  ])
 
-  if (error) {
-    console.error("getStaticPaths city/category salons error", error)
+  if (pagesError || citiesError || categoriesError) {
+    console.error("getStaticPaths city/category source error", pagesError || citiesError || categoriesError)
     return []
   }
 
-  const pairs = new Set(
-    (data || [])
-      .map((row) => `${row.city_slug}::${row.category_slug}`)
-      .filter((key) => key !== "::")
-  )
+  const citySlugById = new Map((cities || []).map((row) => [row.id, row.slug]))
+  const categorySlugById = new Map((categories || []).map((row) => [row.id, row.slug]))
 
-  return Array.from(pairs).map((key) => {
-    const [city, category] = key.split("::")
-    return {
-      params: { city, category }
-    }
-  })
+  return (cityCategoryPages || [])
+    .map((row) => {
+      const city = citySlugById.get(row.city_id)
+      const category = categorySlugById.get(row.category_id)
+      if (!city || !category) return null
+      return {
+        params: { city, category }
+      }
+    })
+    .filter(Boolean)
 }
 
 const { city, category } = Astro.params
 
 // Fetch city info
-const { data: cityData } = await supabase
-  .from("cities")
-  .select("id, name, slug, seo_title, seo_description")
-  .eq("slug", city)
-  .single()
-
-// Fetch category info
-const { data: categoryData } = await supabase
-  .from("business_categories")
-  .select("id, name, slug, seo_title, seo_description")
-  .eq("slug", category)
-  .single()
+const [{ data: cityData }, { data: categoryData }] = await Promise.all([
+  supabase
+    .from("cities")
+    .select("id, name, slug, seo_title, seo_description")
+    .eq("slug", city)
+    .single(),
+  supabase
+    .from("business_categories")
+    .select("id, name, slug, seo_title, seo_description")
+    .eq("slug", category)
+    .single(),
+])
 
 if (!cityData || !categoryData) {
+  return Astro.redirect("/404")
+}
+
+// Fetch city-category SEO/index config
+const { data: cityCategoryPage } = await supabase
+  .from("city_category_pages")
+  .select("seo_title, seo_description, h1_title, index_state, salon_count")
+  .eq("city_id", cityData.id)
+  .eq("category_id", categoryData.id)
+  .single()
+
+if (!cityCategoryPage || cityCategoryPage.salon_count === 0) {
   return Astro.redirect("/404")
 }
 
@@ -62,15 +81,17 @@ const { data: salons } = await supabase
 
 // SEO content
 const title =
+  cityCategoryPage.seo_title ||
   categoryData.seo_title ||
   `${categoryData.name} in ${cityData.name} – Bewertungen & Adressen`
 
 const description =
+  cityCategoryPage.seo_description ||
   categoryData.seo_description ||
   `Finde die besten ${categoryData.name} in ${cityData.name}. Vergleiche Bewertungen, Adressen und Leistungen der Top Salons in deiner Nähe.`
 
-const hasSalons = (salons?.length || 0) > 0
-const robots = hasSalons ? "index, follow" : "noindex, follow"
+const h1Title = cityCategoryPage.h1_title || `Die besten ${categoryData.name} in ${cityData.name}`
+const robots = cityCategoryPage.index_state ? "index, follow" : "noindex, follow"
 const canonicalUrl = `https://duolb.com/directory/city/${cityData.slug}/${categoryData.slug}`
 
 Astro.response.headers.set(
@@ -103,7 +124,7 @@ const itemListSchema = {
 
   <section class="mb-10">
     <h1 class="text-3xl font-serif text-[var(--color-deep-slate)] mb-4">
-      {categoryData.seo_h1 || `Die besten ${categoryData.name} in ${cityData.name}`}
+      {h1Title}
     </h1>
 
     <p class="text-[var(--color-charcoal)] max-w-3xl">

@@ -22,7 +22,7 @@ export async function GET() {
 
   const [{ data: cities }, { data: categories }, { data: salons }] =
     await Promise.all([
-      supabase.from("cities").select("slug"),
+      supabase.from("cities").select("slug").eq("index_state", true),
       supabase.from("business_categories").select("slug"),
       supabase
         .from("salons")

@@ -5,7 +5,7 @@ export async function GET() {
   const base = "https://duolb.com";
 
   const [{ data: cities }, { data: categories }, { data: salons }] = await Promise.all([
-    supabase.from("cities").select("slug, updated_at"),
+    supabase.from("cities").select("slug, updated_at").eq("index_state", true),
     supabase.from("business_categories").select("slug, updated_at"),
     supabase.from("salons").select("slug, updated_at")
   ]);

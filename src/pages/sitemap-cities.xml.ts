@@ -24,23 +24,32 @@ export async function GET({ request }: { request: Request }) {
   const url = new URL(request.url);
   const debug = url.searchParams.get("debug") === "1";
 
-  const { data: salonCitySlugs, error: citiesError } = await supabase
+  const [{ data: salonCitySlugs, error: citiesError }, { data: indexableCities, error: indexableCitiesError }] = await Promise.all([
+    supabase
     .from("salons")
     .select("city_slug, updated_at")
-    .not("city_slug", "is", null);
+    .not("city_slug", "is", null),
+    supabase
+      .from("cities")
+      .select("slug")
+      .eq("index_state", true),
+  ]);
 
   const { count: citiesCount, error: countError } = await supabase
     .from("salons")
     .select("*", { count: "exact", head: true });
 
   if (citiesError) console.error("sitemap-cities: salons error", citiesError);
+  if (indexableCitiesError) console.error("sitemap-cities: cities index_state error", indexableCitiesError);
   if (countError) console.error("sitemap-cities: count error", countError);
 
+  const indexableCitySet = new Set((indexableCities || []).map((row) => row.slug).filter(Boolean));
   const seen = new Set<string>();
 
   const urls = (salonCitySlugs || [])
     .filter((row) => {
       if (!row?.city_slug) return false;
+      if (!indexableCitySet.has(row.city_slug)) return false;
       if (seen.has(row.city_slug)) return false;
       seen.add(row.city_slug);
       return true;

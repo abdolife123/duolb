@@ -15,7 +15,7 @@ const { city } = Astro.params
 // Fetch city
 const { data: cityData } = await supabase
   .from("cities")
-  .select("id, name, slug, seo_title, seo_description")
+  .select("id, name, slug, seo_title, seo_description, index_state")
   .eq("slug", city)
   .single()
 
@@ -44,6 +44,7 @@ const title =
 const description =
   cityData.seo_description ||
   `Finde die besten Friseure, Kosmetikstudios und Wellness Salons in ${cityData.name}. Vergleiche Bewertungen, Preise und Leistungen.`
+const robots = cityData.index_state ? "index, follow" : "noindex, nofollow"
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -70,6 +71,7 @@ const itemListSchema = {
   title={title}
   description={description}
   canonical={`https://duolb.com/directory/city/${cityData.slug}`}
+  robots={robots}
 >
 
 <section class="max-w-6xl mx-auto px-6 py-16">
