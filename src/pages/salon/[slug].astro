@@ -106,6 +106,7 @@ const salonDescriptionText = salonDescription
 const description =
   salonDescriptionText.slice(0, 155) ||
   `${salon.salon_name} in ${city?.name}. Adresse, Bewertungen und Leistungen im Überblick.`
+const robots = "index, follow"
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -116,34 +117,20 @@ const salonSchema = {
   "@context": "https://schema.org",
   "@type": "BeautySalon",
   name: salon.salon_name,
-  url: `https://duolb.com/salon/${salon.slug}`,
-  image: coverImage,
-  description,
-  telephone: salon.phone || undefined,
   address:
-    salon.full_address || salon.postal_code || city?.name
+    salon.full_address || city?.name
       ? {
           "@type": "PostalAddress",
-          streetAddress: salon.full_address || undefined,
-          postalCode: salon.postal_code || undefined,
           addressLocality: city?.name || undefined,
-          addressCountry: "DE",
-        }
-      : undefined,
-  geo:
-    salon.latitude && salon.longitude
-      ? {
-          "@type": "GeoCoordinates",
-          latitude: salon.latitude,
-          longitude: salon.longitude,
+          streetAddress: salon.full_address || undefined,
         }
       : undefined,
   aggregateRating:
-    salon.rating_value
+    (salon.rating_count ?? 0) > 0
       ? {
           "@type": "AggregateRating",
-          ratingValue: salon.rating_value,
-          ratingCount: salon.rating_count ?? 0,
+          ratingValue: salon.rating_value ?? 0,
+          reviewCount: salon.rating_count,
         }
       : undefined,
 }
@@ -162,6 +149,7 @@ const salonSchema = {
   title={title}
   description={description}
   canonical={`https://duolb.com/salon/${salon.slug}`}
+  robots={robots}
   image={coverImage}
 >
 

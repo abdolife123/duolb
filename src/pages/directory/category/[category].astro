@@ -1,57 +1,138 @@
----
+﻿---
+export const prerender = false
+
 import DirectoryLayout from "../../../layouts/DirectoryLayout.astro"
 import SalonImage from "@components/directory/SalonImage.astro"
 import { supabase } from "../../../lib/supabase"
 
-// Generate static pages for each category
+type CityGroup = {
+  name: string
+  slug: string
+  count: number
+}
+
+type CityLink = {
+  citySlug: string
+  cityName: string
+  salonCount: number
+}
+
+type FaqItem = {
+  question: string
+  answer: string
+}
+
 export async function getStaticPaths() {
   const { data: categories, error } = await supabase
     .from("business_categories")
     .select("slug")
 
   if (error) {
-    console.error(error)
+    console.error("category getStaticPaths business_categories error", error)
     return []
   }
 
-  return categories.map(cat => ({
-    params: { category: cat.slug }
-  }))
+  return (categories || [])
+    .filter((row) => typeof row.slug === "string" && row.slug.length > 0)
+    .map((row) => ({
+      params: { category: row.slug },
+    }))
 }
 
-const { category } = Astro.params
+const category = decodeURIComponent(Astro.params.category || "").trim().toLowerCase()
+const pageParam = Number.parseInt(Astro.url.searchParams.get("page") || "1", 10)
+const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
+const pageSize = 9
+const from = (page - 1) * pageSize
+const to = from + pageSize - 1
 
-// Fetch category SEO data + id for salon lookup
-const { data: categoryData, error: catError } = await supabase
+const { data: categoryData, error: categoryError } = await supabase
   .from("business_categories")
-  .select("id, name, seo_title, seo_description")
-  .eq("slug", category)
+  .select("id, name, slug, seo_title, seo_description")
+  .ilike("slug", category)
   .maybeSingle()
 
-if (catError) console.error(catError)
+if (categoryError) {
+  console.error("category query error", categoryError)
+}
 
-// Fetch salons in this category
-const { data: salons, error: salonError } = await supabase
+const { data: cityRows, error: cityRowsError } = await supabase
   .from("salons")
-  .select("salon_name, slug, cover_image, rating_value, rating_count, full_address")
+  .select(`
+    city_id,
+    cities!salons_city_id_fkey(name, slug)
+  `)
+  .eq("category_id", categoryData?.id ?? -1)
+
+if (cityRowsError) {
+  console.error("category city rows query error", cityRowsError)
+}
+
+const { data: salons, error: salonError, count: salonsCount } = await supabase
+  .from("salons")
+  .select(
+    "salon_name, slug, cover_image, rating_value, rating_count, full_address, cities!salons_city_id_fkey(name)",
+    { count: "exact" }
+  )
   .eq("category_id", categoryData?.id ?? -1)
   .order("rating_value", { ascending: false })
+  .range(from, to)
 
-if (salonError) console.error(salonError)
+if (salonError) {
+  console.error("category salons query error", salonError)
+}
 
-Astro.response.headers.set(
-  "Cache-Control",
-  "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
-)
+const groupedCities = (cityRows || []).reduce<Record<string, CityGroup>>((acc, row) => {
+  const city = Array.isArray(row.cities) ? row.cities[0] : row.cities
+  if (!row.city_id || !city?.slug || !city?.name) return acc
+
+  const cityKey = String(row.city_id)
+
+  if (!acc[cityKey]) {
+    acc[cityKey] = {
+      name: city.name,
+      slug: city.slug,
+      count: 0,
+    }
+  }
+
+  acc[cityKey].count += 1
+  return acc
+}, {})
+
+const cityLinks: CityLink[] = Object.values(groupedCities)
+  .filter((entry) => entry.count > 0)
+  .sort((a, b) => b.count - a.count)
+  .map((entry) => ({
+    citySlug: entry.slug,
+    cityName: entry.name,
+    salonCount: entry.count,
+  }))
+
+const robots = "index, follow"
+
+const categoryName = categoryData?.name || category
+const categorySlug = categoryData?.slug || category
+const title = categoryData?.seo_title || `Beste ${categoryName} in Deutschland`
+const description =
+  categoryData?.seo_description ||
+  `Entdecke die besten ${categoryName} in Deutschland. Vergleiche Staedte und finde passende Salons in deiner Naehe.`
+
+const canonicalUrl = `https://duolb.com/directory/category/${categorySlug}`
+const faqItems: FaqItem[] = []
+const totalSalons = salonsCount ?? 0
+const totalPages = Math.max(1, Math.ceil(totalSalons / pageSize))
+const hasPrev = page > 1
+const hasNext = page < totalPages
 
 const itemListSchema = {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  itemListElement: (salons || []).map((salon, index) => ({
+  itemListElement: cityLinks.map((entry, index) => ({
     "@type": "ListItem",
     position: index + 1,
-    url: `https://duolb.com/salon/${salon.slug}`,
-    name: salon.salon_name,
+    url: `https://duolb.com/directory/city/${entry.citySlug}/${categorySlug}`,
+    name: `${categoryName} in ${entry.cityName}`,
   })),
 }
 ---
@@ -61,59 +142,118 @@ const itemListSchema = {
 </head>
 
 <DirectoryLayout
-  title={categoryData?.seo_title || `Beste ${categoryData?.name} in Deutschland`}
-  description={categoryData?.seo_description || ""}
-  canonical={`https://duolb.com/directory/category/${category}`}
+  title={title}
+  description={description}
+  canonical={canonicalUrl}
+  robots={robots}
 >
+  <section class="mb-10">
+    <h1 class="text-3xl font-serif text-[var(--color-deep-slate)] mb-4">
+      {categoryName} nach Stadt
+    </h1>
+    <p class="text-[var(--color-charcoal)] max-w-3xl">
+      {description}
+    </p>
+  </section>
 
-  {!categoryData ? (
-    <h1 class="text-2xl text-red-500">Kategorie nicht gefunden</h1>
+  {cityLinks.length > 0 ? (
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {cityLinks.map((entry) => (
+        <a
+          href={`/directory/city/${entry.citySlug}/${categorySlug}`}
+          class="bg-white rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] p-5 shadow-[var(--shadow-sm)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)]"
+        >
+          <h2 class="text-lg font-semibold text-[var(--color-deep-slate)] mb-1">
+            {categoryName} in {entry.cityName}
+          </h2>
+          <p class="text-sm text-[var(--color-medium-gray)]">
+            {entry.salonCount} Salons verfuegbar
+          </p>
+        </a>
+      ))}
+    </section>
   ) : (
-    <>
-      <h1 class="text-3xl font-serif text-[var(--color-deep-slate)] mb-4">
-        {categoryData.name} in Deutschland
-      </h1>
-
-      <p class="text-[var(--color-charcoal)] mb-10 max-w-3xl">
-        Entdecke die besten {categoryData.name} in ganz Deutschland. Vergleiche Bewertungen,
-        Standorte und finde den passenden Anbieter für deine Bedürfnisse.
-      </p>
-
-      {salons && salons.length > 0 ? (
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {salons.map(salon => (
-            <a href={`/salon/${salon.slug}`} class="bg-white rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-sm)] group border border-[var(--color-light-taupe)] hover:shadow-[var(--shadow-md)] transition-all hover:-translate-y-1">
-              <div class="h-48 bg-gray-200 overflow-hidden">
-                <SalonImage
-                  coverImage={salon.cover_image}
-                  alt={salon.salon_name}
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div class="p-5">
-                <div class="text-[var(--color-gentle-gold)] text-sm mb-1">
-                  ⭐ {salon.rating_value ?? "–"} <span class="text-[var(--color-medium-gray)] ml-1">({salon.rating_count ?? 0})</span>
-                </div>
-                <h3 class="font-semibold text-lg text-[var(--color-deep-slate)]">{salon.salon_name}</h3>
-                <p class="text-[var(--color-medium-gray)] text-sm">{salon.full_address}</p>
-              </div>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <p class="text-[var(--color-medium-gray)] mt-8">Keine Salons in dieser Kategorie gefunden.</p>
-      )}
-
-      <div class="mt-10 text-sm text-[var(--color-medium-gray)]">
-        <a href="/directory/category" class="text-[var(--color-terracotta)] transition-colors hover:text-[var(--color-gentle-gold)]">Alle Kategorien ansehen</a>
-        {" "}·{" "}
-        <a href="/directory/city" class="text-[var(--color-terracotta)] transition-colors hover:text-[var(--color-gentle-gold)]">Alle Städte ansehen</a>
-      </div>
-    </>
+    <p class="text-[var(--color-medium-gray)] mt-8">Keine Staedte fuer diese Kategorie gefunden.</p>
   )}
 
+  <section class="mt-16">
+    <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-6">
+      Salons in Kategorie {categoryName}
+    </h2>
+
+    {salons?.length ? (
+      <>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {salons.map((salon) => {
+            const salonCity = Array.isArray(salon.cities) ? salon.cities[0] : salon.cities
+            const salonCityName = salonCity?.name || "Deutschland"
+            return (
+              <a href={`/salon/${salon.slug}`} class="bg-white rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] overflow-hidden shadow-[var(--shadow-sm)] group transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)]">
+                <SalonImage
+                  coverImage={salon.cover_image}
+                  alt={`${salon.salon_name} in ${salonCityName}`}
+                  class="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div class="p-5">
+                  <div class="text-[var(--color-gentle-gold)] text-sm mb-1">
+                    * {salon.rating_value ?? "-"} ({salon.rating_count ?? 0})
+                  </div>
+                  <h3 class="font-semibold text-[var(--color-deep-slate)]">{salon.salon_name}</h3>
+                  <p class="text-[var(--color-medium-gray)] text-sm">{salon.full_address}</p>
+                </div>
+              </a>
+            )
+          })}
+        </div>
+
+        {totalPages > 1 && (
+          <nav class="mt-10 flex items-center justify-center gap-3" aria-label="Pagination">
+            {hasPrev ? (
+              <a
+                href={`/directory/category/${categorySlug}?page=${page - 1}`}
+                class="px-4 py-2 rounded border border-[var(--color-light-taupe)] bg-white text-[var(--color-deep-slate)]"
+              >
+                Zurueck
+              </a>
+            ) : (
+              <span class="px-4 py-2 rounded border border-[var(--color-light-taupe)] text-[var(--color-medium-gray)] bg-[var(--color-warm-cream)]">Zurueck</span>
+            )}
+            <span class="text-sm text-[var(--color-medium-gray)]">Seite {page} von {totalPages}</span>
+            {hasNext ? (
+              <a
+                href={`/directory/category/${categorySlug}?page=${page + 1}`}
+                class="px-4 py-2 rounded border border-[var(--color-light-taupe)] bg-white text-[var(--color-deep-slate)]"
+              >
+                Weiter
+              </a>
+            ) : (
+              <span class="px-4 py-2 rounded border border-[var(--color-light-taupe)] text-[var(--color-medium-gray)] bg-[var(--color-warm-cream)]">Weiter</span>
+            )}
+          </nav>
+        )}
+      </>
+    ) : (
+      <p class="text-[var(--color-medium-gray)]">Keine Salons in dieser Kategorie gefunden.</p>
+    )}
+  </section>
+
+  {faqItems.length > 0 && (
+    <section class="mt-16">
+      <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-6">Haeufige Fragen</h2>
+      <div class="space-y-4">
+        {faqItems.map((item) => (
+          <article class="bg-white border border-[var(--color-light-taupe)] rounded-[var(--radius-lg)] p-5">
+            <h3 class="font-semibold text-[var(--color-deep-slate)] mb-2">{item.question}</h3>
+            <p class="text-[var(--color-charcoal)]">{item.answer}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <div class="mt-10 text-sm text-[var(--color-medium-gray)]">
+    <a href="/directory/category" class="text-[var(--color-terracotta)] transition-colors hover:text-[var(--color-gentle-gold)]">Alle Kategorien ansehen</a>
+    {" "}.{" "}
+    <a href="/directory/city" class="text-[var(--color-terracotta)] transition-colors hover:text-[var(--color-gentle-gold)]">Alle Staedte ansehen</a>
+  </div>
 </DirectoryLayout>
-
-
-
-

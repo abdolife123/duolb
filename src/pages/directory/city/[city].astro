@@ -1,50 +1,75 @@
----
+﻿---
+export const prerender = false
+
 import DirectoryLayout from "../../../layouts/DirectoryLayout.astro"
 import SalonImage from "@components/directory/SalonImage.astro"
 import { supabase } from "../../../lib/supabase"
 
-export async function getStaticPaths() {
-  const { data: cities } = await supabase.from("cities").select("slug")
-  return (cities || []).map(city => ({
-    params: { city: city.slug }
-  }))
-}
+const cityParam = decodeURIComponent(Astro.params.city || "").trim().toLowerCase()
+const pageParam = Number.parseInt(Astro.url.searchParams.get("page") || "1", 10)
+const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
+const pageSize = 9
+const from = (page - 1) * pageSize
+const to = from + pageSize - 1
 
-const { city } = Astro.params
-
-// Fetch city
 const { data: cityData } = await supabase
   .from("cities")
   .select("id, name, slug, seo_title, seo_description, index_state")
-  .eq("slug", city)
-  .single()
+  .ilike("slug", cityParam)
+  .maybeSingle()
 
-if (!cityData) {
-  return Astro.redirect("/404")
-}
+const cityName = cityData?.name || cityParam
+const citySlug = cityData?.slug || cityParam
 
-// Fetch salons
-const { data: salons } = await supabase
+const { data: salons, count: salonsCount } = await supabase
   .from("salons")
-  .select("salon_name, slug, rating_value, rating_count, cover_image, category_id")
-  .eq("city_id", cityData.id)
+  .select("salon_name, slug, rating_value, rating_count, cover_image, category_id", { count: "exact" })
+  .eq("city_id", cityData?.id ?? -1)
   .order("rating_value", { ascending: false })
-  .limit(60)
+  .range(from, to)
 
-// Fetch categories for internal linking
-const { data: categories } = await supabase
-  .from("business_categories")
-  .select("id, name, slug")
+const { data: cityCategoryPages } = await supabase
+  .from("city_category_pages")
+  .select("category_id, salon_count")
+  .eq("city_id", cityData?.id ?? -1)
+  .gt("salon_count", 0)
+  .order("salon_count", { ascending: false })
 
-// SEO
+const categoryIds = [...new Set((cityCategoryPages || []).map((row) => row.category_id).filter(Boolean))]
+const { data: categoryRows } = categoryIds.length
+  ? await supabase
+      .from("business_categories")
+      .select("id, name, slug")
+      .in("id", categoryIds)
+  : { data: [] }
+
+const categoriesById = new Map((categoryRows || []).map((row) => [row.id, row]))
+const categories = (cityCategoryPages || [])
+  .map((row) => {
+    const categoryRow = categoriesById.get(row.category_id)
+    if (!categoryRow?.slug || !categoryRow?.name) return null
+    return {
+      name: categoryRow.name,
+      slug: categoryRow.slug,
+      salonCount: row.salon_count ?? 0,
+    }
+  })
+  .filter(Boolean)
+
 const title =
-  cityData.seo_title ||
-  `Die besten Salons in ${cityData.name} – Bewertungen, Preise & Adressen`
+  cityData?.seo_title ||
+  `Die besten Salons in ${cityName} - Bewertungen, Preise und Adressen`
 
 const description =
-  cityData.seo_description ||
-  `Finde die besten Friseure, Kosmetikstudios und Wellness Salons in ${cityData.name}. Vergleiche Bewertungen, Preise und Leistungen.`
-const robots = cityData.index_state ? "index, follow" : "noindex, nofollow"
+  cityData?.seo_description ||
+  `Finde die besten Friseure, Kosmetikstudios und Wellness Salons in ${cityName}. Vergleiche Bewertungen, Preise und Leistungen.`
+
+const robots = cityData?.index_state ? "index, follow" : "noindex, follow"
+
+const totalSalons = salonsCount ?? 0
+const totalPages = Math.max(1, Math.ceil(totalSalons / pageSize))
+const hasPrev = page > 1
+const hasNext = page < totalPages
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -56,7 +81,7 @@ const itemListSchema = {
   "@type": "ItemList",
   itemListElement: (salons || []).map((salon, index) => ({
     "@type": "ListItem",
-    position: index + 1,
+    position: from + index + 1,
     url: `https://duolb.com/salon/${salon.slug}`,
     name: salon.salon_name,
   })),
@@ -70,92 +95,109 @@ const itemListSchema = {
 <DirectoryLayout
   title={title}
   description={description}
-  canonical={`https://duolb.com/directory/city/${cityData.slug}`}
+  canonical={`https://duolb.com/directory/city/${citySlug}`}
   robots={robots}
 >
+  <section class="max-w-6xl mx-auto px-6 py-16">
+    <h1 class="text-4xl font-serif text-[var(--color-deep-slate)] mb-6">
+      Die besten Salons in {cityName}
+    </h1>
 
-<section class="max-w-6xl mx-auto px-6 py-16">
+    <p class="text-[var(--color-charcoal)] max-w-3xl mb-12">
+      {description}
+    </p>
 
-  <h1 class="text-4xl font-serif text-[var(--color-deep-slate)] mb-6">
-    Die besten Salons in {cityData.name}
-  </h1>
+    {(!salons || salons.length === 0) && (
+      <p class="text-gray-500">Keine Salons gefunden.</p>
+    )}
 
-  <p class="text-[var(--color-charcoal)] max-w-3xl mb-12">
-    {description}
-  </p>
-
-  {/* Salon Grid */}
-  {(!salons || salons.length === 0) && (
-    <p class="text-gray-500">Keine Salons gefunden.</p>
-  )}
-
-  <div class="grid md:grid-cols-3 gap-8">
-    {salons?.map(salon => (
-      <a href={`/salon/${salon.slug}`} class="bg-white rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] shadow-[var(--shadow-sm)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)] overflow-hidden">
-        <SalonImage
-          coverImage={salon.cover_image}
-          alt={`${salon.salon_name} in ${cityData.name}`}
-          class="h-48 w-full object-cover"
-        />
-        <div class="p-5">
-          <h3 class="font-semibold text-lg mb-1 text-[var(--color-deep-slate)]">{salon.salon_name}</h3>
-          <div class="text-[var(--color-gentle-gold)] text-sm">
-            ⭐ {salon.rating_value ?? "–"} ({salon.rating_count ?? 0})
+    <div class="grid md:grid-cols-3 gap-8">
+      {salons?.map((salon) => (
+        <a href={`/salon/${salon.slug}`} class="bg-white rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] shadow-[var(--shadow-sm)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)] overflow-hidden">
+          <SalonImage
+            coverImage={salon.cover_image}
+            alt={`${salon.salon_name} in ${cityName}`}
+            class="h-48 w-full object-cover"
+          />
+          <div class="p-5">
+            <h3 class="font-semibold text-lg mb-1 text-[var(--color-deep-slate)]">{salon.salon_name}</h3>
+            <div class="text-[var(--color-gentle-gold)] text-sm">
+              * {salon.rating_value ?? "-"} ({salon.rating_count ?? 0})
+            </div>
           </div>
-        </div>
-      </a>
-    ))}
-  </div>
-
-  {/* Category Internal Links */}
-  <section class="mt-20">
-    <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-6">
-      Beliebte Kategorien in {cityData.name}
-    </h2>
-    <div class="flex flex-wrap gap-3">
-      {categories?.map(cat => (
-        <a
-          href={`/directory/city/${cityData.slug}/${cat.slug}`}
-          class="px-4 py-2 bg-[var(--color-warm-cream)] border border-[var(--color-light-taupe)] rounded-full text-sm text-[var(--color-deep-slate)] transition-colors hover:bg-[var(--color-gentle-gold)] hover:text-white hover:border-[var(--color-gentle-gold)]"
-        >
-          {cat.name} in {cityData.name}
         </a>
       ))}
     </div>
+
+    {totalPages > 1 && (
+      <nav class="mt-10 flex items-center justify-center gap-3" aria-label="Pagination">
+        {hasPrev ? (
+          <a
+            href={`/directory/city/${citySlug}?page=${page - 1}`}
+            class="px-4 py-2 rounded border border-[var(--color-light-taupe)] bg-white text-[var(--color-deep-slate)]"
+          >
+            Zuruck
+          </a>
+        ) : (
+          <span class="px-4 py-2 rounded border border-[var(--color-light-taupe)] text-[var(--color-medium-gray)] bg-[var(--color-warm-cream)]">Zuruck</span>
+        )}
+        <span class="text-sm text-[var(--color-medium-gray)]">Seite {page} von {totalPages}</span>
+        {hasNext ? (
+          <a
+            href={`/directory/city/${citySlug}?page=${page + 1}`}
+            class="px-4 py-2 rounded border border-[var(--color-light-taupe)] bg-white text-[var(--color-deep-slate)]"
+          >
+            Weiter
+          </a>
+        ) : (
+          <span class="px-4 py-2 rounded border border-[var(--color-light-taupe)] text-[var(--color-medium-gray)] bg-[var(--color-warm-cream)]">Weiter</span>
+        )}
+      </nav>
+    )}
+
+    <section class="mt-20">
+      <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-6">
+        Beliebte Kategorien in {cityName}
+      </h2>
+      <div class="flex flex-wrap gap-3">
+        {categories.map((cat) => (
+          <a
+            href={`/directory/city/${citySlug}/${cat.slug}`}
+            class="px-4 py-2 bg-[var(--color-warm-cream)] border border-[var(--color-light-taupe)] rounded-full text-sm text-[var(--color-deep-slate)] transition-colors hover:bg-[var(--color-gentle-gold)] hover:text-white hover:border-[var(--color-gentle-gold)]"
+          >
+            {cat.name} in {cityName}
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="mt-20 prose max-w-none">
+      <h2>Warum einen Salon in {cityName} wahlen?</h2>
+      <p>
+        In {cityName} findest du eine grosse Auswahl an professionellen Salons,
+        die moderne Techniken, hochwertige Produkte und individuelle Beratung anbieten.
+        Egal ob Friseur, Kosmetikstudio oder Wellnessanbieter -
+        hier findest du den passenden Service.
+      </p>
+
+      <h2>Preise fur Salons in {cityName}</h2>
+      <p>
+        Die Preise variieren je nach Lage, Erfahrung und Leistungsangebot.
+        Ein Vergleich der Anbieter in {cityName} hilft, die beste Wahl zu treffen.
+      </p>
+
+      <h2>Tipps zur Auswahl</h2>
+      <ul>
+        <li>Bewertungen und Erfahrungsberichte lesen</li>
+        <li>Auf Spezialisierungen achten</li>
+        <li>Standort und Erreichbarkeit pruefen</li>
+        <li>Preis-Leistungs-Verhaeltnis vergleichen</li>
+      </ul>
+
+      <p>
+        <a href="/directory/city">Alle Stadte ansehen</a> .{" "}
+        <a href="/directory/category">Alle Kategorien ansehen</a>
+      </p>
+    </section>
   </section>
-
-  {/* SEO Content */}
-  <section class="mt-20 prose max-w-none">
-    <h2>Warum einen Salon in {cityData.name} wählen?</h2>
-    <p>
-      In {cityData.name} findest du eine große Auswahl an professionellen Salons,
-      die moderne Techniken, hochwertige Produkte und individuelle Beratung anbieten.
-      Egal ob Friseur, Kosmetikstudio oder Wellnessanbieter –
-      hier findest du den passenden Service.
-    </p>
-
-    <h2>Preise für Salons in {cityData.name}</h2>
-    <p>
-      Die Preise variieren je nach Lage, Erfahrung und Leistungsangebot.
-      Ein Vergleich der Anbieter in {cityData.name} hilft, die beste Wahl zu treffen.
-    </p>
-
-    <h2>Tipps zur Auswahl</h2>
-    <ul>
-      <li>Bewertungen und Erfahrungsberichte lesen</li>
-      <li>Auf Spezialisierungen achten</li>
-      <li>Standort und Erreichbarkeit prüfen</li>
-      <li>Preis-Leistungs-Verhältnis vergleichen</li>
-    </ul>
-
-    <p>
-      <a href="/directory/city">Alle Städte ansehen</a> ·{" "}
-      <a href="/directory/category">Alle Kategorien ansehen</a>
-    </p>
-  </section>
-
-</section>
-
 </DirectoryLayout>
-
-

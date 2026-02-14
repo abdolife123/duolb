@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+﻿import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl =
   import.meta.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
@@ -20,44 +20,36 @@ export async function GET() {
     return new Response("Supabase env missing", { status: 500 });
   }
 
-  const [{ data: cities }, { data: categories }, { data: salons }] =
-    await Promise.all([
-      supabase.from("cities").select("slug").eq("index_state", true),
-      supabase.from("business_categories").select("slug"),
-      supabase
-        .from("salons")
-        .select("city_slug, category_slug")
-        .not("city_slug", "is", null)
-        .not("category_slug", "is", null),
-    ]);
+  const { data: pages } = await supabase
+    .from("city_category_pages")
+    .select("updated_at, cities!inner(slug), business_categories!inner(slug)")
+    .eq("is_indexable", true);
 
-  let urls = "";
   const seen = new Set<string>();
-  const citySet = new Set((cities || []).map((c) => c.slug).filter(Boolean));
-  const categorySet = new Set(
-    (categories || []).map((c) => c.slug).filter(Boolean)
-  );
-  const salonPairs = new Set(
-    (salons || [])
-      .map((s) => `${s.city_slug}/${s.category_slug}`)
-      .filter((key) => {
-        const [citySlug, categorySlug] = key.split("/");
-        return citySet.has(citySlug) && categorySet.has(categorySlug);
-      })
-  );
+  const urls = (pages || [])
+    .map((row) => {
+      const city = Array.isArray(row.cities) ? row.cities[0] : row.cities;
+      const category = Array.isArray(row.business_categories)
+        ? row.business_categories[0]
+        : row.business_categories;
 
-  for (const key of salonPairs) {
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const [citySlug, categorySlug] = key.split("/");
-    urls += `
+      if (!city?.slug || !category?.slug) return null;
+
+      const key = `${city.slug}/${category.slug}`;
+      if (seen.has(key)) return null;
+      seen.add(key);
+
+      return `
     <url>
-      <loc>https://duolb.com/directory/city/${citySlug}/${categorySlug}</loc>
+      <loc>https://duolb.com/directory/city/${city.slug}/${category.slug}</loc>
+      <lastmod>${row.updated_at || new Date().toISOString()}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.7</priority>
     </url>
   `;
-  }
+    })
+    .filter(Boolean)
+    .join("");
 
   return new Response(
     `<?xml version="1.0" encoding="UTF-8"?>
@@ -65,10 +57,10 @@ export async function GET() {
 ${urls}
 </urlset>`,
     {
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
-    }
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+      },
     }
   );
 }

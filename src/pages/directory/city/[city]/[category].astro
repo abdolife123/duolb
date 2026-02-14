@@ -1,98 +1,101 @@
----
-export const prerender = true
+﻿---
+export const prerender = false
 
 import DirectoryLayout from "../../../../layouts/DirectoryLayout.astro"
 import SalonImage from "@components/directory/SalonImage.astro"
 import { supabase } from "../../../../lib/supabase"
 
-export async function getStaticPaths() {
-  const [{ data: cityCategoryPages, error: pagesError }, { data: cities, error: citiesError }, { data: categories, error: categoriesError }] = await Promise.all([
-    supabase
-      .from("city_category_pages")
-      .select("city_id, category_id"),
-    supabase
-      .from("cities")
-      .select("id, slug"),
-    supabase
-      .from("business_categories")
-      .select("id, slug"),
-  ])
+const cityParam = decodeURIComponent(Astro.params.city || "").trim().toLowerCase()
+const categoryParam = decodeURIComponent(Astro.params.category || "").trim().toLowerCase()
+const pageParam = Number.parseInt(Astro.url.searchParams.get("page") || "1", 10)
+const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
+const pageSize = 9
+const from = (page - 1) * pageSize
+const to = from + pageSize - 1
 
-  if (pagesError || citiesError || categoriesError) {
-    console.error("getStaticPaths city/category source error", pagesError || citiesError || categoriesError)
-    return []
-  }
-
-  const citySlugById = new Map((cities || []).map((row) => [row.id, row.slug]))
-  const categorySlugById = new Map((categories || []).map((row) => [row.id, row.slug]))
-
-  return (cityCategoryPages || [])
-    .map((row) => {
-      const city = citySlugById.get(row.city_id)
-      const category = categorySlugById.get(row.category_id)
-      if (!city || !category) return null
-      return {
-        params: { city, category }
-      }
-    })
-    .filter(Boolean)
-}
-
-const { city, category } = Astro.params
-
-// Fetch city info
 const [{ data: cityData }, { data: categoryData }] = await Promise.all([
   supabase
     .from("cities")
-    .select("id, name, slug, seo_title, seo_description")
-    .eq("slug", city)
-    .single(),
+    .select("id, name, slug, seo_title, seo_description, index_state")
+    .ilike("slug", cityParam)
+    .maybeSingle(),
   supabase
     .from("business_categories")
     .select("id, name, slug, seo_title, seo_description")
-    .eq("slug", category)
-    .single(),
+    .ilike("slug", categoryParam)
+    .maybeSingle(),
 ])
 
-if (!cityData || !categoryData) {
-  return Astro.redirect("/404")
-}
-
-// Fetch city-category SEO/index config
 const { data: cityCategoryPage } = await supabase
   .from("city_category_pages")
-  .select("seo_title, seo_description, h1_title, index_state, salon_count")
-  .eq("city_id", cityData.id)
-  .eq("category_id", categoryData.id)
-  .single()
+  .select("id, city_id, category_id, seo_title, seo_description, h1_title, intro_content, faq_content, is_indexable, salon_count")
+  .eq("city_id", cityData?.id ?? -1)
+  .eq("category_id", categoryData?.id ?? -1)
+  .maybeSingle()
 
-if (!cityCategoryPage || cityCategoryPage.salon_count === 0) {
+if (!cityCategoryPage) {
   return Astro.redirect("/404")
 }
 
-// Fetch salons in this city + category
-const { data: salons } = await supabase
+const { data: salons, count: salonsCount } = await supabase
   .from("salons")
-  .select("salon_name, slug, cover_image, rating_value, rating_count, full_address")
-  .eq("city_id", cityData.id)
-  .eq("category_id", categoryData.id)
+  .select("salon_name, slug, cover_image, rating_value, rating_count, full_address", { count: "exact" })
+  .eq("city_id", cityCategoryPage.city_id)
+  .eq("category_id", cityCategoryPage.category_id)
   .order("rating_value", { ascending: false })
-  .limit(60)
+  .range(from, to)
 
-// SEO content
+const { data: relatedCategoryRows } = await supabase
+  .from("city_category_pages")
+  .select("category_id, salon_count, business_categories!inner(name, slug)")
+  .eq("city_id", cityCategoryPage.city_id)
+  .gt("salon_count", 0)
+  .neq("category_id", cityCategoryPage.category_id)
+  .order("salon_count", { ascending: false })
+
+const relatedCategories = (relatedCategoryRows || [])
+  .map((row) => {
+    const category = Array.isArray(row.business_categories)
+      ? row.business_categories[0]
+      : row.business_categories
+
+    if (!category?.slug || !category?.name) return null
+
+    return {
+      slug: category.slug,
+      name: category.name,
+      salonCount: row.salon_count ?? 0,
+    }
+  })
+  .filter(Boolean)
+
 const title =
   cityCategoryPage.seo_title ||
-  categoryData.seo_title ||
-  `${categoryData.name} in ${cityData.name} – Bewertungen & Adressen`
+  categoryData?.seo_title ||
+  `${categoryData?.name || categoryParam} in ${cityData?.name || cityParam} - Bewertungen und Adressen`
 
 const description =
   cityCategoryPage.seo_description ||
-  categoryData.seo_description ||
-  `Finde die besten ${categoryData.name} in ${cityData.name}. Vergleiche Bewertungen, Adressen und Leistungen der Top Salons in deiner Nähe.`
+  categoryData?.seo_description ||
+  `Finde die besten ${categoryData?.name || categoryParam} in ${cityData?.name || cityParam}. Vergleiche Bewertungen, Adressen und Leistungen.`
 
-const h1Title = cityCategoryPage.h1_title || `Die besten ${categoryData.name} in ${cityData.name}`
-const robots = cityCategoryPage.index_state ? "index, follow" : "noindex, follow"
-const canonicalUrl = `https://duolb.com/directory/city/${cityData.slug}/${categoryData.slug}`
+const h1Title =
+  cityCategoryPage.h1_title ||
+  `Die besten ${categoryData?.name || categoryParam} in ${cityData?.name || cityParam}`
+
+const introContent = cityCategoryPage.intro_content || description
+const faqItems = Array.isArray(cityCategoryPage.faq_content) ? cityCategoryPage.faq_content : []
+
+const robots =
+  cityData?.index_state && cityCategoryPage.is_indexable
+    ? "index, follow"
+    : "noindex, follow"
+const canonicalUrl = `https://duolb.com/directory/city/${cityData?.slug || cityParam}/${categoryData?.slug || categoryParam}`
+
+const totalSalons = salonsCount ?? 0
+const totalPages = Math.max(1, Math.ceil(totalSalons / pageSize))
+const hasPrev = page > 1
+const hasNext = page < totalPages
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -104,7 +107,7 @@ const itemListSchema = {
   "@type": "ItemList",
   itemListElement: (salons || []).map((salon, index) => ({
     "@type": "ListItem",
-    position: index + 1,
+    position: from + index + 1,
     url: `https://duolb.com/salon/${salon.slug}`,
     name: salon.salon_name,
   })),
@@ -121,73 +124,100 @@ const itemListSchema = {
   canonical={canonicalUrl}
   robots={robots}
 >
-
   <section class="mb-10">
     <h1 class="text-3xl font-serif text-[var(--color-deep-slate)] mb-4">
       {h1Title}
     </h1>
 
     <p class="text-[var(--color-charcoal)] max-w-3xl">
-      {description}
+      {introContent}
     </p>
   </section>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-    {salons?.length ? (
-      salons.map(salon => (
+  {salons?.length ? (
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {salons.map((salon) => (
         <a href={`/salon/${salon.slug}`} class="bg-white rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] overflow-hidden shadow-[var(--shadow-sm)] group transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)]">
           <SalonImage
             coverImage={salon.cover_image}
-            alt={`${salon.salon_name} in ${cityData.name}`}
+            alt={`${salon.salon_name} in ${cityData?.name || cityParam}`}
             class="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div class="p-5">
             <div class="text-[var(--color-gentle-gold)] text-sm mb-1">
-              ⭐ {salon.rating_value ?? "–"} ({salon.rating_count ?? 0})
+              * {salon.rating_value ?? "-"} ({salon.rating_count ?? 0})
             </div>
             <h3 class="font-semibold text-[var(--color-deep-slate)]">{salon.salon_name}</h3>
             <p class="text-[var(--color-medium-gray)] text-sm">{salon.full_address}</p>
           </div>
         </a>
-      ))
-    ) : (
-      <p>Keine Einträge gefunden.</p>
-    )}
-  </div>
+      ))}
+    </div>
+  ) : (
+    <p class="text-[var(--color-medium-gray)]">Keine Eintraege gefunden.</p>
+  )}
 
-  {/* SEO Content Block */}
+  {totalPages > 1 && (
+    <nav class="mt-10 flex items-center justify-center gap-3" aria-label="Pagination">
+      {hasPrev ? (
+        <a
+          href={`/directory/city/${cityData?.slug || cityParam}/${categoryData?.slug || categoryParam}?page=${page - 1}`}
+          class="px-4 py-2 rounded border border-[var(--color-light-taupe)] bg-white text-[var(--color-deep-slate)]"
+        >
+          Zurueck
+        </a>
+      ) : (
+        <span class="px-4 py-2 rounded border border-[var(--color-light-taupe)] text-[var(--color-medium-gray)] bg-[var(--color-warm-cream)]">Zurueck</span>
+      )}
+      <span class="text-sm text-[var(--color-medium-gray)]">Seite {page} von {totalPages}</span>
+      {hasNext ? (
+        <a
+          href={`/directory/city/${cityData?.slug || cityParam}/${categoryData?.slug || categoryParam}?page=${page + 1}`}
+          class="px-4 py-2 rounded border border-[var(--color-light-taupe)] bg-white text-[var(--color-deep-slate)]"
+        >
+          Weiter
+        </a>
+      ) : (
+        <span class="px-4 py-2 rounded border border-[var(--color-light-taupe)] text-[var(--color-medium-gray)] bg-[var(--color-warm-cream)]">Weiter</span>
+      )}
+    </nav>
+  )}
+
+  <section class="mt-16">
+    <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-6">
+      Beliebte Kategorien in {cityData?.name || cityParam}
+    </h2>
+    <div class="flex flex-wrap gap-3">
+      {relatedCategories.map((cat) => (
+        <a
+          href={`/directory/city/${cityData?.slug || cityParam}/${cat.slug}`}
+          class="px-4 py-2 bg-[var(--color-warm-cream)] border border-[var(--color-light-taupe)] rounded-full text-sm text-[var(--color-deep-slate)] transition-colors hover:bg-[var(--color-gentle-gold)] hover:text-white hover:border-[var(--color-gentle-gold)]"
+        >
+          {cat.name} ({cat.salonCount})
+        </a>
+      ))}
+    </div>
+  </section>
+
+  {faqItems.length > 0 && (
+    <section class="mt-16">
+      <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-6">Haeufige Fragen</h2>
+      <div class="space-y-4">
+        {faqItems.map((item) => (
+          <article class="bg-white border border-[var(--color-light-taupe)] rounded-[var(--radius-lg)] p-5">
+            <h3 class="font-semibold text-[var(--color-deep-slate)] mb-2">{item.question}</h3>
+            <p class="text-[var(--color-charcoal)]">{item.answer}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
+
   <section class="mt-16 prose max-w-none">
-    <h2>Worauf sollte man bei {categoryData.name} in {cityData.name} achten?</h2>
     <p>
-      Die Wahl eines guten {categoryData.name} in {cityData.name} hängt von mehreren Faktoren ab.
-      Bewertungen, Spezialisierungen und die Lage spielen eine wichtige Rolle.
-      Viele Anbieter in {cityData.name} bieten unterschiedliche Leistungen an –
-      von klassischen Behandlungen bis zu modernen Spezialtechniken.
-    </p>
-
-    <h2>Preise für {categoryData.name} in {cityData.name}</h2>
-    <p>
-      Die Preise variieren je nach Lage, Erfahrung und Leistungsumfang.
-      Ein Vergleich der Salons in {cityData.name} hilft, das beste Preis-Leistungs-Verhältnis zu finden.
-    </p>
-
-    <h2>Häufige Leistungen</h2>
-    <ul>
-      <li>Individuelle Beratung</li>
-      <li>Professionelle Behandlungen</li>
-      <li>Moderne Techniken und Produkte</li>
-      <li>Flexible Terminemöglichkeiten</li>
-    </ul>
-
-    <p>
-      <a href={`/directory/city/${cityData.slug}`}>Alle Salons in {cityData.name}</a>
-      {" "}·{" "}
+      <a href={`/directory/city/${cityData?.slug || cityParam}`}>Alle Salons in {cityData?.name || cityParam}</a>
+      {" "}.{" "}
       <a href="/directory/category">Alle Kategorien ansehen</a>
     </p>
   </section>
-
 </DirectoryLayout>
-
-
-
-
