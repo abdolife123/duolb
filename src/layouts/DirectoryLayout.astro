@@ -1,7 +1,7 @@
 ﻿---
 const {
   title = "Beauty & Wellness Directory",
-  description = "",
+  description,
   canonical,
   robots = "index, follow, max-image-preview:large",
   image = "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png",
@@ -12,7 +12,37 @@ import Navbar from "@components/navbar.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 
-const canonicalURL = canonical || `https://duolb.com${Astro.url.pathname}`;
+const baseUrl = "https://duolb.com";
+const normalizePath = (value: string) => {
+  const cleaned = (value || "/").replace(/\/{2,}/g, "/");
+  if (cleaned === "/") return "/";
+  return cleaned.replace(/\/+$/, "") || "/";
+};
+
+const canonicalURL = (() => {
+  const fallbackPath = normalizePath(Astro.url.pathname);
+  const fallbackSearch = Astro.url.search || "";
+
+  if (typeof canonical === "string" && canonical.trim().length > 0) {
+    try {
+      const parsed = new URL(canonical.trim(), baseUrl);
+      const path = normalizePath(parsed.pathname);
+      const search = parsed.search || "";
+      return `${baseUrl}${path}${search}`;
+    } catch {
+      const [pathOnly, queryPart = ""] = canonical.trim().split("#")[0].split("?");
+      const path = normalizePath(pathOnly);
+      const search = queryPart ? `?${queryPart}` : "";
+      return `${baseUrl}${path}${search}`;
+    }
+  }
+
+  return `${baseUrl}${fallbackPath}${fallbackSearch}`;
+})();
+const safeDescription =
+  typeof description === "string" && description.trim().length > 0
+    ? description
+    : title.slice(0, 155);
 const supabaseOrigin = (() => {
   const value = import.meta.env.PUBLIC_SUPABASE_URL;
   if (!value) return null;
@@ -22,32 +52,51 @@ const supabaseOrigin = (() => {
     return null;
   }
 })();
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Duolb",
+  url: "https://duolb.com",
+  logo: "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795884/Capture_d_%C3%A9cran_2026-01-30_185740_yhkku3.png",
+};
 ---
 
 <!DOCTYPE html>
 <html lang="de">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="content-language" content="de" />
 
     <title>{title}</title>
-    <meta name="description" content={description} />
+    {safeDescription && <meta name="description" content={safeDescription} />}
     <meta name="author" content="Duolb Beauty Redaktion" />
-    <meta name="robots" content={robots} />
+    {robots && <meta name="robots" content={robots} />}
     <meta name="google-adsense-account" content="ca-pub-6824827690109369" />
-    <!-- Privacy Scripts FIRST -->
-    <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
-    <script data-cfasync="false" src="https://the.gatekeeperconsent.com/cmp.min.js"></script>
-    <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
     <script is:inline>
-      window.ezstandalone = window.ezstandalone || {};
-      ezstandalone.cmd = ezstandalone.cmd || [];
+      window.addEventListener("DOMContentLoaded", () => {
+        window.ezstandalone = window.ezstandalone || {};
+        window.ezstandalone.cmd = window.ezstandalone.cmd || [];
+
+        const loadScript = (src, attrs = {}) => {
+          const script = document.createElement("script");
+          script.src = src;
+          script.async = true;
+          Object.entries(attrs).forEach(([key, value]) => {
+            if (value === true) script.setAttribute(key, "");
+            else if (value !== false && value != null) script.setAttribute(key, String(value));
+          });
+          document.body.appendChild(script);
+        };
+
+        loadScript("https://cmp.gatekeeperconsent.com/min.js", { "data-cfasync": "false" });
+        loadScript("https://the.gatekeeperconsent.com/cmp.min.js", { "data-cfasync": "false" });
+        loadScript("https://www.ezojs.com/ezoic/sa.min.js");
+        loadScript("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6824827690109369", {
+          crossorigin: "anonymous",
+        });
+      });
     </script>
-    <script
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6824827690109369"
-      crossorigin="anonymous"
-    ></script>
     <link rel="canonical" href={canonicalURL} />
 
     <meta name="theme-color" content="#F6F4F1" />
@@ -65,16 +114,16 @@ const supabaseOrigin = (() => {
     <meta property="og:type" content={type} />
     <meta property="og:locale" content="de_DE" />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    {safeDescription && <meta property="og:description" content={safeDescription} />}
     <meta property="og:url" content={canonicalURL} />
-    <meta property="og:image" content={image} />
+    {image && <meta property="og:image" content={image} />}
     <meta property="og:image:alt" content="Duolb Directory Vorschau" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={image} />
+    {safeDescription && <meta name="twitter:description" content={safeDescription} />}
+    {image && <meta name="twitter:image" content={image} />}
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
@@ -82,8 +131,14 @@ const supabaseOrigin = (() => {
     <!-- RSS + Sitemap -->
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="alternate" type="application/rss+xml" title="Duolb RSS Feed" href="/rss.xml" />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(organizationSchema, (key, value) =>
+        value === undefined ? undefined : value
+      )}
+    />
 
-    {Astro.url.hostname === "duolb.pages.dev" && (
+    {Astro.url.hostname.includes("duolb.pages.dev") && (
       <>
         <meta http-equiv="refresh" content={`0; url=https://duolb.com${Astro.url.pathname}`} />
       </>

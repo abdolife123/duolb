@@ -24,34 +24,32 @@ export async function GET({ request }: { request: Request }) {
   const url = new URL(request.url);
   const debug = url.searchParams.get("debug") === "1";
 
-  const { data: salonCategorySlugs, error: categoriesError } = await supabase
-    .from("salons")
-    .select("category_slug, updated_at")
-    .not("category_slug", "is", null);
-
-  const { count: categoriesCount, error: countError } = await supabase
-    .from("salons")
-    .select("*", { count: "exact", head: true });
+  const { data: indexableRows, error: categoriesError } = await supabase
+    .from("city_category_pages")
+    .select("updated_at, cities!inner(index_state), business_categories!inner(slug)")
+    .eq("is_indexable", true);
 
   if (categoriesError) {
-    console.error("sitemap-categories: salons error", categoriesError);
-  }
-  if (countError) {
-    console.error("sitemap-categories: count error", countError);
+    console.error("sitemap-categories: city_category_pages error", categoriesError);
   }
 
   const seen = new Set<string>();
 
-  const urls = (salonCategorySlugs || [])
+  const urls = (indexableRows || [])
     .filter((row) => {
-      if (!row?.category_slug) return false;
-      if (seen.has(row.category_slug)) return false;
-      seen.add(row.category_slug);
+      const category = Array.isArray(row.business_categories)
+        ? row.business_categories[0]
+        : row.business_categories;
+      const city = Array.isArray(row.cities) ? row.cities[0] : row.cities;
+      if (city?.index_state !== true) return false;
+      if (!category?.slug) return false;
+      if (seen.has(category.slug)) return false;
+      seen.add(category.slug);
       return true;
     })
     .map((row) => `
     <url>
-      <loc>https://duolb.com/directory/category/${row.category_slug}</loc>
+      <loc>https://duolb.com/directory/category/${(Array.isArray(row.business_categories) ? row.business_categories[0] : row.business_categories).slug}</loc>
       <lastmod>${formatSitemapLastmod(row.updated_at)}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.9</priority>
@@ -60,7 +58,7 @@ export async function GET({ request }: { request: Request }) {
     .join("");
 
   const debugComment = debug
-    ? `\n<!-- debug: categoriesCount=${categoriesCount ?? "null"} uniqueSlugs=${seen.size} -->\n`
+    ? `\n<!-- debug: rows=${(indexableRows || []).length} uniqueSlugs=${seen.size} -->\n`
     : "\n";
 
   return new Response(

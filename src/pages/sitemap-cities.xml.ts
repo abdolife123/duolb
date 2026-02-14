@@ -24,39 +24,25 @@ export async function GET({ request }: { request: Request }) {
   const url = new URL(request.url);
   const debug = url.searchParams.get("debug") === "1";
 
-  const [{ data: salonCitySlugs, error: citiesError }, { data: indexableCities, error: indexableCitiesError }] = await Promise.all([
-    supabase
-    .from("salons")
-    .select("city_slug, updated_at")
-    .not("city_slug", "is", null),
-    supabase
-      .from("cities")
-      .select("slug")
-      .eq("index_state", true),
-  ]);
+  const { data: cities, error: citiesError } = await supabase
+    .from("cities")
+    .select("slug, updated_at")
+    .eq("index_state", true)
+    .not("slug", "is", null);
 
-  const { count: citiesCount, error: countError } = await supabase
-    .from("salons")
-    .select("*", { count: "exact", head: true });
+  if (citiesError) console.error("sitemap-cities: cities query error", citiesError);
 
-  if (citiesError) console.error("sitemap-cities: salons error", citiesError);
-  if (indexableCitiesError) console.error("sitemap-cities: cities index_state error", indexableCitiesError);
-  if (countError) console.error("sitemap-cities: count error", countError);
-
-  const indexableCitySet = new Set((indexableCities || []).map((row) => row.slug).filter(Boolean));
   const seen = new Set<string>();
-
-  const urls = (salonCitySlugs || [])
+  const urls = (cities || [])
     .filter((row) => {
-      if (!row?.city_slug) return false;
-      if (!indexableCitySet.has(row.city_slug)) return false;
-      if (seen.has(row.city_slug)) return false;
-      seen.add(row.city_slug);
+      if (!row?.slug || !String(row.slug).trim()) return false;
+      if (seen.has(row.slug)) return false;
+      seen.add(row.slug);
       return true;
     })
     .map((row) => `
     <url>
-      <loc>https://duolb.com/directory/city/${row.city_slug}</loc>
+      <loc>https://duolb.com/directory/city/${row.slug}</loc>
       <lastmod>${formatSitemapLastmod(row.updated_at)}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.9</priority>
@@ -65,8 +51,7 @@ export async function GET({ request }: { request: Request }) {
     .join("");
 
   const debugComment = debug
-    ? `\n<!-- debug: citiesCount=${citiesCount ?? "null"} rows=${(salonCitySlugs || [])
-        .length} -->\n`
+    ? `\n<!-- debug: rows=${(cities || []).length} uniqueSlugs=${seen.size} -->\n`
     : "\n";
 
   return new Response(

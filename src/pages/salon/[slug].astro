@@ -107,6 +107,7 @@ const description =
   salonDescriptionText.slice(0, 155) ||
   `${salon.salon_name} in ${city?.name}. Adresse, Bewertungen und Leistungen im Überblick.`
 const robots = "index, follow"
+const salonUrl = `https://duolb.com/salon/${salon.slug}`
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -117,6 +118,19 @@ const salonSchema = {
   "@context": "https://schema.org",
   "@type": "BeautySalon",
   name: salon.salon_name,
+  url: salonUrl,
+  image: coverImage,
+  telephone: salon.phone || undefined,
+  priceRange: salon.has_offers ? "€€" : undefined,
+  geo:
+    salon.latitude && salon.longitude
+      ? {
+          "@type": "GeoCoordinates",
+          latitude: salon.latitude,
+          longitude: salon.longitude,
+        }
+      : undefined,
+  sameAs: salon.website ? [salon.website] : undefined,
   address:
     salon.full_address || city?.name
       ? {
@@ -134,12 +148,58 @@ const salonSchema = {
         }
       : undefined,
 }
+
+const breadcrumbItems = [
+  {
+    "@type": "ListItem",
+    position: 1,
+    name: "Home",
+    item: "https://duolb.com",
+  },
+]
+
+if (city?.slug) {
+  breadcrumbItems.push({
+    "@type": "ListItem",
+    position: breadcrumbItems.length + 1,
+    name: city.name,
+    item: `https://duolb.com/directory/city/${city.slug}`,
+  })
+}
+
+if (city?.slug && category?.slug) {
+  breadcrumbItems.push({
+    "@type": "ListItem",
+    position: breadcrumbItems.length + 1,
+    name: category.name,
+    item: `https://duolb.com/directory/city/${city.slug}/${category.slug}`,
+  })
+}
+
+breadcrumbItems.push({
+  "@type": "ListItem",
+  position: breadcrumbItems.length + 1,
+  name: salon.salon_name,
+  item: salonUrl,
+})
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: breadcrumbItems,
+}
 ---
 
 <head>
   <script
     type="application/ld+json"
     set:html={JSON.stringify(salonSchema, (key, value) =>
+      value === undefined ? undefined : value
+    )}
+  />
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbSchema, (key, value) =>
       value === undefined ? undefined : value
     )}
   />
@@ -154,6 +214,28 @@ const salonSchema = {
 >
 
 <section class="max-w-6xl mx-auto px-6 py-14 text-[var(--color-charcoal)]">
+
+  <nav class="mb-6 text-sm text-[var(--color-medium-gray)]">
+    <a href="/directory/city" class="hover:text-[var(--color-terracotta)] transition-colors">Startseite</a>
+    {city?.slug && (
+      <>
+        {" "} /{" "}
+        <a href={`/directory/city/${city.slug}`} class="hover:text-[var(--color-terracotta)] transition-colors">
+          {city.name}
+        </a>
+      </>
+    )}
+    {city?.slug && category?.slug && (
+      <>
+        {" "} /{" "}
+        <a href={`/directory/city/${city.slug}/${category.slug}`} class="hover:text-[var(--color-terracotta)] transition-colors">
+          {category.name}
+        </a>
+      </>
+    )}
+    {" "} /{" "}
+    <span class="text-[var(--color-deep-slate)]">{salon.salon_name}</span>
+  </nav>
 
   {/* HERO IMAGE */}
   <div class="salon-hero relative rounded-3xl overflow-hidden shadow-[var(--shadow-md)] ring-1 ring-[rgba(230,226,221,0.55)] mb-10">
@@ -328,6 +410,18 @@ const salonSchema = {
         class="inline-block bg-[var(--color-warm-cream)] text-[var(--color-deep-slate)] border border-[var(--color-light-taupe)] px-6 py-3 rounded-xl transition-colors hover:border-[var(--color-gentle-gold)] hover:text-[var(--color-gentle-gold)]"
       >
         Alle {category.name} in {city.name} anzeigen
+      </a>
+    </div>
+  )}
+
+  {city && (
+    <div class="mt-8">
+      <h2 class="text-xl font-semibold text-[var(--color-deep-slate)] mb-4">Weitere Salons in {city.name}</h2>
+      <a
+        href={`/directory/city/${city.slug}`}
+        class="inline-block bg-[var(--color-warm-cream)] text-[var(--color-deep-slate)] border border-[var(--color-light-taupe)] px-6 py-3 rounded-xl transition-colors hover:border-[var(--color-gentle-gold)] hover:text-[var(--color-gentle-gold)]"
+      >
+        Alle Salons in {city.name} anzeigen
       </a>
     </div>
   )}

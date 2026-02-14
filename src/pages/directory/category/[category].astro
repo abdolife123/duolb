@@ -109,8 +109,6 @@ const cityLinks: CityLink[] = Object.values(groupedCities)
     salonCount: entry.count,
   }))
 
-const robots = "index, follow"
-
 const categoryName = categoryData?.name || category
 const categorySlug = categoryData?.slug || category
 const title = categoryData?.seo_title || `Beste ${categoryName} in Deutschland`
@@ -118,12 +116,25 @@ const description =
   categoryData?.seo_description ||
   `Entdecke die besten ${categoryName} in Deutschland. Vergleiche Staedte und finde passende Salons in deiner Naehe.`
 
-const canonicalUrl = `https://duolb.com/directory/category/${categorySlug}`
 const faqItems: FaqItem[] = []
 const totalSalons = salonsCount ?? 0
+const robots = totalSalons > 0 ? "index, follow" : "noindex, follow"
 const totalPages = Math.max(1, Math.ceil(totalSalons / pageSize))
 const hasPrev = page > 1
 const hasNext = page < totalPages
+const currentPage = page
+const pagePath = `/directory/category/${categorySlug}`
+const buildPageUrl = (pageNumber: number) =>
+  pageNumber > 1
+    ? `https://duolb.com${pagePath}?page=${pageNumber}`
+    : `https://duolb.com${pagePath}`
+const canonicalUrl = buildPageUrl(currentPage)
+const previousUrl = currentPage > 1 ? buildPageUrl(currentPage - 1) : null
+const nextUrl = currentPage < totalPages ? buildPageUrl(currentPage + 1) : null
+
+if (robots === "noindex, follow") {
+  Astro.response.headers.set("X-Robots-Tag", "noindex, follow")
+}
 
 const itemListSchema = {
   "@context": "https://schema.org",
@@ -135,10 +146,36 @@ const itemListSchema = {
     name: `${categoryName} in ${entry.cityName}`,
   })),
 }
+
+const faqSchema =
+  faqItems.length > 0
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqItems.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: item.answer,
+          },
+        })),
+      }
+    : null
 ---
 
 <head>
   <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+  {currentPage > 1 && previousUrl && <link rel="prev" href={previousUrl} />}
+  {currentPage < totalPages && nextUrl && <link rel="next" href={nextUrl} />}
+  {faqSchema && (
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(faqSchema, (key, value) =>
+        value === undefined ? undefined : value
+      )}
+    />
+  )}
 </head>
 
 <DirectoryLayout
@@ -174,6 +211,24 @@ const itemListSchema = {
     </section>
   ) : (
     <p class="text-[var(--color-medium-gray)] mt-8">Keine Staedte fuer diese Kategorie gefunden.</p>
+  )}
+
+  {cityLinks.length > 0 && (
+    <section class="mt-12">
+      <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-4">
+        Top Staedte fuer {categoryName}
+      </h2>
+      <div class="flex flex-wrap gap-3">
+        {cityLinks.slice(0, 10).map((entry) => (
+          <a
+            href={`/directory/city/${entry.citySlug}/${categorySlug}`}
+            class="px-4 py-2 bg-[var(--color-warm-cream)] border border-[var(--color-light-taupe)] rounded-full text-sm text-[var(--color-deep-slate)] transition-colors hover:bg-[var(--color-gentle-gold)] hover:text-white hover:border-[var(--color-gentle-gold)]"
+          >
+            {entry.cityName} ({entry.salonCount})
+          </a>
+        ))}
+      </div>
+    </section>
   )}
 
   <section class="mt-16">

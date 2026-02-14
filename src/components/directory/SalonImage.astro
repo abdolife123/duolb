@@ -11,6 +11,8 @@ const {
   loading = "lazy",
   decoding = "async",
   fetchpriority,
+  width = 1200,
+  height = 800,
   ...rest
 } = Astro.props
 
@@ -24,6 +26,8 @@ const resolvedCover = resolveSalonCoverImage(coverImage)
   loading={loading}
   decoding={decoding}
   fetchpriority={fetchpriority}
+  width={width}
+  height={height}
   onerror={`this.onerror=null;this.src='${SALON_COVER_PLACEHOLDER}';`}
   {...rest}
 />

@@ -4,10 +4,13 @@ import { formatSitemapLastmod } from "../lib/sitemapLastmod";
 export async function GET() {
   const base = "https://duolb.com";
 
-  const [{ data: cities }, { data: categories }, { data: salons }] = await Promise.all([
-    supabase.from("cities").select("slug, updated_at").eq("index_state", true),
-    supabase.from("business_categories").select("slug, updated_at"),
-    supabase.from("salons").select("slug, updated_at")
+  const [{ data: cities }, { data: indexableCategoryPages }, { data: salons }] = await Promise.all([
+    supabase.from("cities").select("slug, updated_at").eq("index_state", true).not("slug", "is", null),
+    supabase
+      .from("city_category_pages")
+      .select("updated_at, business_categories!inner(slug), cities!inner(index_state)")
+      .eq("is_indexable", true),
+    supabase.from("salons").select("slug, updated_at").not("slug", "is", null)
   ]);
 
   let urls = "";
@@ -22,8 +25,22 @@ export async function GET() {
       </url>`;
   }
 
-  // Category pages
+  // Category pages (only categories that have at least one indexable city-category row in indexable city)
+  const seenCategories = new Set<string>();
+  const categories = (indexableCategoryPages || [])
+    .map((row) => {
+      const category = Array.isArray(row.business_categories)
+        ? row.business_categories[0]
+        : row.business_categories;
+      const city = Array.isArray(row.cities) ? row.cities[0] : row.cities;
+      if (!category?.slug || city?.index_state !== true) return null;
+      return { slug: category.slug, updated_at: row.updated_at };
+    })
+    .filter(Boolean);
+
   for (const cat of categories || []) {
+    if (!cat?.slug || seenCategories.has(cat.slug)) continue;
+    seenCategories.add(cat.slug);
     urls += `
       <url>
         <loc>${base}/directory/category/${cat.slug}</loc>
@@ -34,6 +51,7 @@ export async function GET() {
 
   // Salon pages
   for (const salon of salons || []) {
+    if (!salon?.slug || !String(salon.slug).trim()) continue;
     urls += `
       <url>
         <loc>${base}/salon/${salon.slug}</loc>

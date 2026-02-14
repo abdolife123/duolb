@@ -22,7 +22,7 @@ export async function GET() {
 
   const { data: pages } = await supabase
     .from("city_category_pages")
-    .select("updated_at, cities!inner(slug), business_categories!inner(slug)")
+    .select("updated_at, cities!inner(slug, index_state), business_categories!inner(slug)")
     .eq("is_indexable", true);
 
   const seen = new Set<string>();
@@ -34,6 +34,7 @@ export async function GET() {
         : row.business_categories;
 
       if (!city?.slug || !category?.slug) return null;
+      if (city.index_state !== true) return null;
 
       const key = `${city.slug}/${category.slug}`;
       if (seen.has(key)) return null;

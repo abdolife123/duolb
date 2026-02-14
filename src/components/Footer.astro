@@ -1,6 +1,44 @@
 ﻿---
 // Footer.astro
+import { supabase } from "../lib/supabase";
+
 const currentYear = new Date().getFullYear();
+
+const { data: linkRows } = await supabase
+  .from("city_category_pages")
+  .select("salon_count, cities!inner(name, slug), business_categories!inner(name, slug)")
+  .gt("salon_count", 0);
+
+const cityMap = new Map();
+const categoryMap = new Map();
+
+for (const row of linkRows || []) {
+  const city = Array.isArray(row.cities) ? row.cities[0] : row.cities;
+  const category = Array.isArray(row.business_categories)
+    ? row.business_categories[0]
+    : row.business_categories;
+  const count = row.salon_count ?? 0;
+
+  if (city?.slug && city?.name) {
+    const current = cityMap.get(city.slug) || { name: city.name, slug: city.slug, count: 0 };
+    current.count += count;
+    cityMap.set(city.slug, current);
+  }
+
+  if (category?.slug && category?.name) {
+    const current = categoryMap.get(category.slug) || { name: category.name, slug: category.slug, count: 0 };
+    current.count += count;
+    categoryMap.set(category.slug, current);
+  }
+}
+
+const topCities = [...cityMap.values()]
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 10);
+
+const topCategories = [...categoryMap.values()]
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 10);
 ---
 
 <footer class="border-t pt-20 pb-10 footer-root">
@@ -32,6 +70,42 @@ const currentYear = new Date().getFullYear();
           ))
         }
       </nav>
+
+      {(topCities.length > 0 || topCategories.length > 0) && (
+        <div class="w-full max-w-5xl mb-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+          {topCities.length > 0 && (
+            <section>
+              <h3 class="text-xs font-semibold uppercase tracking-[0.2em] mb-4 footer-meta">Top Staedte</h3>
+              <div class="flex flex-wrap gap-2">
+                {topCities.map((city) => (
+                  <a
+                    href={`/directory/city/${city.slug}`}
+                    class="text-xs px-3 py-1 rounded-full border border-[rgba(47,36,8,0.18)] footer-link"
+                  >
+                    {city.name}
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {topCategories.length > 0 && (
+            <section>
+              <h3 class="text-xs font-semibold uppercase tracking-[0.2em] mb-4 footer-meta">Top Kategorien</h3>
+              <div class="flex flex-wrap gap-2">
+                {topCategories.map((category) => (
+                  <a
+                    href={`/directory/category/${category.slug}`}
+                    class="text-xs px-3 py-1 rounded-full border border-[rgba(47,36,8,0.18)] footer-link"
+                  >
+                    {category.name}
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
 
       <div
         class="mb-8 h-px w-full max-w-xs footer-divider"
@@ -123,4 +197,3 @@ const currentYear = new Date().getFullYear();
     color: color-mix(in srgb, var(--color-deep-slate) 85%, #4b3b11);
   }
 </style>
-

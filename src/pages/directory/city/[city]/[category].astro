@@ -68,6 +68,7 @@ const relatedCategories = (relatedCategoryRows || [])
     }
   })
   .filter(Boolean)
+const moreCategories = relatedCategories.slice(0, 8)
 
 const title =
   cityCategoryPage.seo_title ||
@@ -87,20 +88,31 @@ const introContent = cityCategoryPage.intro_content || description
 const faqItems = Array.isArray(cityCategoryPage.faq_content) ? cityCategoryPage.faq_content : []
 
 const robots =
-  cityData?.index_state && cityCategoryPage.is_indexable
+  cityData?.index_state && cityCategoryPage.is_indexable && (cityCategoryPage.salon_count ?? 0) > 0
     ? "index, follow"
     : "noindex, follow"
-const canonicalUrl = `https://duolb.com/directory/city/${cityData?.slug || cityParam}/${categoryData?.slug || categoryParam}`
+const currentPage = page
+const pagePath = `/directory/city/${cityData?.slug || cityParam}/${categoryData?.slug || categoryParam}`
+const buildPageUrl = (pageNumber: number) =>
+  pageNumber > 1
+    ? `https://duolb.com${pagePath}?page=${pageNumber}`
+    : `https://duolb.com${pagePath}`
+const canonicalUrl = buildPageUrl(currentPage)
 
 const totalSalons = salonsCount ?? 0
 const totalPages = Math.max(1, Math.ceil(totalSalons / pageSize))
 const hasPrev = page > 1
 const hasNext = page < totalPages
+const previousUrl = currentPage > 1 ? buildPageUrl(currentPage - 1) : null
+const nextUrl = currentPage < totalPages ? buildPageUrl(currentPage + 1) : null
 
 Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
 )
+if (robots === "noindex, follow") {
+  Astro.response.headers.set("X-Robots-Tag", "noindex, follow")
+}
 
 const itemListSchema = {
   "@context": "https://schema.org",
@@ -112,10 +124,43 @@ const itemListSchema = {
     name: salon.salon_name,
   })),
 }
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://duolb.com",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: cityData?.name || cityParam,
+      item: `https://duolb.com/directory/city/${cityData?.slug || cityParam}`,
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: categoryData?.name || categoryParam,
+      item: `https://duolb.com/directory/city/${cityData?.slug || cityParam}/${categoryData?.slug || categoryParam}`,
+    },
+  ],
+}
 ---
 
 <head>
   <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+  {currentPage > 1 && previousUrl && <link rel="prev" href={previousUrl} />}
+  {currentPage < totalPages && nextUrl && <link rel="next" href={nextUrl} />}
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbSchema, (key, value) =>
+      value === undefined ? undefined : value
+    )}
+  />
 </head>
 
 <DirectoryLayout
@@ -185,10 +230,10 @@ const itemListSchema = {
 
   <section class="mt-16">
     <h2 class="text-2xl font-serif text-[var(--color-deep-slate)] mb-6">
-      Beliebte Kategorien in {cityData?.name || cityParam}
+      Weitere Kategorien in {cityData?.name || cityParam}
     </h2>
     <div class="flex flex-wrap gap-3">
-      {relatedCategories.map((cat) => (
+      {moreCategories.map((cat) => (
         <a
           href={`/directory/city/${cityData?.slug || cityParam}/${cat.slug}`}
           class="px-4 py-2 bg-[var(--color-warm-cream)] border border-[var(--color-light-taupe)] rounded-full text-sm text-[var(--color-deep-slate)] transition-colors hover:bg-[var(--color-gentle-gold)] hover:text-white hover:border-[var(--color-gentle-gold)]"

@@ -55,6 +55,7 @@ const categories = (cityCategoryPages || [])
     }
   })
   .filter(Boolean)
+const popularCategories = categories.slice(0, 12)
 
 const title =
   cityData?.seo_title ||
@@ -64,17 +65,31 @@ const description =
   cityData?.seo_description ||
   `Finde die besten Friseure, Kosmetikstudios und Wellness Salons in ${cityName}. Vergleiche Bewertungen, Preise und Leistungen.`
 
-const robots = cityData?.index_state ? "index, follow" : "noindex, follow"
-
 const totalSalons = salonsCount ?? 0
+const robots =
+  cityData?.index_state && totalSalons > 0
+    ? "index, follow"
+    : "noindex, follow"
 const totalPages = Math.max(1, Math.ceil(totalSalons / pageSize))
 const hasPrev = page > 1
 const hasNext = page < totalPages
+const currentPage = page
+const pagePath = `/directory/city/${citySlug}`
+const buildPageUrl = (pageNumber: number) =>
+  pageNumber > 1
+    ? `https://duolb.com${pagePath}?page=${pageNumber}`
+    : `https://duolb.com${pagePath}`
+const canonicalUrl = buildPageUrl(currentPage)
+const previousUrl = currentPage > 1 ? buildPageUrl(currentPage - 1) : null
+const nextUrl = currentPage < totalPages ? buildPageUrl(currentPage + 1) : null
 
 Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
 )
+if (robots === "noindex, follow") {
+  Astro.response.headers.set("X-Robots-Tag", "noindex, follow")
+}
 
 const itemListSchema = {
   "@context": "https://schema.org",
@@ -90,12 +105,14 @@ const itemListSchema = {
 
 <head>
   <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+  {currentPage > 1 && previousUrl && <link rel="prev" href={previousUrl} />}
+  {currentPage < totalPages && nextUrl && <link rel="next" href={nextUrl} />}
 </head>
 
 <DirectoryLayout
   title={title}
   description={description}
-  canonical={`https://duolb.com/directory/city/${citySlug}`}
+  canonical={canonicalUrl}
   robots={robots}
 >
   <section class="max-w-6xl mx-auto px-6 py-16">
@@ -160,7 +177,7 @@ const itemListSchema = {
         Beliebte Kategorien in {cityName}
       </h2>
       <div class="flex flex-wrap gap-3">
-        {categories.map((cat) => (
+        {popularCategories.map((cat) => (
           <a
             href={`/directory/city/${citySlug}/${cat.slug}`}
             class="px-4 py-2 bg-[var(--color-warm-cream)] border border-[var(--color-light-taupe)] rounded-full text-sm text-[var(--color-deep-slate)] transition-colors hover:bg-[var(--color-gentle-gold)] hover:text-white hover:border-[var(--color-gentle-gold)]"

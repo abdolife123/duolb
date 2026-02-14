@@ -4,16 +4,20 @@ import { formatSitemapLastmod } from "../lib/sitemapLastmod";
 export async function GET() {
   const { data: salons } = await supabase
     .from("salons")
-    .select("slug, updated_at");
+    .select("slug, updated_at")
+    .not("slug", "is", null);
 
-  const urls = (salons || []).map((salon) => `
+  const urls = (salons || [])
+    .filter((salon) => typeof salon.slug === "string" && salon.slug.trim().length > 0)
+    .map((salon) => `
     <url>
       <loc>https://duolb.com/salon/${salon.slug}</loc>
       <lastmod>${formatSitemapLastmod(salon.updated_at)}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.8</priority>
     </url>
-  `).join("");
+  `)
+    .join("");
 
   return new Response(`<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

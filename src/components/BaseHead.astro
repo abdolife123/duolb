@@ -14,10 +14,13 @@ interface Props {
 }
 
 const { title, description, image = FallbackImage } = Astro.props;
+const safeDescription =
+  typeof description === "string" && description.trim().length > 0
+    ? description
+    : title.slice(0, 155);
 
 // Correct canonical URL
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
-const fullURL = Astro.url.toString();
 const imageURL = new URL(image.src, Astro.site).toString();
 ---
 
@@ -36,25 +39,24 @@ const imageURL = new URL(image.src, Astro.site).toString();
 
 <!-- SEO Meta -->
 <title>{title}</title>
-<meta name="description" content={description} />
+{safeDescription && <meta name="description" content={safeDescription} />}
 <meta name="keywords" content="Beauty Blog, Hautpflege, Skincare, Make-up, Kosmetik, Beauty Trends, Deutschland" />
 <meta name="author" content="duolb" />
 <meta name="publisher" content="duolb" />
-<meta name="robots" content="index, follow" />
 <meta name="msvalidate.01" content="B67B9187875C803F521B956542758582" />
 
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="duolb" />
 <meta property="og:title" content={title} />
-<meta property="og:description" content={description} />
-<meta property="og:url" content={fullURL} />
+{safeDescription && <meta property="og:description" content={safeDescription} />}
+<meta property="og:url" content={canonicalURL} />
 <meta property="og:image" content={imageURL} />
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={title} />
-<meta name="twitter:description" content={description} />
+{safeDescription && <meta name="twitter:description" content={safeDescription} />}
 <meta name="twitter:image" content={imageURL} />
 
 <!-- RSS + Sitemap -->
