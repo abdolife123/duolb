@@ -34,6 +34,20 @@ const normalizeLegacySalonSlug = (value) => {
   return normalized
 }
 
+const extractSlugKeywords = (slug) => {
+  if (!slug) return []
+
+  return slug
+    .toLowerCase()
+    .split("-")
+    .filter(
+      (word) =>
+        word.length > 3 &&
+        !["studio", "salon", "beauty", "kosmetik", "haarlaserentfernung"].includes(word)
+    )
+    .slice(0, 3)
+}
+
 let salon = null
 
 const { data: exactSalon, error: exactSalonError } = await supabase
@@ -52,17 +66,21 @@ if (!salon) {
   const normalizedSlug = normalizeLegacySalonSlug(slug)
 
   if (normalizedSlug) {
-    const fuzzy = normalizedSlug.replace(/-/g, "%")
+    const keywords = extractSlugKeywords(normalizedSlug)
 
-    const { data: fallback } = await supabase
-      .from("salons")
-      .select("slug")
-      .ilike("slug", fuzzy)
-      .limit(1)
-      .maybeSingle()
+    if (keywords.length > 0) {
+      const conditions = keywords.map((k) => `slug.ilike.%${k}%`).join(",")
 
-    if (fallback) {
-      return Astro.redirect(`/salon/${fallback.slug}`, 301)
+      const { data: keywordMatch } = await supabase
+        .from("salons")
+        .select("slug")
+        .or(conditions)
+        .limit(1)
+        .maybeSingle()
+
+      if (keywordMatch) {
+        return Astro.redirect(`/salon/${keywordMatch.slug}`, 301)
+      }
     }
   }
 
