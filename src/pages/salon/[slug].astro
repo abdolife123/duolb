@@ -9,14 +9,64 @@ import { resolveSalonCoverImage } from "../../lib/images"
 
 const { slug } = Astro.params
 
-const { data: salon } = await supabase
+const normalizeLegacySalonSlug = (value) => {
+  if (typeof value !== "string") return ""
+
+  let normalized = value.trim().toLowerCase()
+
+  const legacyPatterns = [
+    ["sch-n", "schoen"],
+    ["sthetik", "aesthetik"],
+    ["f-r", "fuer"],
+    ["m-nner", "maenner"],
+  ]
+
+  for (const [from, to] of legacyPatterns) {
+    normalized = normalized.replaceAll(from, to)
+  }
+
+  normalized = normalized
+    .replaceAll("ä", "ae")
+    .replaceAll("ö", "oe")
+    .replaceAll("ü", "ue")
+    .replaceAll("ß", "ss")
+
+  return normalized
+}
+
+let salon = null
+
+const { data: exactSalon, error: exactSalonError } = await supabase
   .from("salons")
   .select("*")
   .eq("slug", slug)
   .maybeSingle()
 
+if (exactSalonError) {
+  console.error("salon exact slug lookup error", exactSalonError)
+}
+
+salon = exactSalon
+
 if (!salon) {
-  return Astro.redirect("/directory")
+  const normalizedSlug = normalizeLegacySalonSlug(slug)
+
+  if (normalizedSlug) {
+    const fuzzy = normalizedSlug.replace(/-/g, "%")
+
+    const { data: fallback } = await supabase
+      .from("salons")
+      .select("slug")
+      .ilike("slug", fuzzy)
+      .limit(1)
+      .maybeSingle()
+
+    if (fallback) {
+      return Astro.redirect(`/salon/${fallback.slug}`, 301)
+    }
+  }
+
+  return new Response("Not found", { status: 404 })
 }
 
 const coverImage =
