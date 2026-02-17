@@ -10,7 +10,6 @@ import HomeCityGrid from "../components/home/HomeCityGrid.astro";
 import HomeFeaturedSalons from "../components/home/HomeFeaturedSalons.astro";
 import HomeSeoBlock from "../components/home/HomeSeoBlock.astro";
 import HomeNearMe from "../components/home/HomeNearMe.astro";
-import PublisherAd from "../components/ads/PublisherAd.astro";
 
 /* ---------------- UTF-8 REPAIR (posts) ---------------- */
 function repairUTF8(str = "") {
@@ -118,14 +117,6 @@ const featuredItemListSchema = {
 
     <HomeHero categories={categories || []} cities={cities || []} />
 
-    <PublisherAd
-      tid="54193_897282_0"
-      width={728}
-      height={90}
-      label="Anzeige"
-      desktopOnly={true}
-    />
-
     <HomeFeaturedSalons salons={featuredSalonsWithContext} />
 
     <nav
@@ -198,38 +189,13 @@ const featuredItemListSchema = {
 
     <HomeCategoryGrid categories={categories || []} />
 
-    <PublisherAd
-      tid="54193_897282_1"
-      width={300}
-      height={250}
-      label="Anzeige"
-      class="flex justify-center"
-    />
-
     <HomeCityGrid cities={cities || []} />
 
     <HomeNearMe categories={categories || []} />
 
-    <PublisherAd
-      tid="54193_897282_3"
-      width={320}
-      height={50}
-      label="Anzeige"
-      mobileOnly={true}
-      class="flex justify-center"
-    />
-
     <HomeSeoBlock
       topCities={(cities || []).slice(0, 6)}
       topCategories={(categories || []).slice(0, 6)}
-    />
-
-    <PublisherAd
-      tid="54193_897282_2"
-      width={300}
-      height={250}
-      label="Anzeige"
-      class="flex justify-center"
     />
 
     <section class="mt-16" aria-labelledby="home-blog">
