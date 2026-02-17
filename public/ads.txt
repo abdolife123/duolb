@@ -1,10 +1,6 @@
 #Ads.txt duolb.com
 #Ads.txt managed by AdsTxtManager.com - the free ads.txt management tool for publishers
 ownerdomain=duolb.com
-contact=directsales@ezoic.com
-managerdomain=ezoic.ai
-
-ezoic.ai, 529d106a4d4ed58985eebdc00b8c3c16, DIRECT
 # 35
 themediagrid.com, Q19AKF, DIRECT, 35d5010d7789b49d
 sonobi.com, 192ecdea01, RESELLER, d1a215d9eb5aee9e

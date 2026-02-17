@@ -75,9 +75,6 @@ const organizationSchema = {
     <meta name="google-adsense-account" content="ca-pub-6824827690109369" />
     <script is:inline>
       window.addEventListener("DOMContentLoaded", () => {
-        window.ezstandalone = window.ezstandalone || {};
-        window.ezstandalone.cmd = window.ezstandalone.cmd || [];
-
         const loadScript = (src, attrs = {}) => {
           const script = document.createElement("script");
           script.src = src;
@@ -91,7 +88,6 @@ const organizationSchema = {
 
         loadScript("https://cmp.gatekeeperconsent.com/min.js", { "data-cfasync": "false" });
         loadScript("https://the.gatekeeperconsent.com/cmp.min.js", { "data-cfasync": "false" });
-        loadScript("https://www.ezojs.com/ezoic/sa.min.js");
         loadScript("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6824827690109369", {
           crossorigin: "anonymous",
         });
