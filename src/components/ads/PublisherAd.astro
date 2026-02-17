@@ -19,16 +19,17 @@ const {
   desktopOnly = false,
 } = Astro.props;
 
-const adSrc = `//clksite.com/adServe/banners?tid=${encodeURIComponent(tid)}`;
+const adSrc = `https://clksite.com/adServe/banners?tid=${encodeURIComponent(tid)}`;
 const visibilityClass = mobileOnly ? "md:hidden" : desktopOnly ? "hidden md:block" : "";
+const adTagHtml = `<script data-cfasync='false' type='text/javascript' src='${adSrc}'><\/script>`;
 ---
 
 <section class={`my-8 ${visibilityClass} ${className}`.trim()} aria-label={label}>
   <div
     class="publisher-ad-slot mx-auto w-full max-w-full overflow-hidden rounded-xl border border-[rgba(230,226,221,0.45)] bg-white/70"
-    style={`width:min(100%, ${width}px); min-height:${height}px;`}
+    style={`width:${width}px; max-width:100%; min-height:${height}px;`}
   >
-    <script data-cfasync="false" type="text/javascript" src={adSrc}></script>
+    <Fragment set:html={adTagHtml} />
     <noscript>
       <div class="flex h-full min-h-[inherit] items-center justify-center px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-medium-gray)]">
         {label}
