@@ -1,0 +1,77 @@
+---
+interface Props {
+  tid: string;
+  width: number;
+  height: number;
+  label?: string;
+  class?: string;
+  mobileOnly?: boolean;
+  desktopOnly?: boolean;
+}
+
+const {
+  tid,
+  width,
+  height,
+  label = "Anzeige",
+  class: className = "",
+  mobileOnly = false,
+  desktopOnly = false,
+} = Astro.props;
+
+const adSrc = `https://clksite.com/adServe/banners?tid=${encodeURIComponent(tid)}`;
+const visibilityClass = mobileOnly ? "md:hidden" : desktopOnly ? "hidden md:block" : "";
+---
+
+<section class={`my-8 ${visibilityClass} ${className}`.trim()} aria-label={label}>
+  <div
+    class="publisher-ad-slot mx-auto w-full max-w-full overflow-hidden rounded-xl border border-[rgba(230,226,221,0.45)] bg-white/70"
+    style={`width:min(100%, ${width}px); min-height:${height}px;`}
+    data-ad-src={adSrc}
+    data-loaded="false"
+  >
+    <div class="flex h-full min-h-[inherit] items-center justify-center px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-medium-gray)]">
+      {label}
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (() => {
+    const slot = document.currentScript?.previousElementSibling?.querySelector?.(".publisher-ad-slot");
+    if (!(slot instanceof HTMLElement)) return;
+
+    const loadAd = () => {
+      if (slot.dataset.loaded === "true") return;
+      slot.dataset.loaded = "true";
+      slot.innerHTML = "";
+
+      const script = document.createElement("script");
+      script.type = "text/javascript";
+      script.async = true;
+      script.setAttribute("data-cfasync", "false");
+      script.src = slot.dataset.adSrc || "";
+      slot.appendChild(script);
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      loadAd();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            loadAd();
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin: "300px 0px" }
+    );
+
+    observer.observe(slot);
+  })();
+</script>
