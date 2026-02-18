@@ -15,6 +15,14 @@ function getSupabaseClient() {
   });
 }
 
+const xmlEscape = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
 export async function GET({ request }: { request: Request }) {
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -42,7 +50,7 @@ export async function GET({ request }: { request: Request }) {
     })
     .map((row) => `
     <url>
-      <loc>https://duolb.com/directory/city/${row.slug}</loc>
+      <loc>https://duolb.com/directory/city/${xmlEscape(row.slug)}</loc>
       <lastmod>${formatSitemapLastmod(row.updated_at)}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.9</priority>
@@ -50,19 +58,30 @@ export async function GET({ request }: { request: Request }) {
   `)
     .join("");
 
+  const safeUrls =
+    urls.trim().length > 0
+      ? urls
+      : `
+    <url>
+      <loc>https://duolb.com/directory/city</loc>
+      <changefreq>weekly</changefreq>
+      <priority>0.7</priority>
+    </url>
+  `;
+
   const debugComment = debug
     ? `\n<!-- debug: rows=${(cities || []).length} uniqueSlugs=${seen.size} -->\n`
     : "\n";
 
   return new Response(
     `<?xml version="1.0" encoding="UTF-8"?>${debugComment}<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
+${safeUrls}
 </urlset>`,
     {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
-    }
+        "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
+      }
     }
   );
 }

@@ -9,7 +9,20 @@ import { resolveSalonCoverImage } from "../../lib/images"
 
 const { slug } = Astro.params
 
-const normalizeLegacySalonSlug = (value) => {
+type RelatedSalonRaw = {
+  salon_name: string | null
+  slug: string | null
+  cover_image: string | null
+  rating_value: number | null
+  rating_count: number | null
+  full_address: string | null
+  city_id: number | null
+  category_id: number | null
+}
+
+type RelatedSalon = RelatedSalonRaw & { score: number }
+
+const normalizeLegacySalonSlug = (value: string | undefined): string => {
   if (typeof value !== "string") return ""
 
   let normalized = value.trim().toLowerCase()
@@ -34,14 +47,14 @@ const normalizeLegacySalonSlug = (value) => {
   return normalized
 }
 
-const extractSlugKeywords = (slug) => {
+const extractSlugKeywords = (slug: string): string[] => {
   if (!slug) return []
 
   return slug
     .toLowerCase()
     .split("-")
     .filter(
-      (word) =>
+      (word: string) =>
         word.length > 3 &&
         !["studio", "salon", "beauty", "kosmetik", "haarlaserentfernung"].includes(word)
     )
@@ -69,7 +82,7 @@ if (!salon) {
     const keywords = extractSlugKeywords(normalizedSlug)
 
     if (keywords.length > 0) {
-      const conditions = keywords.map((k) => `slug.ilike.%${k}%`).join(",")
+      const conditions = keywords.map((k: string) => `slug.ilike.%${k}%`).join(",")
 
       const { data: keywordMatch } = await supabase
         .from("salons")
@@ -127,11 +140,11 @@ if (salon.category_id) {
   category = data
 }
 
-const relatedConditions = []
+const relatedConditions: string[] = []
 if (salon.city_id) relatedConditions.push(`city_id.eq.${salon.city_id}`)
 if (salon.category_id) relatedConditions.push(`category_id.eq.${salon.category_id}`)
 
-let relatedSalons = []
+let relatedSalons: RelatedSalon[] = []
 if (relatedConditions.length > 0) {
   const { data: relatedRaw, error: relatedError } = await supabase
     .from("salons")
@@ -146,8 +159,8 @@ if (relatedConditions.length > 0) {
     console.error("related salons error", relatedError)
   }
 
-  relatedSalons = (relatedRaw || [])
-    .map((item) => {
+  relatedSalons = ((relatedRaw || []) as RelatedSalonRaw[])
+    .map((item: RelatedSalonRaw): RelatedSalon => {
       const isSameCity = Boolean(salon.city_id && item.city_id === salon.city_id)
       const isSameCategory = Boolean(
         salon.category_id && item.category_id === salon.category_id
@@ -156,7 +169,7 @@ if (relatedConditions.length > 0) {
 
       return { ...item, score }
     })
-    .sort((a, b) => {
+    .sort((a: RelatedSalon, b: RelatedSalon) => {
       if (b.score !== a.score) return b.score - a.score
       return (b.rating_value ?? 0) - (a.rating_value ?? 0)
     })
