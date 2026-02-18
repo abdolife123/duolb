@@ -21,16 +21,32 @@ const { categories } = Astro.props;
 
 <style>
   .home-near-me {
+    position: relative;
+    overflow: hidden;
     text-align: center;
     margin: 4rem auto;
     max-width: 1100px;
-    padding: 3rem 2rem;
+    padding: 3rem 2rem 2.5rem;
     border-radius: var(--radius-xl);
     border: 1px solid rgba(230,226,221,0.2);
-    background: linear-gradient(135deg, var(--color-soft-rose), var(--color-warm-cream));
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-soft-white) 34%, transparent) 0%, transparent 40%),
+      linear-gradient(135deg, var(--color-soft-rose), var(--color-warm-cream));
     box-shadow: var(--shadow-sm);
     font-family: var(--font-body);
     color: var(--color-deep-slate);
+  }
+
+  .home-near-me::after {
+    content: "";
+    position: absolute;
+    inset: auto -30% -100px auto;
+    width: 260px;
+    height: 260px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-gentle-gold) 24%, transparent);
+    filter: blur(40px);
+    pointer-events: none;
   }
 
   .home-near-me h2 {
@@ -47,6 +63,8 @@ const { categories } = Astro.props;
   }
 
   .near-category-grid {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1rem;
@@ -70,5 +88,16 @@ const { categories } = Astro.props;
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
     color: var(--color-terracotta);
+  }
+
+  .near-category-card:focus-visible {
+    outline: 2px solid var(--color-gentle-gold);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px) {
+    .home-near-me {
+      padding: 2.25rem 1rem 2rem;
+    }
   }
 </style>

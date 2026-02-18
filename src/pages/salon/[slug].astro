@@ -22,45 +22,6 @@ type RelatedSalonRaw = {
 
 type RelatedSalon = RelatedSalonRaw & { score: number }
 
-const normalizeLegacySalonSlug = (value: string | undefined): string => {
-  if (typeof value !== "string") return ""
-
-  let normalized = value.trim().toLowerCase()
-
-  const legacyPatterns = [
-    ["sch-n", "schoen"],
-    ["sthetik", "aesthetik"],
-    ["f-r", "fuer"],
-    ["m-nner", "maenner"],
-  ]
-
-  for (const [from, to] of legacyPatterns) {
-    normalized = normalized.replaceAll(from, to)
-  }
-
-  normalized = normalized
-    .replaceAll("ä", "ae")
-    .replaceAll("ö", "oe")
-    .replaceAll("ü", "ue")
-    .replaceAll("ß", "ss")
-
-  return normalized
-}
-
-const extractSlugKeywords = (slug: string): string[] => {
-  if (!slug) return []
-
-  return slug
-    .toLowerCase()
-    .split("-")
-    .filter(
-      (word: string) =>
-        word.length > 3 &&
-        !["studio", "salon", "beauty", "kosmetik", "haarlaserentfernung"].includes(word)
-    )
-    .slice(0, 3)
-}
-
 let salon = null
 
 const { data: exactSalon, error: exactSalonError } = await supabase
@@ -76,27 +37,6 @@ if (exactSalonError) {
 salon = exactSalon
 
 if (!salon) {
-  const normalizedSlug = normalizeLegacySalonSlug(slug)
-
-  if (normalizedSlug) {
-    const keywords = extractSlugKeywords(normalizedSlug)
-
-    if (keywords.length > 0) {
-      const conditions = keywords.map((k: string) => `slug.ilike.%${k}%`).join(",")
-
-      const { data: keywordMatch } = await supabase
-        .from("salons")
-        .select("slug")
-        .or(conditions)
-        .limit(1)
-        .maybeSingle()
-
-      if (keywordMatch) {
-        return Astro.redirect(`/salon/${keywordMatch.slug}`, 301)
-      }
-    }
-  }
-
   return new Response("Not found", { status: 404 })
 }
 

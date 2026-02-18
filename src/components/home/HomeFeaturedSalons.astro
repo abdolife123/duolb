@@ -19,7 +19,7 @@ interface Props {
 const { salons } = Astro.props;
 ---
 
-<section class="mt-16" aria-labelledby="home-featured">
+<section class="home-featured mt-16 rounded-3xl border border-[color-mix(in_srgb,var(--color-light-taupe)_80%,transparent)] bg-white p-5 shadow-[var(--shadow-sm)] md:p-7" aria-labelledby="home-featured">
   <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
     <div>
       <h2 id="home-featured" class="text-2xl md:text-3xl font-serif text-slate-900">
@@ -31,7 +31,7 @@ const { salons } = Astro.props;
     </div>
     <a
       href="/directory"
-      class="text-sm font-semibold text-[var(--color-terracotta)] transition-colors hover:text-[var(--color-gentle-gold)]"
+      class="inline-flex items-center justify-center rounded-xl border border-[var(--color-light-taupe)] bg-[var(--color-warm-cream)] px-4 py-2 text-sm font-semibold text-[var(--color-deep-slate)] shadow-[var(--shadow-sm)] transition-all hover:-translate-y-0.5 hover:border-[var(--color-gentle-gold)] hover:text-[var(--color-terracotta)] hover:shadow-[var(--shadow-md)]"
     >
       Mehr im Verzeichnis
     </a>
@@ -39,7 +39,7 @@ const { salons } = Astro.props;
 
   <div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
     {salons.map((salon) => (
-      <article class="rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] bg-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition overflow-hidden">
+      <article class="group rounded-[var(--radius-lg)] border border-[var(--color-light-taupe)] bg-white shadow-[var(--shadow-sm)] transition-all overflow-hidden hover:-translate-y-1 hover:border-[var(--color-gentle-gold)] hover:shadow-[var(--shadow-md)]">
         <a
           href={`/salon/${salon.slug}`}
           class="block"
@@ -52,7 +52,7 @@ const { salons } = Astro.props;
           />
 
           <div class="p-5">
-            <h3 class="text-base font-semibold text-slate-900">
+            <h3 class="text-base font-semibold text-slate-900 transition-colors group-hover:text-[var(--color-terracotta)]">
               {salon.salon_name ?? "Salon"}
               <span class="block mt-1 text-sm font-medium text-[var(--color-medium-gray)]">
                 {salon.category_name ?? "Beauty & Wellness"}
@@ -79,4 +79,12 @@ const { salons } = Astro.props;
     ))}
   </div>
 </section>
+
+<style>
+  .home-featured {
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-soft-rose) 18%, transparent) 0%, transparent 42%),
+      white;
+  }
+</style>
 
