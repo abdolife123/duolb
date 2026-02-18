@@ -5,6 +5,7 @@ import '../styles/global.css';
 import type { ImageMetadata } from 'astro';
 import FallbackImage from '../assets/blog-placeholder-1.jpg';
 import { SITE_TITLE } from '../consts';
+import { resolveMetaDescription } from '../lib/seo/metaDescription';
 
 
 interface Props {
@@ -14,10 +15,12 @@ interface Props {
 }
 
 const { title, description, image = FallbackImage } = Astro.props;
-const safeDescription =
-  typeof description === "string" && description.trim().length > 0
-    ? description
-    : title.slice(0, 155);
+const safeDescription = resolveMetaDescription({
+  description,
+  title,
+  pathname: Astro.url.pathname,
+  robots: "index, follow",
+});
 
 // Correct canonical URL
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();

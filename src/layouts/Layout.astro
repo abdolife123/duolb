@@ -2,6 +2,7 @@
 import Navbar from "@components/navbar.astro";
 import "../styles/global.css";
 import BackToTop from "@components/BackToTop.astro";
+import { resolveMetaDescription } from "../lib/seo/metaDescription";
 
 const {
   title = "Duolb | Profi Akne-Behandlung & High-End Beauty Tech",
@@ -12,6 +13,12 @@ const {
 } = Astro.props;
 
 const canonicalURL = `https://duolb.com${Astro.url.pathname}`;
+const metaDescription = resolveMetaDescription({
+  description,
+  title,
+  pathname: Astro.url.pathname,
+  robots,
+});
 const supabaseOrigin = (() => {
   const value = import.meta.env.PUBLIC_SUPABASE_URL;
   if (!value) return null;
@@ -30,7 +37,7 @@ const supabaseOrigin = (() => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <title>{title}</title>
-  <meta name="description" content={description} />
+  <meta name="description" content={metaDescription} />
   <meta name="author" content="Duolb Beauty Redaktion" />
   <meta name="robots" content={robots} />
   <meta name="msvalidate.01" content="B67B9187875C803F521B956542758582" />
@@ -61,7 +68,7 @@ const supabaseOrigin = (() => {
   <meta property="og:type" content={type} />
   <meta property="og:locale" content="de_DE" />
   <meta property="og:title" content={title} />
-  <meta property="og:description" content={description} />
+  <meta property="og:description" content={metaDescription} />
   <meta property="og:url" content={canonicalURL} />
   <meta property="og:image" content={image} />
   <meta property="og:image:alt" content="Duolb Beauty Editorial Vorschau" />
@@ -69,7 +76,7 @@ const supabaseOrigin = (() => {
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
-  <meta name="twitter:description" content={description} />
+  <meta name="twitter:description" content={metaDescription} />
   <meta name="twitter:image" content={image} />
 
 

@@ -20,7 +20,18 @@ const {
   image = "https://res.cloudinary.com/dc0ax30om/image/upload/v1769795790/duolb_og_xrs8qe.png",
 } = Astro.props as Props;
 
-const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).toString();
+const path = Astro.url.pathname || "/";
+const isNearYouPath = path.startsWith("/near-you/");
+const nearYouCategorySlug = isNearYouPath ? path.split("/").filter(Boolean)[1] || "" : "";
+const nearYouCanonicalPath = nearYouCategorySlug
+  ? `/directory/category/${nearYouCategorySlug}`
+  : "/directory/category";
+
+const canonicalURL = isNearYouPath
+  ? new URL(nearYouCanonicalPath, Astro.site).toString()
+  : canonical || new URL(Astro.url.pathname, Astro.site).toString();
+
+const robotsContent = isNearYouPath ? "noindex, follow" : robots;
 ---
 
 <!doctype html>
@@ -32,7 +43,7 @@ const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site).toStri
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
-    <meta name="robots" content={robots} />
+    <meta name="robots" content={robotsContent} />
     <meta name="msvalidate.01" content="B67B9187875C803F521B956542758582" />
     <!-- Privacy Scripts FIRST -->
     <script data-cfasync="false" src="https://cmp.gatekeeperconsent.com/min.js"></script>
