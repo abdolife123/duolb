@@ -1,4 +1,5 @@
-﻿import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
+import { formatSitemapLastmod } from "../lib/sitemapLastmod";
 
 const supabaseUrl =
   import.meta.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL;
@@ -43,7 +44,7 @@ export async function GET() {
       return `
     <url>
       <loc>https://duolb.com/directory/city/${city.slug}/${category.slug}</loc>
-      <lastmod>${row.updated_at || new Date().toISOString()}</lastmod>
+      <lastmod>${formatSitemapLastmod(row.updated_at)}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.7</priority>
     </url>
@@ -52,10 +53,21 @@ export async function GET() {
     .filter(Boolean)
     .join("");
 
+  const safeUrls =
+    urls.trim().length > 0
+      ? urls
+      : `
+    <url>
+      <loc>https://duolb.com/directory/city</loc>
+      <changefreq>weekly</changefreq>
+      <priority>0.6</priority>
+    </url>
+  `;
+
   return new Response(
     `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
+${safeUrls}
 </urlset>`,
     {
       headers: {
