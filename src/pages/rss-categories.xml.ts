@@ -28,25 +28,54 @@ export async function GET() {
     return new Response("Supabase env missing", { status: 500 });
   }
 
-  const [{ data: categories, error }, { data: salonCategories }] =
-    await Promise.all([
-      supabase.from("business_categories").select("name, slug").order("name"),
-      supabase
-        .from("salons")
-        .select("category_slug")
-        .not("category_slug", "is", null),
-    ]);
+  const pageSize = 1000;
 
-  if (error) {
-    console.error(error);
+  const categories: Array<{ name: string | null; slug: string | null }> = [];
+  let categoriesFrom = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from("business_categories")
+      .select("name, slug")
+      .order("name")
+      .range(categoriesFrom, categoriesFrom + pageSize - 1);
+
+    if (error) {
+      console.error(error);
+      break;
+    }
+
+    const batch = data || [];
+    categories.push(...batch);
+    if (batch.length < pageSize) break;
+    categoriesFrom += pageSize;
+  }
+
+  const salonCategories: Array<{ category_slug: string | null }> = [];
+  let salonsFrom = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from("salons")
+      .select("category_slug")
+      .not("category_slug", "is", null)
+      .range(salonsFrom, salonsFrom + pageSize - 1);
+
+    if (error) {
+      console.error(error);
+      break;
+    }
+
+    const batch = data || [];
+    salonCategories.push(...batch);
+    if (batch.length < pageSize) break;
+    salonsFrom += pageSize;
   }
 
   const pubDate = new Date().toUTCString();
   const categorySet = new Set(
-    (salonCategories || []).map((row) => row.category_slug).filter(Boolean)
+    salonCategories.map((row) => row.category_slug).filter(Boolean)
   );
 
-  const items = (categories || [])
+  const items = categories
     .filter((category) => categorySet.size === 0 || categorySet.has(category.slug))
     .map((category) => {
       const title = escapeXml(category.name ?? "Category");

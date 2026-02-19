@@ -9,17 +9,41 @@ const escapeXml = (value: string) =>
     .replace(/'/g, "&apos;");
 
 export async function GET() {
-  const { data: salons, error } = await supabase
-    .from("salons")
-    .select("salon_name, slug, full_address, updated_at, created_at")
-    .order("updated_at", { ascending: false })
-    .limit(500);
+  const pageSize = 1000;
+  const salons: Array<{
+    salon_name: string | null;
+    slug: string | null;
+    full_address: string | null;
+    updated_at: string | null;
+    created_at: string | null;
+  }> = [];
 
-  if (error) {
-    console.error(error);
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("salons")
+      .select("salon_name, slug, full_address, updated_at, created_at")
+      .order("updated_at", { ascending: false })
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      console.error(error);
+      break;
+    }
+
+    const batch = data || [];
+    salons.push(...batch);
+
+    if (batch.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
   }
 
-  const items = (salons || [])
+  const items = salons
+    .filter((salon) => typeof salon.slug === "string" && salon.slug.trim().length > 0)
     .map((salon) => {
       const title = escapeXml(salon.salon_name ?? "Salon");
       const link = `https://duolb.com/salon/${salon.slug}`;
